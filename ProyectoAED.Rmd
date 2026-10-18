@@ -1,0 +1,336 @@
+---
+title: "Proyecto AED"
+author: "Rubén Sánchez Munuera, Luis Molina Villar y Pablo Gallart Carbonell"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    echo: true
+    number_sections: true
+    theme: lumen
+    toc: true
+always_allow_html: true
+params:
+  lang: ES
+lang: "`r switch(params$lang, ES = 'es-ES', EN = 'en-US')`"
+subtitle: "Introducción a la Ciencia de Datos. Máster en Ciencia de Datos- UV"
+language:
+  label:
+    fig: 'Figura '
+    tab: 'Tabla '
+    eq: 'Ecuación '
+    thm: 'Teorema '
+    lem: 'Lema '
+    def: 'Definición '
+    cor: 'Corolario '
+    prp: 'Proposición '
+    exm: 'Ejemplo '
+    exr: 'Ejercicio '
+    proof: 'Demostración. '
+    remark: 'Nota: '
+    solution: 'Solución. '
+---
+
+# Introducción
+
+Este documento explicativo te puede servir de plantilla para la realización de proyectos con *Rmarkdown* para la realizacón de memorias de práctica, tareas, etc. Pretende ser autoexplicativo.
+
+# Estructura del fichero
+
+El bloque inicial separado entre 3 guiones, se denomina cabecera YALM y determina el formato y tipo de documento generado Las opciones dependen del tipo de documento. Un documento que te ayudará a opciones más complejas lo puedes encontrar en este enlace <https://bookdown.org/yihui/rmarkdown/>
+
+**NOTA**: Los espacios iniciales son imprescindibles. El documento debe empezar por los guiones (no puede haber comentarios previos)
+
+**title**: "Pon un título a tu documento"\
+**subtitle**: Tratamiento de Datos. Grado en Ciencia de Datos- UV\
+**author**: "Pon aquí tu nombre y apellidos"
+
+Pone la fecha de generación del documento
+
+**date**: "`r Sys.Date()`" Pondría la fecha del día actual. También se puede poner fija "01/02/2021"
+
+Cambio de idioma para que en lugar de "Contents" ponga "Indice" al incluir la tabla de contenido
+
+**params**: **lang**: ES\
+**lang**: "`r switch(params$lang, ES = 'es-ES', EN = 'en-US')`"
+
+En este ejemplo, por defecto se generará una salida html, que es la que está descomentada. Si si quieres otras salidas o varias de ellas descomenta lo que proceda
+
+**output:** Salida(s) generadas
+
+[*Salida pdf*]{.ul}*. Si se incluye código en LaTeX necesitarás tener instalado un compilador de Latex*\
+
+**pdf_document**:\
+**toc**: yes Tabla de contenido (índice)\
+**toc_depth**: 3 Número de niveles de la tabla de contenido (índice) \# 1, \#\#2,\#\#\#3\
+**number_sections**: yes Numeración de las secciones
+
+[Salida html_document]{.ul}:\
+**echo**: yes **number_sections**: yes\
+**theme**: lumen Aspecto y estilo. Otras opciones: *cerulean, journal, flatly, darkly, readable, spacelab, united, cosmo, lumen, paper, sandstone, simplex, and yeti*\
+**toc**: yes
+
+[*Salida html_notebook*]{.ul}*, como html, pero con algunas opciones de visualización*
+
+**bookdown::html_document2:** Versión enriquecida de html que permite numerar figuras, referenciar, etc. https://bookdown.org/yihui/bookdown/
+**bookdown::pdf_document2:** Versión enriquecida de pdf que permite numerar figuras, referenciar, etc.
+
+Las opciones siguientes nos permiten traducir estas etiquetas para que aparezcan en otro idioma en caso de que se usen en el documento para referenciar a figuras, tablas, etc.
+
+**language:**\
+**label:** **fig:** 'Figura '\
+**tab:** 'Tabla '\
+**eq:** 'Ecuación '\
+**thm:** 'Teorema '\
+**lem:** 'Lema '\
+**def:** 'Definición '\
+**cor:** 'Corolario '\
+**prp:** 'Proposición '\
+**exm:** 'Ejemplo '\
+**exr:** 'Ejercicio '\
+**proof:** 'Demostración. '\
+**remark:** 'Nota: '\
+**solution:** 'Solución. '
+
+# Configuración del los bloques (*Chunks*)
+
+Cada bloque tiene muchos parámetros que pueden ser configurados
+
+**eval** = **FALSE** evita que el código se ejecute.
+
+**include** = **FALSE** evita que el código y los resultados aparezcan en el archivo terminado. R Markdown aún ejecuta el código en el fragmento y los resultados pueden ser utilizados por otros fragmentos.
+
+**echo = FALSE** evita que el código, pero no los resultados, aparezcan en el archivo terminado. Esta es una manera útil de incrustar figuras.
+
+**message = FALSE** evita que los mensajes generados por el código aparezcan en el archivo finalizado.
+
+**warning = FALSE** evita que las advertencias generadas por el código aparezcan en el final.
+
+**fig.cap = "..."** agrega un título a los resultados gráficos.
+
+Se pueden especificicar opciones generales por defecto en *opts_chunk\$set*
+
+Más opciones en el enlace [\<https://bookdown.org/yihui/rmarkdown/\>](https://bookdown.org/yihui/rmarkdown/){.uri}
+
+```{r setup, cache = F, echo = F, message = F, warning = F, tidy = F}
+
+
+# CONFIGURACIÓN GENERAL
+library(knitr)
+options(width = 100)
+
+# Opciones generales de los chucks. Se utilizarán salvo cambios en el chunk
+opts_chunk$set(echo=F, message = F, error = F, warning = F, comment = NA, fig.align = 'center', dpi = 200, tidy = F, cache.path = '.cache/', fig.path = './figura/')
+
+# Opciones generales de dígitos cuando se incluyen tablas
+#options(xtable.type = 'html')
+knit_hooks$set(inline = function(x) {
+  
+  if(is.numeric(x)) {
+    round(x, getOption('digits'))
+  } else {
+    paste(as.character(x), collapse = ', ')
+  }
+})
+#knit_hooks$set(plot = knitr:::hook_plot_html)
+```
+
+# Instalación automática de paquetes
+
+Especificar las librerías necesarias para ejecutar el código en la variable ***packages***. Si no está instaladas, se instalarán y cargarán (solo para aquellas que están en el repositorio <http://cran.rediris.es>)
+
+El siguiente bloque, al no especificar opciones del *chunk* usa la configuración por defecto.
+
+```
+# Asegúrate que el paquete "pacman" está instalado
+if (!require("pacman")) install.packages("pacman")
+
+```
+
+Utilizaremos la librería `pacman` (package manager) para gestionar la instalación de librerías. Es necesario que dicha librería esté instalada previamente.
+
+https://epirhandbook.com/es/suggested-packages-1.html
+
+```{r, message=FALSE}
+# Asegúrate que el paquete "pacman" está instalado
+if (!require("pacman")) install.packages("pacman")
+
+```
+
+Utilizamos la función `p_load` para la carga e instalación de paquetes
+
+```
+pacman::p_load(
+     bookdown,
+     rio      # importación/exportación de múltiples tipos de datos
+     )
+```
+ 
+
+```{r,results=FALSE}
+
+# Paquetes disponibles desde CRAN
+#################################
+pacman::p_load(
+     
+     ###############
+     # Creación de libros y 
+     bookdown,
+     
+     # Manejo de archivos y proyecto 
+     ###############################
+     here,     # describir ruta de archivo dentro de la carpeta principal del proyecto
+     rio,      # importación/exportación de múltiples tipos de datos
+     openxlsx, # importación/exportación de libros con múltiples hojas de excel
+     
+     # Manejo e instalación de paquetes
+     ##################################
+     pacman,   # instalación/carga de paquetes
+     renv,     # manejo de versiones de paquetes para trabajar con grupos colaborativos.
+     remotes,  # instalación de paquetes desde github
+     
+     # Manejo general de datos
+     #########################
+     tidyverse,    # incluye múltiples paquetes para el tratamiento de datos en formato tidy y presentación de los mismos.
+          #dplyr,      # manejo de datos
+          #tidyr,      # manejo de datos
+          #ggplot2,    # visualización de datos
+          #stringr,    # trabajo con cadenas y caracteres
+          #forcats,    # trabajo con factores
+          #lubridate,  # trabajo con fechas
+          #purrr       # iteraciones y trabajo con listas
+     linelist,     # limpiar linelists
+     naniar,       # trabajo con valores perdidos
+     
+     # Estadística  
+     ############
+     janitor,      # tablas y limpieza de datos
+     gtsummary,    # hacer tablas descriptivas con valores estadísticos
+     rstatix,      # realización rápida de test estadísticos y tablas descriptivas
+     broom,        # pasar a formato tidy los resultados de las regresiones
+     lmtest,       # realizar test de likelihood-ratio
+    # easystats,
+    # parameters, # alternativa para pasar a formato tidy los resultados de las regresiones 
+    # see,        # alternativa para visualizar forest plots 
+     
+     # plots - general
+     #################
+     #ggplot2,         # incluido en tidyverse
+     cowplot,          # combinar plots  
+     # patchwork,      # alternativa para combinar plots    
+     RColorBrewer,     # escalas de color
+     ggnewscale,       # para añadir capas de color adicionales
+     
+     # plots - tipos específicos
+     ########################
+     DiagrammeR,       # diagramas empleando lenguaje DOT
+#     incidence2,       # curvas epidémicas
+#     gghighlight,      # destacar un subgrupo
+     ggrepel,          # etiquetas inteligentes (smart labels)
+     plotly,           # gráficos interactivos
+     gganimate,        # gráficos animados
+
+     
+     # gis
+     ######
+     # sf,               # manejo de datos espaciales usando el formato Simple Features
+     # tmap,             # producción sencilla de mapas, tanto estáticos como interactivos
+     # OpenStreetMap,    # añadir una base con un mapa de OSM a un mapa en ggplot
+     # spdep,            # estadística espacial
+     
+     # reportes rutinarios
+     #################
+     rmarkdown,        # producción de archivos PDF, Word, Powerpoint y HTML
+     reportfactory,    # auto-organización de los trabajos realizados en R Markdown 
+     officer,          # powerpoints
+     
+     # dashboards
+     ############
+     flexdashboard,    # convierte código de R Markdown en un dashboard
+     shiny,            # aplicaciones web interactivas
+
+     # tablas for para presentaciones
+     #########################
+     knitr,            # generación de reportes y tablas HTML con R Markdown 
+     flextable        # tablas HTML tables
+     #DT,              # tablas HTML (alternativa)
+     #gt,              # tablas HTML (alternativa)
+     #huxtable,        # tablas HTML (alternativa) 
+     
+)
+
+```
+
+# Trabaja con proyectos.
+
+https://epirhandbook.com/es/r-projects.html
+
+Para cada tarea crea un nuevo proyecto con, al menos, una carpeta *./data*, que contenga los datos (puedes usar carpetas adicionales para organizar la información **./program, /figuras**, etc). (La carpeta donde se encuentra este fichero es un proyecto)
+
+# Introducción del trabajo
+
+Haz un breve introducción indicando el contenido del documento:
+
+" El objetivo de esta *tarea/trabajo/práctica* es ... bla bla bla "
+
+## Subapartado (nivel 2 \#\#). Rutas locales
+
+Usa rutas referidas a la carpeta en la que se encuentra el fichero fuente, y siempre rutas **relativas** a dicha ubicación. Ejemplos
+
+**ruta1\<-'data/tabla1.txt'** : el fichero está en la carpeta datos que cuelga del directorio donde está el código.
+
+**ruta2\<-'./data/tabla1.txt'** : el fichero está en la carpeta datos que cuelga de un nivel superior
+
+**ruta3\<-'../data/tabla1.txt'** : el fichero está en la carpeta datos que cuelga del nivel superior
+
+**ruta4\<-'./../data/tabla1.txt'** : igual a la anterior
+
+**ruta4\<-'../../data/tabla1.txt'** : el fichero está en la carpeta datos que cuelga de dos niveles superiores
+
+
+<font color=red size=4>ruta5\<-'C:/MisDatos/Ej.txt' </font> **NO USAR NUNCA UNA RUTA ABSOLUTA COMO ESTA**
+
+### Subsubapartado  (nivel 3 \#\#\#). Cómo incluir figuras
+
+Podemos especificar parámetros de tamaño y ubicación en el *chunk*
+
+<!-- ```{r rmarkdown, echo=FALSE,include=FALSE, out.width='30%', fig.align='center', fig.cap='Logo ETSE (desde archivo PNG).'} -->
+<!-- knitr::include_graphics("figure/logoETSE.png") -->
+<!-- ``` -->
+
+### Subsubapartado (nivel 3 \#\#\#). 
+
+En este caso visualizamos el código. Observa como podemos incluir una figura y también ponerle un título
+
+```{r rmarkdown2, echo=TRUE, out.width='20%', fig.align='center', fig.cap='Logo GCD (desde archivo png).'}
+knitr::include_graphics("figure/logoEtse.png")
+```
+
+
+# Inclusión de ecuaciones
+
+Puedes incluir expresiones matemáticas usando la nomenclatura LaTeX por ejemplo:
+
+$ax^2+bx+c=0$
+
+### Subsubapartado (nivel 3 \#\#\#). 
+
+Podemos referirnos a una figura haciendo referencia al nombre del chunk `\@ref(fig:chunk-name))`
+
+```{r newFig, echo=TRUE, out.width='60%', fig.align='center', fig.cap='Histograma.'}
+
+hist(rnorm(100000),breaks=100)
+
+```
+
+En la figura \@ref(fig:newFig) se muestra un histograma de una distribución normal.
+
+# Nuevo apartado nivel I \#
+
+Compila el proyecto como **pdf** y como **html** y observa el fichero obtenido. Cuando generes el documento **html**, observa el efecto de cambiar el valor **theme** por algún otro. Ten en cuenta que este parámetro solo se puede usar la salida **html**.
+
+```{r}
+
+
+
+```
+
