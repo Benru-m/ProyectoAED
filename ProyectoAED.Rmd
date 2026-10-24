@@ -376,7 +376,19 @@ pib_clean <- pib_step1 %>%
   filter(!grepl("^-|^\\(|^Nota|^Volver", Territorio)) %>%
   # Renombramos y convertimos a numérico
   mutate(
-    Provincia = Territorio,
+    Provincia = case_match(
+      Territorio,
+      "ASTURIAS, PRINCIPADO DE"      ~ "Asturias",
+      "BALEARS, ILLES"               ~ "Balears, Illes",
+      "CANTABRIA"                    ~ "Cantabria",
+      "MADRID, COMUNIDAD DE"         ~ "Madrid",
+      "MURCIA, REGIÓN DE"            ~ "Murcia",
+      "NAVARRA, COMUNIDAD FORAL DE"  ~ "Navarra",
+      "RIOJA, LA"                    ~ "Rioja, La",
+      "CEUTA"                        ~ "Ceuta",
+      "MELILLA"                      ~ "Melilla",
+      .default = Territorio          # el resto se queda igual
+    ),
     PIB_per_capita = as.numeric(PIB_per_capita)
   ) %>%
   select(Provincia, PIB_per_capita)
