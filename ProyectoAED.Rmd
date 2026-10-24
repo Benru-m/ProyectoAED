@@ -447,3 +447,65 @@ vab_final <- vab_clean %>%
 print(paste("Provincias con datos VAB extraídas:", nrow(vab_final)))
 head(vab_final)
 ```
+## PASO 3: PRECIO MEDIO DE LA VIVIENDA (AÑO 2022)
+Los archivos de transacciones inmobiliarias del INE (34020150...csv) presentan dos complejidades técnicas importantes que debemos resolver con rigor analítico:
+
+Estructura trimestral vs. Anual: El archivo desglosa el precio medio por cada trimestre (T1, T2, T3, T4) para cada año. Para cruzarlo con el PIB y el VAB (que son anuales en el año 2022), no podemos coger un único trimestre al azar, ya que introduciría un sesgo estacional (por ejemplo, el precio en zonas turísticas varía mucho entre verano e invierno). Lo metodológicamente riguroso es calcular la media aritmética de los cuatro trimestres del año 2022 para obtener el precio medio anual representativo.
+
+Formato numérico español: Los valores monetarios vienen en formato de texto con puntos para los miles y comas para los decimales (ej. "183.747,9"). Si R o Python lo leen tal cual, lo interpretarán como carácter. Debemos limpiar las cadenas de texto y convertirlas a formato numérico continuo (numeric).
+
+```{r}
+# 3.1 Leer el archivo CSV de vivienda
+vivienda_raw <- read.csv("datosPablo/34020150(2020, 2021, 2022, 2023).csv", 
+                         sep = ";", dec = ",", skip = 15, header = FALSE, 
+                         encoding = "latin1", stringsAsFactors = FALSE)
+
+# 3.2 Seleccionar la provincia (Col 2) y los 4 trimestres del año 2022 
+vivienda_step3 <- vivienda_raw %>%
+  select(
+    Provincia_Raw = 2,
+    T1_2022 = 11,
+    T2_2022 = 12,
+    T3_2022 = 13,
+    T4_2022 = 14
+  ) %>%
+  filter(!is.na(Provincia_Raw), Provincia_Raw != "")
+
+# 3.3 Función de limpieza de formato numérico
+limpiar_precio <- function(columna) {
+  if (is.numeric(columna)) {
+    columna
+  } else {
+    as.numeric(gsub(",", ".", gsub("\\.", "", columna)))
+  }
+}
+# 3.4 Limpieza y cálculo directo de la media (vectorial, sin errores de select)
+vivienda_clean <- vivienda_step3 %>%
+  mutate(
+    T1 = limpiar_precio(T1_2022),
+    T2 = limpiar_precio(T2_2022),
+    T3 = limpiar_precio(T3_2022),
+    T4 = limpiar_precio(T4_2022),
+    Precio_Vivienda_2022 = (T1 + T2 + T3 + T4) / 4,
+    Provincia = str_trim(Provincia_Raw)
+  ) %>%
+  select(Provincia, Precio_Vivienda_2022) %>%
+  mutate(Provincia = case_match(
+    Provincia,
+    "Asturias (Principado de )"    ~ "Asturias",
+    "Balears (Illes)"              ~ "Balears, Illes",
+    "Palmas (Las)"                 ~ "Palmas, Las",
+    "Coruña (A)"                   ~ "Coruña, A",
+    "Madrid (Comunidad de)"        ~ "Madrid",
+    "Murcia (Región de)"           ~ "Murcia",
+    "Navarra (Comunidad Foral de)" ~ "Navarra",
+    "Araba/Alava"                  ~ "Araba/Álava",
+    "Rioja (La)"                   ~ "Rioja, La",
+    .default = Provincia
+  )) %>%
+  filter(Provincia %in% vab_final$Provincia)
+
+# Verificación rigurosa
+print(paste("Provincias con precios de vivienda extraídas:", nrow(vivienda_clean)))
+head(vivienda_clean)
+```
