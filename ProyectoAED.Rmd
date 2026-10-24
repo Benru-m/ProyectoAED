@@ -397,3 +397,53 @@ pib_clean <- pib_step1 %>%
 print(paste("Total de provincias extraídas:", nrow(pib_clean)))
 head(pib_clean)
 ```
+## PASO 2: ESTRUCTURA PRODUCTIVA (VAB por Sectores)
+
+El archivo original del INE presenta una estructura orientada a la visualización humana, mezclando dos niveles jerárquicos distintos en la misma columna.En la columna principal se intercala el nombre de la provincia (ej. "02 Albacete") con celdas de datos vacías, seguido en las filas inferiores de los sectores productivos (ej. "A. Agricultura") con sus valores correspondientes. Si importamos esto de forma directa, la conexión relacional entre cada sector y su provincia se perdería, invalidando el análisis. Para resolverlo con rigor metodológico, aplicamos una técnica de reestructuración (Data Wrangling):
+   1. Condicional `if_else` + regex: Detecta códigos numéricos iniciales para identificar qué filas actúan como "Cabecera de Provincia".
+   2. Función `fill(.direction = "down")`: Arrastra (rellena hacia abajo) el nombre de la provincia detectada hacia todas las filas de sus sectores.
+   3. Expresiones regulares: Simplifican la verbosidad de los nombres sectoriales.
+   4. Pivotaje (Wider): Transforma la estructura a un formato Tidy, donde cada provincia es una fila única y cada sector una variable (columna).
+   
+```{r}
+# 2.1 Leer el archivo saltando la cabecera del INE
+vab_raw <- import("datosPablo/77776.xlsx", sheet = "tabla-77776", skip = 5, col_names = FALSE)
+
+# 2.2 Arreglar la jerarquía del INE (Provincias y Sectores mezclados)
+vab_step2 <- vab_raw %>%
+  select(Concepto = 1, VAB_2022 = 3) %>% # La col 3 corresponde a los valores de 2022
+  filter(!is.na(Concepto), Concepto != "") %>%
+  mutate(
+    Provincia_Temp = if_else(grepl("^\\d{2}\\s", Concepto), Concepto, NA_character_)
+  ) %>%
+  fill(Provincia_Temp, .direction = "down") %>%
+  filter(!is.na(VAB_2022))
+
+# 2.3 Extraer solo Industria y Servicios, y calcular porcentajes
+vab_clean <- vab_step2 %>%
+  mutate(
+    Sector_Simple = case_when(
+      grepl("Valor añadido bruto total", Concepto) ~ "VAB_Total",
+      grepl("C\\. - De las cuales: Industria", Concepto) ~ "VAB_Industria",
+      grepl("G_J\\. Comercio", Concepto) ~ "VAB_Servicios",
+      TRUE ~ "Otro"
+    )
+  ) %>%
+  filter(Sector_Simple != "Otro") %>%
+  select(Provincia_Temp, Sector_Simple, VAB_2022) %>%
+  mutate(VAB_2022 = as.numeric(VAB_2022))
+
+# 2.4 Pivotar a formato ancho y limpiar nombres
+vab_final <- vab_clean %>%
+  pivot_wider(names_from = Sector_Simple, values_from = VAB_2022) %>%
+  mutate(
+    Provincia = str_trim(str_replace(Provincia_Temp, "^\\d{2}\\s", "")),
+    pct_industria = (VAB_Industria / VAB_Total) * 100,
+    pct_servicios_turismo = (VAB_Servicios / VAB_Total) * 100
+  ) %>%
+  select(Provincia, pct_industria, pct_servicios_turismo)
+
+# Verificación
+print(paste("Provincias con datos VAB extraídas:", nrow(vab_final)))
+head(vab_final)
+```
