@@ -328,9 +328,60 @@ En la figura \@ref(fig:newFig) se muestra un histograma de una distribución nor
 
 Compila el proyecto como **pdf** y como **html** y observa el fichero obtenido. Cuando generes el documento **html**, observa el efecto de cambiar el valor **theme** por algún otro. Ten en cuenta que este parámetro solo se puede usar la salida **html**.
 
-```{r}
+## PASO 1: EXTRACCIÓN Y LIMPIEZA DEL PIB PER CÁPITA (2022-EFECTO COVID 2020-2021)
 
+Justificación Metodológica: Selección del año 2022 como corte transversal
 
+Para la realización de este análisis (MVP) y la contrastación de nuestra hipótesis sobre el impacto del sector servicios en el mercado inmobiliario, se ha optado por realizar un análisis de corte transversal (cross-sectional) centrado en el ejercicio fiscal 2022. Esta decisión metodológica se fundamenta en tres criterios operativos:
 
+Efecto estabilizador post-pandemia: Los años 2020 y 2021 presentan anomalías extremas en la Contabilidad Regional debido a las restricciones de movilidad y la paralización de la hostelería derivadas de la COVID-19. Incluir estos años distorsionaría el análisis estructural de las provincias dependientes del turismo. 2022 representa el primer ejercicio de reactivación económica normalizada.
+
+Consolidación estadística: En las series publicadas por el Instituto Nacional de Estadística (INE), los datos correspondientes a 2023 y 2024 figuran bajo las etiquetas de "Avance (A)" o "Provisional (P)". El año 2022 garantiza el uso de cifras definitivas y consolidadas tanto en el PIB como en el Valor Añadido Bruto sectorial.
+
+Claridad analítica y espacial: Dada la limitación de extensión del informe, un análisis de corte transversal permite generar visualizaciones bivariantes nítidas (diagramas de dispersión de 52 observaciones) que demuestran la correlación estructural actual, evitando el solapamiento o "ruido" visual que generaría la representación de series temporales completas.
+
+```{r importacion_limpieza, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Cargar librerías necesarias
+library(tidyverse)
+library(rio)
+library(janitor)
+library(stringr)
+
+# 1.1 Leer el archivo en crudo, sin asumir cabeceras, desde la fila donde empiezan los datos (fila 7)
+pib_raw <- import("datosPablo/pr_cre_26.xls", sheet = "Tabla_2", skip = 6, col_names = FALSE)
+
+# 1.2 Extraer solo las columnas que nos interesan. 
+# Al inspeccionar el Excel, sabemos que la columna 2 es el Territorio y la columna 90 es el "Valor" del año 2022.
+pib_step1 <- pib_raw %>%
+  select(
+    Territorio = 1, 
+    PIB_per_capita = 89
+  ) %>%
+  filter(!is.na(Territorio)) # Quitamos filas vacías del final del Excel
+
+# 1.3 Aislar exclusivamente las 52 provincias/ciudades autónomas
+# Definimos la lista de Comunidades Pluriprovinciales y Total que hay que borrar
+ccaa_a_borrar <- c("ANDALUCÍA", "ARAGÓN", "CANARIAS", "CASTILLA Y LEÓN", 
+                   "CASTILLA - LA MANCHA", "CATALUÑA", "COMUNITAT VALENCIANA", 
+                   "EXTREMADURA", "GALICIA", "PAÍS VASCO", "TOTAL NACIONAL")
+
+pib_clean <- pib_step1 %>%
+  mutate(Territorio = str_trim(Territorio)) %>%
+  # Quitamos las comunidades pluriprovinciales y totales
+  filter(!toupper(Territorio) %in% ccaa_a_borrar) %>%
+  # Quitamos agregados de "ESPAÑA" por si acaso
+  filter(!grepl("ESPAÑA", toupper(Territorio))) %>%
+  # Quitamos las notas al pie del Excel (empiezan por guion, paréntesis, o la palabra Nota/Volver)
+  filter(!grepl("^-|^\\(|^Nota|^Volver", Territorio)) %>%
+  # Renombramos y convertimos a numérico
+  mutate(
+    Provincia = Territorio,
+    PIB_per_capita = as.numeric(PIB_per_capita)
+  ) %>%
+  select(Provincia, PIB_per_capita)
+
+# 1.4 Verificación
+print(paste("Total de provincias extraídas:", nrow(pib_clean)))
+head(pib_clean)
 ```
-
