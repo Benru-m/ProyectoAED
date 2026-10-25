@@ -30,6 +30,14 @@ language:
     solution: 'Solución. '
 ---
 
+<style>
+  body {
+    text-align: justify;
+  }
+</style>
+  
+# Introducción del trabajo
+
 # Introducción
 
 Este documento explicativo te puede servir de plantilla para la realización de proyectos con *Rmarkdown* para la realizacón de memorias de práctica, tareas, etc. Pretende ser autoexplicativo.
@@ -302,7 +310,7 @@ Podemos especificar parámetros de tamaño y ubicación en el *chunk*
 En este caso visualizamos el código. Observa como podemos incluir una figura y también ponerle un título
 
 ```{r rmarkdown2, echo=TRUE, out.width='20%', fig.align='center', fig.cap='Logo GCD (desde archivo png).'}
-knitr::include_graphics("figure/logoEtse.png")
+#knitr::include_graphics("figure/logoEtse.png")
 ```
 
 
@@ -318,7 +326,7 @@ Podemos referirnos a una figura haciendo referencia al nombre del chunk `\@ref(f
 
 ```{r newFig, echo=TRUE, out.width='60%', fig.align='center', fig.cap='Histograma.'}
 
-hist(rnorm(100000),breaks=100)
+#hist(rnorm(100000),breaks=100)
 
 ```
 
@@ -566,8 +574,11 @@ grafico_espejismo <- ggplot(df_analisis,
     plot.subtitle = element_text(size = 10),
     legend.position = "right"
   )
+ggsave("espejismo.png", grafico_espejismo, width = 10, height = 8, dpi = 300)
+```
 
-ggsave("espejismo.png", grafico_espejismo, width = 10, height = 7, dpi = 300)
+```{r, fig.width=10, fig.height=7}
+grafico_espejismo
 ```
 Baleares y Málaga se desvían drásticamente de la norma. Sus puntos (coloreados en amarillo y verde claro) indican una altísima dependencia del sector servicios (rozando el 35% de su VAB), lo que dispara sus precios de vivienda (destacando Baleares cerca de los 400.000€) a pesar de tener un PIB per cápita estancado en la mitad izquierda de la tabla.
 
