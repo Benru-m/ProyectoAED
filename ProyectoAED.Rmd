@@ -486,10 +486,11 @@ vivienda_clean <- vivienda_step3 %>%
     T2 = limpiar_precio(T2_2022),
     T3 = limpiar_precio(T3_2022),
     T4 = limpiar_precio(T4_2022),
-    Precio_Vivienda_2022 = (T1 + T2 + T3 + T4) / 4,
+    Valor_Vivienda_2022 = (T1 + T2 + T3 + T4) / 4,
+#valor medio de las transacciones de vivienda libre (€, media de los 4 trimestres de 2022)
     Provincia = str_trim(Provincia_Raw)
   ) %>%
-  select(Provincia, Precio_Vivienda_2022) %>%
+  select(Provincia, Valor_Vivienda_2022) %>%
   mutate(Provincia = case_match(
     Provincia,
     "Asturias (Principado de )"    ~ "Asturias",
@@ -508,4 +509,5 @@ vivienda_clean <- vivienda_step3 %>%
 # Verificación rigurosa
 print(paste("Provincias con precios de vivienda extraídas:", nrow(vivienda_clean)))
 head(vivienda_clean)
+
 ```
