@@ -1,0 +1,334 @@
+---
+title: "El espejismo del PIB y la trampa turística: presión inmobiliaria en las provincias españolas"
+author:
+  - name: Rubén Sánchez Munuera
+    affil: 1
+  - name: Luis Molina Villar
+    affil: 1
+  - name: Pablo Gallart Carbonell
+    affil: 1
+affiliation:
+  - num: 1
+    address: |
+      Máster en Ciencia de Datos, Universitat de València, España
+authorcitation: |
+  Sánchez Munuera, R.; Molina Villar, L.; Gallart Carbonell, P.
+journal: econometrics
+type: article
+status: submit
+abstract: |
+  Pendiente de redactar al final (150-200 palabras).
+keywords: |
+  PIB per cápita; vivienda; turismo; provincias; correlación de Spearman
+endnotes: false
+output:
+  rticles::mdpi_article:
+    extra_dependencies: longtable
+---
+
+```{r setup, include=FALSE}
+library(knitr)
+opts_chunk$set(
+  echo = FALSE, message = FALSE, warning = FALSE, error = FALSE,
+  comment = NA, fig.align = "center", dpi = 200,
+  fig.width = 6.5, fig.height = 4.5
+)
+options(width = 100, OutDec = ",")
+```
+
+```{r paquetes, include=FALSE}
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(
+  tidyverse,   # manejo de datos y ggplot2
+  rio, readxl, # importación de .xls, .xlsx y .csv
+  janitor,     # limpieza
+  naniar,      # valores perdidos
+  ggrepel,     # etiquetas en gráficos
+  kableExtra,  # tablas
+  knitr
+)
+```
+
+# Introducción
+
+<!-- Pendiente (Paso 2): contexto del espejismo del PIB (P5) y pregunta central sobre la trampa turística (P1). -->
+
+# Datos y métodos
+
+## Fuentes de datos y año de referencia 
+
+## Importación y limpieza 
+### PIB per cápita (2022)
+
+**Justificación metodológica: selección del año 2022 como corte transversal.**
+
+Para la realización de este análisis (MVP) y la contrastación de nuestra hipótesis sobre el impacto del sector servicios en el mercado inmobiliario, se ha optado por realizar un análisis de corte transversal (*cross-sectional*) centrado en el ejercicio fiscal 2022. Esta decisión metodológica se fundamenta en tres criterios operativos:
+
+*Efecto estabilizador post-pandemia.* Los años 2020 y 2021 presentan anomalías extremas en la Contabilidad Regional debido a las restricciones de movilidad y la paralización de la hostelería derivadas de la COVID-19. Incluir estos años distorsionaría el análisis estructural de las provincias dependientes del turismo. 2022 representa el primer ejercicio de reactivación económica normalizada.
+
+*Consolidación estadística.* En las series publicadas por el Instituto Nacional de Estadística (INE), los datos correspondientes a 2023 y 2024 figuran bajo las etiquetas de "Avance (A)" o "Provisional (P)". El año 2022 garantiza el uso de cifras definitivas y consolidadas tanto en el PIB como en el Valor Añadido Bruto sectorial.
+
+*Claridad analítica y espacial.* Dada la limitación de extensión del informe, un análisis de corte transversal permite generar visualizaciones bivariantes nítidas (diagramas de dispersión de 52 observaciones) que muestran la correlación estructural actual, evitando el solapamiento o "ruido" visual que generaría la representación de series temporales completas.
+
+```{r importacion_limpieza}
+# 1.1 Leer el archivo en crudo, sin asumir cabeceras, desde la fila donde empiezan los datos (fila 7)
+pib_raw <- import("data/pr_cre_26.xls", sheet = "Tabla_2", skip = 6, col_names = FALSE)
+
+# 1.2 Extraer solo las columnas que nos interesan.
+# Al inspeccionar el Excel, sabemos que la columna 2 es el Territorio y la columna 90 es el "Valor" del año 2022.
+pib_step1 <- pib_raw %>%
+  select(
+    Territorio = 1,
+    PIB_per_capita = 89
+  ) %>%
+  filter(!is.na(Territorio)) # Quitamos filas vacías del final del Excel
+
+# 1.3 Aislar exclusivamente las 52 provincias/ciudades autónomas
+# Definimos la lista de Comunidades Pluriprovinciales y Total que hay que borrar
+ccaa_a_borrar <- c("ANDALUCÍA", "ARAGÓN", "CANARIAS", "CASTILLA Y LEÓN",
+                   "CASTILLA - LA MANCHA", "CATALUÑA", "COMUNITAT VALENCIANA",
+                   "EXTREMADURA", "GALICIA", "PAÍS VASCO", "TOTAL NACIONAL")
+
+pib_clean <- pib_step1 %>%
+  mutate(Territorio = str_trim(Territorio)) %>%
+  # Quitamos las comunidades pluriprovinciales y totales
+  filter(!toupper(Territorio) %in% ccaa_a_borrar) %>%
+  # Quitamos agregados de "ESPAÑA" por si acaso
+  filter(!grepl("ESPAÑA", toupper(Territorio))) %>%
+  # Quitamos las notas al pie del Excel (empiezan por guion, paréntesis, o la palabra Nota/Volver)
+  filter(!grepl("^-|^\\(|^Nota|^Volver", Territorio)) %>%
+  # Renombramos y convertimos a numérico
+  mutate(
+    Provincia = case_match(
+      Territorio,
+      "ASTURIAS, PRINCIPADO DE"      ~ "Asturias",
+      "BALEARS, ILLES"               ~ "Balears, Illes",
+      "CANTABRIA"                    ~ "Cantabria",
+      "MADRID, COMUNIDAD DE"         ~ "Madrid",
+      "MURCIA, REGIÓN DE"            ~ "Murcia",
+      "NAVARRA, COMUNIDAD FORAL DE"  ~ "Navarra",
+      "RIOJA, LA"                    ~ "Rioja, La",
+      "CEUTA"                        ~ "Ceuta",
+      "MELILLA"                      ~ "Melilla",
+      .default = Territorio          # el resto se queda igual
+    ),
+    PIB_per_capita = as.numeric(PIB_per_capita)
+  ) %>%
+  select(Provincia, PIB_per_capita)
+
+# 1.4 Verificación
+print(paste("Total de provincias extraídas:", nrow(pib_clean)))
+head(pib_clean)
+```
+
+### Estructura productiva (VAB por sectores)
+
+El archivo original del INE presenta una estructura orientada a la visualización humana, mezclando dos niveles jerárquicos distintos en la misma columna. En la columna principal se intercala el nombre de la provincia (ej. "02 Albacete") con celdas de datos vacías, seguido en las filas inferiores de los sectores productivos (ej. "A. Agricultura") con sus valores correspondientes. Si importamos esto de forma directa, la conexión relacional entre cada sector y su provincia se perdería, invalidando el análisis. Para resolverlo aplicamos una técnica de reestructuración (*data wrangling*):
+
+1. Condicional `if_else` + expresión regular: detecta códigos numéricos iniciales para identificar qué filas actúan como "cabecera de provincia".
+2. Función `fill(.direction = "down")`: arrastra el nombre de la provincia detectada hacia todas las filas de sus sectores.
+3. Expresiones regulares: simplifican la verbosidad de los nombres sectoriales.
+4. Pivotaje (`pivot_wider`): transforma la estructura a formato *tidy*, donde cada provincia es una fila única y cada sector una variable (columna).
+
+```{r vab}
+# 2.1 Leer el archivo saltando la cabecera del INE
+vab_raw <- import("data/77776.xlsx", sheet = "tabla-77776", skip = 5, col_names = FALSE)
+
+# 2.2 Arreglar la jerarquía del INE (Provincias y Sectores mezclados)
+vab_step2 <- vab_raw %>%
+  select(Concepto = 1, VAB_2022 = 3) %>% # La col 3 corresponde a los valores de 2022
+  filter(!is.na(Concepto), Concepto != "") %>%
+  mutate(
+    Provincia_Temp = if_else(grepl("^\\d{2}\\s", Concepto), Concepto, NA_character_)
+  ) %>%
+  fill(Provincia_Temp, .direction = "down") %>%
+  filter(!is.na(VAB_2022))
+
+# 2.3 Extraer solo Industria y Servicios, y calcular porcentajes
+vab_clean <- vab_step2 %>%
+  mutate(
+    Sector_Simple = case_when(
+      grepl("Valor añadido bruto total", Concepto) ~ "VAB_Total",
+      grepl("C\\. - De las cuales: Industria", Concepto) ~ "VAB_Industria",
+      grepl("G_J\\. Comercio", Concepto) ~ "VAB_Servicios",
+      TRUE ~ "Otro"
+    )
+  ) %>%
+  filter(Sector_Simple != "Otro") %>%
+  select(Provincia_Temp, Sector_Simple, VAB_2022) %>%
+  mutate(VAB_2022 = as.numeric(VAB_2022))
+
+# 2.4 Pivotar a formato ancho y limpiar nombres
+vab_final <- vab_clean %>%
+  pivot_wider(names_from = Sector_Simple, values_from = VAB_2022) %>%
+  mutate(
+    Provincia = str_trim(str_replace(Provincia_Temp, "^\\d{2}\\s", "")),
+    pct_industria = (VAB_Industria / VAB_Total) * 100,
+    pct_servicios_turismo = (VAB_Servicios / VAB_Total) * 100
+  ) %>%
+  select(Provincia, pct_industria, pct_servicios_turismo)
+
+# Verificación
+print(paste("Provincias con datos VAB extraídas:", nrow(vab_final)))
+head(vab_final)
+```
+
+### Precio medio de la vivienda (2022)
+
+Los archivos de transacciones inmobiliarias del INE (34020150...csv) presentan dos complejidades técnicas importantes que debemos resolver con rigor analítico.
+
+*Estructura trimestral frente a anual.* El archivo desglosa el precio medio por cada trimestre (T1, T2, T3, T4) para cada año. Para cruzarlo con el PIB y el VAB (que son anuales en el año 2022) no podemos coger un único trimestre al azar, ya que introduciría un sesgo estacional (por ejemplo, el precio en zonas turísticas varía mucho entre verano e invierno). Lo metodológicamente riguroso es calcular la media aritmética de los cuatro trimestres del año 2022 para obtener el precio medio anual representativo.
+
+*Formato numérico español.* Los valores monetarios vienen en formato de texto con puntos para los miles y comas para los decimales (ej. "183.747,9"). Si R los lee tal cual, los interpretará como carácter. Debemos limpiar las cadenas de texto y convertirlas a formato numérico continuo (`numeric`).
+
+```{r vivienda}
+# 3.1 Leer el archivo CSV de vivienda
+vivienda_raw <- read.csv("data/34020150(2020, 2021, 2022, 2023).csv",
+                         sep = ";", dec = ",", skip = 15, header = FALSE,
+                         encoding = "latin1", stringsAsFactors = FALSE)
+
+# 3.2 Seleccionar la provincia (Col 2) y los 4 trimestres del año 2022
+vivienda_step3 <- vivienda_raw %>%
+  select(
+    Provincia_Raw = 2,
+    T1_2022 = 11,
+    T2_2022 = 12,
+    T3_2022 = 13,
+    T4_2022 = 14
+  ) %>%
+  filter(!is.na(Provincia_Raw), Provincia_Raw != "")
+
+# 3.3 Función de limpieza de formato numérico
+limpiar_precio <- function(columna) {
+  if (is.numeric(columna)) {
+    columna
+  } else {
+    as.numeric(gsub(",", ".", gsub("\\.", "", columna)))
+  }
+}
+# 3.4 Limpieza y cálculo directo de la media (vectorial, sin errores de select)
+vivienda_clean <- vivienda_step3 %>%
+  mutate(
+    T1 = limpiar_precio(T1_2022),
+    T2 = limpiar_precio(T2_2022),
+    T3 = limpiar_precio(T3_2022),
+    T4 = limpiar_precio(T4_2022),
+    # valor medio de las transacciones de vivienda libre (€, media de los 4 trimestres de 2022)
+    Valor_Vivienda_2022 = (T1 + T2 + T3 + T4) / 4,
+    Provincia = str_trim(Provincia_Raw)
+  ) %>%
+  select(Provincia, Valor_Vivienda_2022) %>%
+  mutate(Provincia = case_match(
+    Provincia,
+    "Asturias (Principado de )"    ~ "Asturias",
+    "Balears (Illes)"              ~ "Balears, Illes",
+    "Palmas (Las)"                 ~ "Palmas, Las",
+    "Coruña (A)"                   ~ "Coruña, A",
+    "Madrid (Comunidad de)"        ~ "Madrid",
+    "Murcia (Región de)"           ~ "Murcia",
+    "Navarra (Comunidad Foral de)" ~ "Navarra",
+    "Araba/Alava"                  ~ "Araba/Álava",
+    "Rioja (La)"                   ~ "Rioja, La",
+    .default = Provincia
+  )) %>%
+  filter(Provincia %in% vab_final$Provincia)
+
+# Verificación rigurosa
+print(paste("Provincias con precios de vivienda extraídas:", nrow(vivienda_clean)))
+head(vivienda_clean)
+```
+
+## Índice de presión inmobiliaria  
+
+```{r fusion}
+df_master <- pib_clean %>%
+  left_join(vab_final, by = "Provincia") %>%
+  left_join(vivienda_clean, by = "Provincia")
+
+# 4.2 Calcular el Índice de Presión Inmobiliaria
+df_analisis <- df_master %>%
+  mutate(
+    presion_inmobiliaria = Valor_Vivienda_2022 / PIB_per_capita
+  ) %>%
+  arrange(desc(presion_inmobiliaria))
+
+# 4.3 Verificación de la tabla maestra final y el Top 10 de la Burbuja
+print("Top 10 Provincias con mayor Presión Inmobiliaria (Vivienda/PIB):")
+head(df_analisis, 10)
+```
+
+Exceptuando las anomalías fronterizas (Ceuta y Melilla) y las grandes capitales hiperdensas (Madrid y Barcelona), el "Top 10" está dominado absolutamente por las provincias más turísticas de España. Tienen un coste de vivienda desorbitado en relación a la riqueza real (PIB) que generan sus ciudadanos.
+
+## Valores perdidos y atípicos 
+
+## Métodos estadísticos
+
+# Resultados
+## Análisis univariante 
+
+## El espejismo del PIB
+
+## Servicios, industria y presión inmobiliaria 
+
+## Robustez de los resultados 
+
+## Visualización de "el espejismo del PIB"
+
+Vamos a enfrentar la riqueza (eje X) contra el coste de la vivienda (eje Y), y vamos a colorear los puntos según su dependencia del sector servicios/turismo.
+
+```{r grafico-espejismo-datos}
+# Crear el gráfico bivariante
+grafico_espejismo <- ggplot(df_analisis,
+                            aes(x = PIB_per_capita, y = Valor_Vivienda_2022)) +
+  # Añadimos los puntos. El color depende de cuánto dependan del sector servicios
+  geom_point(aes(color = pct_servicios_turismo), size = 3.5, alpha = 0.85) +
+  # Usamos una paleta de colores profesional (viridis)
+  scale_color_viridis_c(name = "% VAB en comercio,\ntransporte y hostelería\n(rama G-J)") +
+  # Etiquetas para las provincias más extremas para no saturar el gráfico
+  geom_text_repel(
+    data = subset(df_analisis,
+                  presion_inmobiliaria > quantile(presion_inmobiliaria, 0.75) |
+                  PIB_per_capita > quantile(PIB_per_capita, 0.85)),
+    aes(label = Provincia), size = 3.5, fontface = "bold", box.padding = 0.5
+  ) +
+  scale_x_continuous(labels = scales::label_number(big.mark = ".", decimal.mark = ",")) +
+  scale_y_continuous(labels = scales::label_number(big.mark = ".", decimal.mark = ",")) +
+  theme_minimal() +
+  labs(
+    title = "El espejismo del PIB: riqueza provincial vs. coste de la vivienda (2022)",
+    subtitle = "Las provincias con más peso de servicios (colores claros) tienden a tener una vivienda más cara para su nivel de PIB",
+    x = "PIB per cápita (euros)",
+    y = "Valor medio de la vivienda libre (euros por transacción)",
+    caption = "Fuente: elaboración propia con datos del INE"
+  ) +
+  theme(
+    plot.title = element_text(face = "bold", size = 14),
+    plot.subtitle = element_text(size = 10),
+    legend.position = "right"
+  )
+ggsave("espejismo.png", grafico_espejismo, width = 10, height = 8, dpi = 300)
+```
+
+```{r grafico-espejismo, fig.width=6.5, fig.height=5, fig.cap="El espejismo del PIB: PIB per cápita y valor medio de la vivienda por provincia, 2022.\\label{fig:espejismo}"}
+grafico_espejismo
+```
+
+Baleares y Málaga se desvían drásticamente de la norma. Sus puntos (coloreados en amarillo y verde claro) indican una altísima dependencia del sector servicios (rozando el 35% de su VAB), lo que dispara sus precios de vivienda (destacando Baleares cerca de los 400.000€) a pesar de tener un PIB per cápita estancado en la mitad izquierda de la tabla.
+
+En el extremo derecho, provincias como Araba/Álava, Bizkaia y Gipuzkoa tienen los niveles de PIB per cápita más altos del país, pero sus puntos son de color azul oscuro, indicando una economía menos dependiente del turismo y el sector servicios. Sus precios de vivienda son elevados, pero escalan de forma mucho más lógica y proporcional a la riqueza real de sus ciudadanos.
+
+Madrid y Barcelona siguen su propia lógica de grandes capitales europeas, con un alto PIB y un alto coste, pero sin la anomalía desproporcionada de las zonas costeras.
+
+# Discusión
+
+<!-- Pendiente (Pasos 7-8): robustez, limitaciones e interpretación de las correlaciones. -->
+
+# Conclusiones
+
+<!-- Texto original; se reescribirá en el Paso 8 respondiendo por separado a P5 y P1. -->
+
+El análisis bivariante realizado revela una desconexión estructural entre la riqueza real generada en cada provincia (PIB per cápita) y el coste de acceso a la vivienda, evidenciando lo que hemos denominado "el espejismo del PIB". Como se observa en la gráfica, provincias con una fuerte dependencia del sector servicios y el turismo —tales como Illes Balears, Málaga, Santa Cruz de Tenerife o Alicante— presentan precios inmobiliarios desproporcionadamente altos en comparación con su nivel de renta local. Por el contrario, regiones con mayor peso industrial (como Araba/Álava, Bizkaia o Burgos) mantienen una relación mucho más equilibrada entre los ingresos de sus ciudadanos y el coste de las transacciones inmobiliarias.
+
+Este fenómeno se explica por la naturaleza del modelo productivo basado en la tercerización y el turismo. Este modelo tiende a atraer una fuerte demanda externa (inversores extranjeros, segundas residencias, nómadas digitales y pisos turísticos) que compite directamente por el suelo y la vivienda con la población residente. En consecuencia, los precios del mercado inmobiliario se inflan impulsados por capital foráneo, desvinculándose por completo de la capacidad adquisitiva real del territorio.
+
+En definitiva, la estructura productiva condiciona severamente la presión inmobiliaria. Dado que los salarios medios en la hostelería y los servicios de bajo valor añadido suelen ser inferiores a los del sector industrial, se produce una brecha insalvable: el mercado de la vivienda opera bajo lógicas de precios internacionales o especulativos, mientras que los ciudadanos compiten con salarios locales mermados. Esto confirma nuestra hipótesis inicial de que no basta con analizar el crecimiento del PIB de forma aislada; es fundamental comprender de qué sectores proviene dicha riqueza para entender la verdadera salud económica y social de una provincia.
