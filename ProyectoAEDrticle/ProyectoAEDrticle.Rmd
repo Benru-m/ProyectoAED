@@ -51,24 +51,25 @@ pacman::p_load(
 
 # Introducción
 
-<!-- Pendiente (Paso 2): contexto del espejismo del PIB (P5) y pregunta central sobre la trampa turística (P1). -->
+El producto interior bruto (PIB) per cápita es la medida más habitual de la prosperidad de un territorio. Sin embargo, el PIB provincial mide la actividad que se produce en cada provincia, no necesariamente la renta de las personas que viven en ella. En territorios donde buena parte de la actividad se vincula al turismo, la segunda residencia o la demanda de no residentes, el precio de la vivienda puede quedar determinado por una demanda que no depende del PIB que generan sus habitantes. A esta posible desconexión entre la riqueza medida y el coste de acceder a una vivienda la denominamos aquí "el espejismo del PIB".
+
+Este trabajo estudia esa desconexión en las 52 provincias y ciudades autónomas de España en 2022. Para ello definimos un índice de presión inmobiliaria, el cociente entre el valor medio de las transacciones de vivienda libre y el PIB per cápita provincial, y lo cruzamos con la estructura productiva. Nuestra pregunta central es si las provincias cuya riqueza se apoya más en el comercio, el transporte y la hostelería soportan una presión inmobiliaria mayor que las de mayor peso industrial. Planteamos dos hipótesis de trabajo: una asociación positiva entre el peso de los servicios y la presión inmobiliaria, y una asociación negativa con el peso de la industria. Se trata de hipótesis sobre asociaciones, y el diseño transversal del estudio no permite establecer relaciones causales.
+
+El resto del artículo se organiza así. La sección de datos y métodos describe las fuentes del Instituto Nacional de Estadística (INE), la construcción del índice y el tratamiento de valores perdidos y atípicos. La sección de resultados presenta el análisis univariante y bivariante y comprueba su robustez. Cerramos con una discusión de las limitaciones y las conclusiones sobre las dos preguntas planteadas.
 
 # Datos y métodos
 
 ## Fuentes de datos y año de referencia 
-
-## Importación y limpieza 
-### PIB per cápita (2022)
-
-**Justificación metodológica: selección del año 2022 como corte transversal.**
-
-Para la realización de este análisis (MVP) y la contrastación de nuestra hipótesis sobre el impacto del sector servicios en el mercado inmobiliario, se ha optado por realizar un análisis de corte transversal (*cross-sectional*) centrado en el ejercicio fiscal 2022. Esta decisión metodológica se fundamenta en tres criterios operativos:
+Para la realización de este análisis y la contrastación de nuestra hipótesis sobre el impacto del sector servicios en el mercado inmobiliario, se ha optado por realizar un análisis de corte transversal (*cross-sectional*) centrado en el ejercicio fiscal 2022. Esta decisión metodológica se fundamenta en tres criterios operativos:
 
 *Efecto estabilizador post-pandemia.* Los años 2020 y 2021 presentan anomalías extremas en la Contabilidad Regional debido a las restricciones de movilidad y la paralización de la hostelería derivadas de la COVID-19. Incluir estos años distorsionaría el análisis estructural de las provincias dependientes del turismo. 2022 representa el primer ejercicio de reactivación económica normalizada.
 
 *Consolidación estadística.* En las series publicadas por el Instituto Nacional de Estadística (INE), los datos correspondientes a 2023 y 2024 figuran bajo las etiquetas de "Avance (A)" o "Provisional (P)". El año 2022 garantiza el uso de cifras definitivas y consolidadas tanto en el PIB como en el Valor Añadido Bruto sectorial.
 
 *Claridad analítica y espacial.* Dada la limitación de extensión del informe, un análisis de corte transversal permite generar visualizaciones bivariantes nítidas (diagramas de dispersión de 52 observaciones) que muestran la correlación estructural actual, evitando el solapamiento o "ruido" visual que generaría la representación de series temporales completas.
+
+## Importación y limpieza 
+### PIB per cápita (2022)
 
 ```{r importacion_limpieza}
 # 1.1 Leer el archivo en crudo, sin asumir cabeceras, desde la fila donde empiezan los datos (fila 7)
@@ -267,13 +268,6 @@ Exceptuando las anomalías fronterizas (Ceuta y Melilla) y las grandes capitales
 ## Análisis univariante 
 
 ## El espejismo del PIB
-
-## Servicios, industria y presión inmobiliaria 
-
-## Robustez de los resultados 
-
-## Visualización de "el espejismo del PIB"
-
 Vamos a enfrentar la riqueza (eje X) contra el coste de la vivienda (eje Y), y vamos a colorear los puntos según su dependencia del sector servicios/turismo.
 
 ```{r grafico-espejismo-datos}
@@ -318,6 +312,14 @@ Baleares y Málaga se desvían drásticamente de la norma. Sus puntos (coloreado
 En el extremo derecho, provincias como Araba/Álava, Bizkaia y Gipuzkoa tienen los niveles de PIB per cápita más altos del país, pero sus puntos son de color azul oscuro, indicando una economía menos dependiente del turismo y el sector servicios. Sus precios de vivienda son elevados, pero escalan de forma mucho más lógica y proporcional a la riqueza real de sus ciudadanos.
 
 Madrid y Barcelona siguen su propia lógica de grandes capitales europeas, con un alto PIB y un alto coste, pero sin la anomalía desproporcionada de las zonas costeras.
+
+## Servicios, industria y presión inmobiliaria 
+
+## Robustez de los resultados 
+
+## Visualización de "el espejismo del PIB"
+
+
 
 # Discusión
 
