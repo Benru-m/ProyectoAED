@@ -511,3 +511,23 @@ print(paste("Provincias con precios de vivienda extraídas:", nrow(vivienda_clea
 head(vivienda_clean)
 
 ```
+## PASO 4: FUSIÓN MAESTRA Y CREACIÓN DEL ÍNDICE DE PRESIÓN INMOBILIARIA
+
+```{r}
+df_master <- pib_clean %>%
+  left_join(vab_final, by = "Provincia") %>%
+  left_join(vivienda_clean, by = "Provincia")
+
+# 4.2 Calcular el Índice de Presión Inmobiliaria
+df_analisis <- df_master %>%
+  mutate(
+    presion_inmobiliaria = Valor_Vivienda_2022 / PIB_per_capita
+  ) %>%
+  arrange(desc(presion_inmobiliaria))
+
+# 4.3 Verificación de la tabla maestra final y el Top 10 de la Burbuja
+print("Top 10 Provincias con mayor Presión Inmobiliaria (Vivienda/PIB):")
+head(df_analisis, 10)
+```
+Exceptuando las anomalías fronterizas (Ceuta y Melilla) y las grandes capitales hiperdensas (Madrid y Barcelona), el "Top 10" está dominado absolutamente por las provincias más turísticas de España. Tienen un coste de vivienda desorbitado en relación a la riqueza real (PIB) que generan sus ciudadanos.
+
