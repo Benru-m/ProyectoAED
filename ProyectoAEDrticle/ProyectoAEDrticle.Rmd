@@ -402,17 +402,56 @@ El histograma de la presión inmobiliaria revela además un segundo grupo en tor
 
 Estas asimetrías, junto con los atípicos del apartado anterior, respaldan el uso de correlaciones basadas en rangos en lugar de la correlación de Pearson.
 
-## El espejismo del PIB
+## Análisis bivariante: el espejismo del PIB
+```{r bivar-calculo, include=FALSE}
+fmt <- function(x, d = 2) format(round(x, d), nsmall = d, decimal.mark = ",")
+rho <- function(x, y) cor.test(x, y, method = "spearman", exact = FALSE)
+
+r_pib_viv <- rho(df_analisis$PIB_per_capita, df_analisis$Valor_Vivienda_2022)
+r_pib_pre <- rho(df_analisis$PIB_per_capita, df_analisis$presion_inmobiliaria)
+r_serv    <- rho(df_analisis$pct_servicios_turismo, df_analisis$presion_inmobiliaria)
+r_ind     <- rho(df_analisis$pct_industria, df_analisis$presion_inmobiliaria)
+
+df_biv <- df_analisis %>%
+  select(Provincia, presion_inmobiliaria, pct_servicios_turismo, pct_industria) %>%
+  pivot_longer(c(pct_servicios_turismo, pct_industria),
+               names_to = "estructura", values_to = "peso") %>%
+  mutate(estructura = recode(estructura,
+           pct_servicios_turismo = paste0("Servicios, G-J (rho = ", fmt(r_serv$estimate), ")"),
+           pct_industria         = paste0("Industria, B-E (rho = ", fmt(r_ind$estimate), ")")),
+         estructura = factor(estructura, levels = unique(estructura)))
+
+umbral_top10 <- sort(df_analisis$presion_inmobiliaria, decreasing = TRUE)[10]
+```
+La Tabla \ref{tab:tabtop10} recoge las diez provincias con mayor presión inmobiliaria.
+
+```{r tabtop10}
+df_analisis %>%
+  arrange(desc(presion_inmobiliaria)) %>%
+  slice_head(n = 10) %>%
+  transmute(Provincia,
+            `PIB pc (€)` = PIB_per_capita, `Vivienda (€)` = Valor_Vivienda_2022,
+            Presión = presion_inmobiliaria,
+            `Servicios (%)` = pct_servicios_turismo, `Industria (%)` = pct_industria) %>%
+  kbl(format = "html", booktabs = TRUE, digits = c(0, 0, 0, 2, 1, 1),
+      format.args = list(big.mark = ".", decimal.mark = ","),
+      caption = "Las diez provincias con mayor presión inmobiliaria, 2022.",
+      table.envir = "table", position = "H") %>%
+  kable_styling(font_size = 8)
+```
+
+Siete de las diez tienen un peso de servicios superior a la mediana nacional (23,0 %), y las dos primeras, Illes Balears y Málaga, destacan con diferencia. Sin embargo, el ranking no es una lista de destinos turísticos: incluye grandes capitales (Madrid y Barcelona), las dos ciudades autónomas (Melilla y Ceuta), Cádiz y una provincia industrial, Gipuzkoa, con un 26,0 % de industria.
+
 Vamos a enfrentar la riqueza (eje X) contra el coste de la vivienda (eje Y), y vamos a colorear los puntos según su dependencia del sector servicios/turismo.
 
-```{r grafico-espejismo-datos}
+```{r grafico-espejismo-datos, fig.cap="El espejismo del PIB: PIB per cápita y valor medio de la vivienda por provincia, 2022. Fuente: elaboración propia con datos del INE y del Ministerio de Vivienda.\\label{fig:espejismo}"}
 # Crear el gráfico bivariante
 grafico_espejismo <- ggplot(df_analisis,
                             aes(x = PIB_per_capita, y = Valor_Vivienda_2022)) +
   # Añadimos los puntos. El color depende de cuánto dependan del sector servicios
   geom_point(aes(color = pct_servicios_turismo), size = 3.5, alpha = 0.85) +
   # Usamos una paleta de colores profesional (viridis)
-  scale_color_viridis_c(name = "% VAB en comercio,\ntransporte y hostelería\n(rama G-J)") +
+  scale_color_viridis_c(name = "% VAB en rama G-J\n(comercio, transporte,\nhostelería, información\ny comunicaciones)") +
   # Etiquetas para las provincias más extremas para no saturar el gráfico
   geom_text_repel(
     data = subset(df_analisis,
@@ -424,11 +463,8 @@ grafico_espejismo <- ggplot(df_analisis,
   scale_y_continuous(labels = scales::label_number(big.mark = ".", decimal.mark = ",")) +
   theme_minimal() +
   labs(
-    title = "El espejismo del PIB: riqueza provincial vs. coste de la vivienda (2022)",
-    subtitle = "Las provincias con más peso de servicios (colores claros) tienden a tener una vivienda más cara para su nivel de PIB",
     x = "PIB per cápita (euros)",
     y = "Valor medio de la vivienda libre (euros por transacción)",
-    caption = "Fuente: elaboración propia con datos del INE y del Ministerio de Vivienda"
   ) +
   theme(
     plot.title = element_text(face = "bold", size = 14),
@@ -442,13 +478,62 @@ ggsave("espejismo.png", grafico_espejismo, width = 10, height = 8, dpi = 300)
 grafico_espejismo
 ```
 
-Baleares y Málaga se desvían drásticamente de la norma. Sus puntos (coloreados en amarillo y verde claro) indican una altísima dependencia del sector servicios (rozando el 35% de su VAB), lo que dispara sus precios de vivienda (destacando Baleares cerca de los 400.000€) a pesar de tener un PIB per cápita estancado en la mitad izquierda de la tabla.
+La Figura \ref{fig:espejismo} muestra que la relación entre riqueza y precio de la vivienda es débil. La correlación de Spearman entre el PIB per cápita y el valor medio de la vivienda es de ρ = `r fmt(r_pib_viv$estimate)`, y con la presión inmobiliaria resulta incluso negativa (ρ = `r fmt(r_pib_pre$estimate)`): las provincias más ricas no son sistemáticamente las de vivienda más cara en relación con su renta, que es lo que cabría esperar si el precio siguiera a la capacidad adquisitiva local.
 
-En el extremo derecho, provincias como Araba/Álava, Bizkaia y Gipuzkoa tienen los niveles de PIB per cápita más altos del país, pero sus puntos son de color azul oscuro, indicando una economía menos dependiente del turismo y el sector servicios. Sus precios de vivienda son elevados, pero escalan de forma mucho más lógica y proporcional a la riqueza real de sus ciudadanos.
+Los casos que más se desvían son Illes Balears y Málaga. Illes Balears combina el mayor peso de servicios (37,1 %) con el precio más alto (402.811 €) y un PIB per cápita de 31.030 €, algo por encima de la mediana. Málaga, con un 29,1 % de servicios, alcanza 275.159 € con un PIB per cápita de solo 21.470 €.
 
-Madrid y Barcelona siguen su propia lógica de grandes capitales europeas, con un alto PIB y un alto coste, pero sin la anomalía desproporcionada de las zonas costeras.
+En el extremo derecho, Madrid, Araba/Álava y Gipuzkoa tienen los PIB per cápita más altos, pero con estructuras muy distintas. El País Vasco no escapa a una presión elevada pese a su perfil industrial: Araba/Álava (5,04), Bizkaia (6,33) y Gipuzkoa (7,24) están por encima de la mediana nacional (4,52). Madrid (7,59) y Barcelona (7,15) combinan PIB y precios altos y figuran entre las diez provincias de mayor presión, de modo que un PIB elevado no basta para evitar una vivienda cara en relación con la renta.
 
 ## Servicios, industria y presión inmobiliaria 
+```{r terciles-calculo, include=FALSE}
+terciles <- function(x) cut(x, quantile(x, c(0, 1/3, 2/3, 1)),
+                            labels = c("Bajo", "Medio", "Alto"), include.lowest = TRUE)
+
+resumen_tercil <- function(df, var, nombre) {
+  df %>%
+    mutate(Tercil = terciles({{ var }}), peso = {{ var }}) %>%
+    group_by(Tercil) %>%
+    summarise(Estructura = nombre, n = n(),
+              `Peso mín. (%)` = min(peso), `Peso máx. (%)` = max(peso),
+              `Presión mediana` = median(presion_inmobiliaria), .groups = "drop")
+}
+
+tab_terc <- bind_rows(
+  resumen_tercil(df_analisis, pct_servicios_turismo, "Servicios (G-J)"),
+  resumen_tercil(df_analisis, pct_industria, "Industria (B-E)")
+) %>% select(Estructura, Tercil, n, everything())
+```
+
+La Figura \ref{fig:bivar} enfrenta el peso de cada sector con la presión inmobiliaria y la Tabla \ref{tab:tabterciles} compara la presión mediana entre grupos de provincias.
+
+```{r figbivar, fig.width=6.5, fig.height=3.6, fig.cap="Presión inmobiliaria según el peso de los servicios y de la industria. Línea: ajuste local (loess). Se etiquetan las diez provincias de mayor presión.\\label{fig:bivar}"}
+ggplot(df_biv, aes(peso, presion_inmobiliaria)) +
+  geom_point(alpha = 0.7, size = 1.6, colour = "grey35") +
+  geom_smooth(method = "loess", formula = y ~ x, se = FALSE,
+              colour = "steelblue", linewidth = 0.7) +
+  geom_text_repel(data = filter(df_biv, presion_inmobiliaria >= umbral_top10),
+                  aes(label = Provincia), size = 2.3, max.overlaps = Inf,
+                  segment.size = 0.2) +
+  facet_wrap(~ estructura, scales = "free_x") +
+  labs(x = "Peso en el VAB total (%)", y = "Presión inmobiliaria") +
+  theme_minimal(base_size = 9)
+```
+
+```{r tabterciles}
+kbl(tab_terc, format = "html", booktabs = TRUE, digits = 2,
+    format.args = list(decimal.mark = ","),
+    caption = "Presión inmobiliaria mediana según el tercil de peso de cada sector.",
+    table.envir = "table", position = "H") %>%
+  kable_styling(font_size = 8)
+```
+
+**Servicios.** El peso de los servicios se asocia de forma positiva y moderada con la presión inmobiliaria (ρ = `r fmt(r_serv$estimate)`), pero la relación no es homogénea. La presión mediana es prácticamente idéntica en el tercil bajo (4,20) y en el medio (4,21) y solo aumenta en el alto (5,91): la asociación se concentra en las provincias más terciarizadas, entre ellas Illes Balears, Las Palmas, Santa Cruz de Tenerife y Málaga. La curva de la figura es plana hasta aproximadamente el 25 % de servicios y asciende con fuerza a partir de ese punto, de modo que la asociación no es lineal.
+
+**Industria.** El peso de la industria presenta una asociación negativa de magnitud similar (ρ = `r fmt(r_ind$estimate)`), pero también aquí se concentra en un extremo: la presión mediana cae de 6,18 en el tercil menos industrial a 4,39 en el medio y apenas varía en el tercil más industrial (3,95). La curva de la Figura \ref{fig:bivar} confirma que el descenso se produce sobre todo por debajo del 15-20 % de industria, a partir del cual la presión se estabiliza en torno a 4-5. Las provincias con menor peso industrial, como Illes Balears, Málaga, Santa Cruz de Tenerife, Las Palmas, Madrid, Melilla o Ceuta, son las de presión más alta.
+
+**Excepciones.** El patrón admite excepciones relevantes. Melilla y Ceuta tienen una presión alta con un peso de servicios cercano al de la media (19,3 % y 21,7 %), y Gipuzkoa y Barcelona la tienen con perfiles industriales. En el extremo contrario, las provincias de menor presión (Cuenca, Teruel, Ciudad Real, Palencia, Zamora o Cáceres) son interiores, con poco peso de servicios y, en general, una industria apreciable.
+
+Estos resultados describen asociaciones y no permiten atribuir el nivel de presión a la estructura productiva. Además, servicios e industria se mueven en sentido contrario (se analiza en el apartado de robustez), y buena parte de las provincias menos industriales coincide con las más terciarizadas, por lo que sus efectos no pueden separarse con estos datos.
 
 ## Robustez de los resultados 
 
