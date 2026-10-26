@@ -2,11 +2,12 @@
 title: "El espejismo del PIB y la trampa turística: presión inmobiliaria en las provincias españolas"
 author:
   - name: Rubén Sánchez Munuera
-    affil: 1
+    affil: 1,*
   - name: Luis Molina Villar
-    affil: 1
+    affil: 1,*
   - name: Pablo Gallart Carbonell
-    affil: 1
+    affil: 1,*
+correspondence: ~
 affiliation:
   - num: 1
     address: |
@@ -17,26 +18,29 @@ journal: econometrics
 type: article
 status: submit
 abstract: |
-  Pendiente de redactar al final (150-200 palabras).
+  El PIB per cápita provincial se utiliza como medida de prosperidad, pero puede desconectarse del coste de la vivienda en los territorios donde la demanda no depende de la renta local. Este trabajo analiza esa desconexión en las 52 provincias y ciudades autónomas españolas en 2022. Definimos un índice de presión inmobiliaria (valor medio de las transacciones de vivienda libre dividido por el PIB per cápita) y lo relacionamos con el peso de los servicios (comercio, transporte, hostelería, información y comunicaciones) y de la industria en el valor añadido bruto, con datos del INE y del Ministerio de Vivienda. Aplicamos análisis univariante y bivariante, correlaciones de Spearman y pruebas de robustez. El PIB per cápita se asocia débilmente con el valor de la vivienda (correlación de 0,29) y no significativamente con la presión inmobiliaria. Esta se asocia positivamente con el peso de los servicios (0,49) y negativamente con el de la industria (−0,56), y ambas asociaciones resisten la exclusión de provincias singulares; sin embargo, al controlar por la industria, la de los servicios deja de ser significativa. Los resultados, transversales y descriptivos, no permiten atribuir la presión a la especialización turística en sentido estricto.
 keywords: |
-  PIB per cápita; vivienda; turismo; provincias; correlación de Spearman
+  espejismo del PIB; presión inmobiliaria; precio de la vivienda; estructura productiva; provincias españolas; correlación de Spearman
 endnotes: false
+header-includes:
+  - \DeclareUnicodeCharacter{2212}{-}
+  - \DeclareUnicodeCharacter{03C1}{$\rho$}
 output:
   rticles::mdpi_article:
     extra_dependencies: longtable
 ---
-<style>
-  body {
-    text-align: justify;
-  }
-</style>
 
 ```{r setup, include=FALSE}
 library(knitr)
+
+# Anular el hook de crop asignándole NULL
+knit_hooks$set(crop = NULL)
+
 opts_chunk$set(
   echo = FALSE, message = FALSE, warning = FALSE, error = FALSE,
   comment = NA, fig.align = "center", dpi = 200,
-  fig.width = 6.5, fig.height = 4.5
+  fig.width = 5.5, fig.height = 4.5, crop = FALSE,
+  out.width = "100%", fig.pos = "H"
 )
 options(width = 100, OutDec = ",")
 ```
@@ -63,7 +67,6 @@ Este trabajo estudia esa desconexión en las 52 provincias y ciudades autónomas
 El resto del artículo se organiza así. La sección de datos y métodos describe las fuentes del Instituto Nacional de Estadística (INE) y del Ministerio de Vivienda, la construcción del índice y el tratamiento de valores perdidos y atípicos. La sección de resultados presenta el análisis univariante y bivariante y comprueba su robustez. Cerramos con una discusión de las limitaciones y las conclusiones sobre las dos preguntas planteadas.
 
 # Datos y métodos
-Dado el tamaño muestral (52 provincias), la asimetría de las distribuciones y la presencia de valores atípicos, medimos la asociación entre variables con el coeficiente de correlación de Spearman, basado en rangos, y contrastamos su significación (H0: ρ = 0) al nivel del 5 %. Para evaluar la robustez de los resultados repetimos el cálculo excluyendo: Ceuta y Melilla (ciudades autónomas sin hinterland), Madrid (efecto sede de las empresas), Illes Balears y Málaga (los dos valores atípicos de presión inmobiliaria) y las cinco a la vez. Como el peso de los servicios y el de la industria son porcentajes del mismo valor añadido bruto y están correlacionados entre sí, calculamos también la correlación parcial de Spearman de cada uno con la presión, controlando por el otro. Todos los resultados describen asociaciones transversales y no se interpretan como efectos causales. El análisis se realizó con R y el ecosistema tidyverse.
 
 ## Fuentes de datos y año de referencia 
 Para la realización de este análisis y la contrastación de nuestra hipótesis sobre el impacto del sector servicios en el mercado inmobiliario, se ha optado por realizar un análisis de corte transversal (*cross-sectional*) centrado en el ejercicio fiscal 2022. Esta decisión metodológica se fundamenta en tres criterios operativos:
@@ -76,11 +79,7 @@ Para la realización de este análisis y la contrastación de nuestra hipótesis
 
 La Tabla \ref{tab:tabvars} resume las variables empleadas y su origen.
 
-```{r tabvars, message=FALSE, warning=FALSE}
-# Asegúrate de tener cargada esta librería (puedes añadirla a tu pacman inicial)
-library(kableExtra) 
-library(tibble)
-
+```{r tabvars}
 tabla_vars <- tibble(
   Variable = c("PIB_per_capita", "pct_industria", "pct_servicios_turismo",
                "Valor_Vivienda_2022", "presion_inmobiliaria"),
@@ -94,14 +93,16 @@ tabla_vars <- tibble(
              "Ministerio de Vivienda, 34020150.csv", "Elaboración propia")
 )
 
-kbl(tabla_vars, format = "html", 
-    caption = "Variables utilizadas en el análisis (52 provincias y ciudades autónomas, 2022).") %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "responsive"), full_width = F) %>%
-  column_spec(2, width = "40em")
+kbl(tabla_vars, format = "latex", booktabs = TRUE,
+    caption = "Variables utilizadas en el análisis (52 provincias y ciudades autónomas, 2022).",
+    table.envir = "table", position = "H") %>%
+  column_spec(2, width = "5cm") %>%
+  column_spec(3, width = "3.3cm")
 ```
 
 ## Importación y limpieza 
 ### PIB per cápita (2022)
+El PIB per cápita provincial procede de la Contabilidad Regional de España (INE, Revisión Estadística 2024). Del fichero se conservaron las 52 provincias y ciudades autónomas, descartando los totales nacionales, los agregados de comunidades pluriprovinciales y las notas al pie, y se armonizaron los nombres con los de las otras fuentes.
 
 ```{r importacion_limpieza}
 # 1.1 Leer el archivo en crudo, sin asumir cabeceras, desde la fila donde empiezan los datos (fila 7)
@@ -200,7 +201,7 @@ vab_final <- vab_clean %>%
 
 ### Precio medio de la vivienda (2022)
 
-Los archivos de transacciones inmobiliarias del INE (34020150...csv) del Ministerio de Vivienda presentan dos complejidades técnicas importantes que debemos resolver con rigor analítico.
+Los archivos de transacciones inmobiliarias del Ministerio de Vivienda (34020150...csv) presentan dos complejidades técnicas importantes que debemos resolver con rigor analítico.
 
 *Estructura trimestral frente a anual.* El archivo desglosa el precio medio por cada trimestre (T1, T2, T3, T4) para cada año. Para cruzarlo con el PIB y el VAB (que son anuales en el año 2022) no podemos coger un único trimestre al azar, ya que introduciría un sesgo estacional (por ejemplo, el precio en zonas turísticas varía mucho entre verano e invierno). Lo metodológicamente riguroso es calcular la media aritmética de los cuatro trimestres del año 2022 para obtener el precio medio anual representativo.
 
@@ -260,6 +261,7 @@ vivienda_clean <- vivienda_step3 %>%
 ```
 
 ## Índice de presión inmobiliaria  
+El índice de presión inmobiliaria de cada provincia es el cociente entre el valor medio de las transacciones de vivienda libre y su PIB per cápita. Es adimensional y se interpreta como el número de PIB per cápita anuales al que equivale una vivienda media: un valor de 5 indica que la vivienda media cuesta cinco veces lo que se produce por habitante en un año.
 
 ```{r fusion}
 df_master <- pib_clean %>%
@@ -281,9 +283,6 @@ n_prov     <- nrow(df_analisis)
 n_na_total <- sum(is.na(df_analisis))
 na_por_var <- colSums(is.na(df_analisis))
 stopifnot(n_prov == 52, !anyDuplicated(df_analisis$Provincia))
-n_prov
-n_na_total
-na_por_var
 ```
 
 Las tres fuentes se unieron por el nombre de la provincia, tras armonizar las denominaciones (por ejemplo, "Madrid, Comunidad de" y "Madrid (Comunidad de)" pasan a "Madrid"). El conjunto final contiene `r n_prov` observaciones y `r n_na_total` valores perdidos en el conjunto de variables analizadas. Todas las provincias con PIB per cápita disponen también de estructura productiva y de precio de la vivienda, de modo que ninguna observación quedó sin cruzar.
@@ -325,12 +324,12 @@ tab_atipicos <- df_largo %>%
 Para identificar valores atípicos aplicamos el criterio de Tukey: se considera atípica una provincia cuyo valor queda por encima de Q3 + 1,5·RIC o por debajo de Q1 − 1,5·RIC, donde RIC es el rango intercuartílico. Previamente se comprobó que todos los valores son coherentes (porcentajes entre 0 y 100, precios y PIB positivos), de modo que ninguno responde a un error de importación. La Tabla \ref{tab:tabatipicos} recoge las provincias señaladas y la Figura \ref{fig:atipicos} su posición en la distribución.
 
 ```{r tabatipicos}
-kbl(tab_atipicos, format = "html", booktabs = TRUE,
+kbl(tab_atipicos, format = "latex", booktabs = TRUE,
     caption = "Provincias atípicas según el criterio de Tukey (1,5 veces el rango intercuartílico).",
     table.envir = "table", position = "H")
 ```
 
-```{r figatipicos, fig.width=6.5, fig.height=3.4, fig.cap="Diagramas de caja de las tres variables de análisis; en rojo, las provincias atípicas.\\label{fig:atipicos}"}
+```{r figatipicos, fig.width=5.5, fig.height=3.0, fig.cap="Diagramas de caja de las tres variables de análisis; en rojo, las provincias atípicas.\\label{fig:atipicos}"}
 ggplot(df_largo, aes(x = "", y = valor)) +
   geom_boxplot(outlier.shape = NA, width = 0.45, fill = "grey92", colour = "grey35") +
   geom_point(aes(colour = atipico), alpha = 0.7, size = 1.6) +
@@ -347,6 +346,7 @@ La presión inmobiliaria presenta dos valores atípicos por la parte alta, Illes
 **Decisión:** no se elimina ninguna provincia. Los atípicos son valores reales, no errores de datos, y además son precisamente los casos que motivan la pregunta de investigación. Illes Balears resulta atípica a la vez en presión inmobiliaria y en peso de los servicios, lo que refleja el patrón que se quiere contrastar, no una anomalía de medición. Madrid supera la valla de los servicios por un margen muy estrecho (0,4 puntos), por lo que su condición de atípico es débil; aun así se trata aparte por la singularidad de su PIB per cápita, que refleja el efecto sede de las empresas. Excluir estos casos eliminaría de la muestra la evidencia que se quiere contrastar. Por ello empleamos la correlación de Spearman, que se basa en rangos y es poco sensible a valores extremos, y comprobamos en la sección de robustez que los resultados se mantienen al excluir los casos estructuralmente singulares: Madrid, y Ceuta y Melilla, ciudades pequeñas sin hinterland.
 
 ## Métodos estadísticos
+Dado el tamaño muestral (52 provincias), la asimetría de las distribuciones y la presencia de valores atípicos, medimos la asociación entre variables con el coeficiente de correlación de Spearman, basado en rangos, y contrastamos su significación (H0: ρ = 0) al nivel del 5 %. Para evaluar la robustez de los resultados repetimos el cálculo excluyendo: Ceuta y Melilla (ciudades autónomas sin hinterland), Madrid (efecto sede de las empresas), Illes Balears y Málaga (los dos valores atípicos de presión inmobiliaria) y las cinco a la vez. Como el peso de los servicios y el de la industria son porcentajes del mismo valor añadido bruto y están correlacionados entre sí, calculamos también la correlación parcial de Spearman de cada uno con la presión, controlando por el otro. Todos los resultados describen asociaciones transversales y no se interpretan como efectos causales. El análisis se realizó con R y el ecosistema tidyverse.
 
 # Resultados
 ## Análisis univariante 
@@ -374,14 +374,14 @@ med5 <- df5 %>% group_by(variable) %>% summarise(mediana = median(valor), .group
 La Tabla \ref{tab:tabdescriptiva} resume la distribución de las cinco variables y la Figura \ref{fig:hist} muestra su forma.
 
 ```{r tabdescriptiva}
-kbl(tab_desc, format = "html", booktabs = TRUE, digits = 2,
+kbl(tab_desc, format = "latex", booktabs = TRUE, digits = 2,
     format.args = list(big.mark = ".", decimal.mark = ","),
     caption = "Estadísticos descriptivos de las variables de análisis (52 provincias, 2022).",
     table.envir = "table", position = "H") %>%
   kable_styling(font_size = 8)
 ```
 
-```{r fighist, fig.width=6.5, fig.height=4.4, fig.cap="Distribución de las variables de análisis: histograma, densidad (azul) y mediana (rojo discontinuo).\\label{fig:hist}"}
+```{r fighist, fig.width=5.5, fig.height=3.8, fig.cap="Distribución de las variables de análisis: histograma, densidad (azul) y mediana (rojo discontinuo).\\label{fig:hist}"}
 ggplot(df5, aes(valor)) +
   geom_histogram(aes(y = after_stat(density)), bins = 12, fill = "grey80", colour = "white") +
   geom_density(colour = "steelblue", linewidth = 0.7) +
@@ -395,7 +395,7 @@ ggplot(df5, aes(valor)) +
 ```
 Los resultados muestran tres rasgos. En primer lugar, el PIB per cápita es la variable más homogénea: la media (27.014 €) y la mediana (26.316 €) son próximas, la asimetría es moderada (0,46) y el coeficiente de variación ronda el 19 %. Los valores van desde 18.859 € en Jaén hasta 39.246 € en Madrid, seguida de Araba/Álava y Gipuzkoa.
 
-En segundo lugar, el valor medio de la vivienda es mucho más desigual que la riqueza. Su media (139.817 €) supera con claridad a la mediana (118.794 €) y la distribución presenta una cola larga hacia la derecha (asimetría de 1,90), con Illes Balears (402.811 €), Madrid (297.801 €) y Málaga (275.159 €) en el extremo. Entre la provincia más cara y la más barata, Ciudad Real (74.301 €), la vivienda se multiplica por 5,4, mientras que el PIB per cápita solo lo hace por 2,1. Esta diferencia de dispersión es el origen del espejismo: el precio de la vivienda varía mucho más que la riqueza que genera cada provincia.
+En segundo lugar, el valor medio de la vivienda es mucho más desigual que la riqueza. Su media (139.817 €) supera con claridad a la mediana (118.794 €) y la distribución presenta una cola larga hacia la derecha (asimetría de 1,90), con Illes Balears (402.811 €), Madrid (297.801 €) y Málaga (275.159 €) en el extremo. Entre la provincia más cara y la más barata, Ciudad Real (74.301 €), la vivienda se multiplica por 5,4, mientras que el PIB per cápita solo lo hace por 2,1. Esta diferencia de dispersión es coherente con la idea del espejismo: el precio de la vivienda varía mucho más que la riqueza que genera cada provincia.
 
 En tercer lugar, la presión inmobiliaria hereda esa asimetría positiva (1,74). El valor medio de una vivienda equivale en la provincia mediana a 4,5 veces el PIB per cápita, y la mitad de las provincias se sitúa entre 3,8 y 6,1; en cambio, Illes Balears y Málaga superan 12,8, más del doble de la mediana. La estructura productiva es más equilibrada: el peso de los servicios tiene una cola derecha moderada (asimetría de 0,83) debida a Illes Balears, Las Palmas y Madrid, y el de la industria es casi simétrico (−0,24), con una gran dispersión que va del 4,1 % de Melilla al 36,4 % de Guadalajara.
 
@@ -434,7 +434,7 @@ df_analisis %>%
             `PIB pc (€)` = PIB_per_capita, `Vivienda (€)` = Valor_Vivienda_2022,
             Presión = presion_inmobiliaria,
             `Servicios (%)` = pct_servicios_turismo, `Industria (%)` = pct_industria) %>%
-  kbl(format = "html", booktabs = TRUE, digits = c(0, 0, 0, 2, 1, 1),
+  kbl(format = "latex", booktabs = TRUE, digits = c(0, 0, 0, 2, 1, 1),
       format.args = list(big.mark = ".", decimal.mark = ","),
       caption = "Las diez provincias con mayor presión inmobiliaria, 2022.",
       table.envir = "table", position = "H") %>%
@@ -443,7 +443,7 @@ df_analisis %>%
 
 Siete de las diez tienen un peso de servicios superior a la mediana nacional (23,0 %), y las dos primeras, Illes Balears y Málaga, destacan con diferencia. Sin embargo, el ranking no es una lista de destinos turísticos: incluye grandes capitales (Madrid y Barcelona), las dos ciudades autónomas (Melilla y Ceuta), Cádiz y una provincia industrial, Gipuzkoa, con un 26,0 % de industria.
 
-Vamos a enfrentar la riqueza (eje X) contra el coste de la vivienda (eje Y), y vamos a colorear los puntos según su dependencia del sector servicios/turismo.
+La Figura \ref{fig:espejismo} enfrenta el PIB per cápita con el valor medio de la vivienda y colorea cada provincia según el peso de la rama G-J.
 
 ```{r grafico-espejismo-datos, fig.cap="El espejismo del PIB: PIB per cápita y valor medio de la vivienda por provincia, 2022. Fuente: elaboración propia con datos del INE y del Ministerio de Vivienda.\\label{fig:espejismo}"}
 # Crear el gráfico bivariante
@@ -458,7 +458,7 @@ grafico_espejismo <- ggplot(df_analisis,
     data = subset(df_analisis,
                   presion_inmobiliaria > quantile(presion_inmobiliaria, 0.75) |
                   PIB_per_capita > quantile(PIB_per_capita, 0.85)),
-    aes(label = Provincia), size = 3.5, fontface = "bold", box.padding = 0.5
+    aes(label = Provincia), size = 3.5, fontface = "bold", box.padding = 0.8
   ) +
   scale_x_continuous(labels = scales::label_number(big.mark = ".", decimal.mark = ",")) +
   scale_y_continuous(labels = scales::label_number(big.mark = ".", decimal.mark = ",")) +
@@ -475,11 +475,11 @@ grafico_espejismo <- ggplot(df_analisis,
 ggsave("espejismo.png", grafico_espejismo, width = 10, height = 8, dpi = 300)
 ```
 
-```{r grafico-espejismo, fig.width=6.5, fig.height=5, fig.cap="El espejismo del PIB: PIB per cápita y valor medio de la vivienda por provincia, 2022.\\label{fig:espejismo}"}
+```{r grafico-espejismo, fig.width=5.5, fig.height=4.2, fig.cap="El espejismo del PIB: PIB per cápita y valor medio de la vivienda por provincia, 2022. Fuente: elaboración propia con datos del INE y del Ministerio de Vivienda.\\label{fig:espejismo}"}
 grafico_espejismo
 ```
 
-La Figura \ref{fig:espejismo} muestra que la relación entre riqueza y precio de la vivienda es débil. La correlación de Spearman entre el PIB per cápita y el valor medio de la vivienda es débil (ρ = `r fmt(r_pib_viv$estimate)`, p = `r fmt(r_pib_viv$p.value, 3)`): la riqueza provincial explica poco del nivel de precios. Si estos siguieran a la renta local, la vivienda sería mucho más cara en las provincias más ricas y la presión inmobiliaria sería similar en todas. Lo que se observa es que el precio varía mucho más (coeficiente de variación del 46 %) que el PIB per cápita (19 %), y que una presión alta aparece tanto en provincias de PIB bajo (Málaga, Melilla) como alto (Madrid, Gipuzkoa), sin relación significativa con la riqueza (ρ = `r fmt(r_pib_pre$estimate)`, p = `r fmt(r_pib_pre$p.value)`).
+La correlación de Spearman entre el PIB per cápita y el valor medio de la vivienda es débil (ρ = `r fmt(r_pib_viv$estimate)`, p = `r fmt(r_pib_viv$p.value, 3)`): la riqueza provincial explica poco del nivel de precios. Si estos siguieran a la renta local, la vivienda sería mucho más cara en las provincias más ricas y la presión inmobiliaria sería similar en todas. Lo que se observa es que el precio varía mucho más (coeficiente de variación del 46 %) que el PIB per cápita (19 %), y que una presión alta aparece tanto en provincias de PIB bajo (Málaga, Melilla) como alto (Madrid, Gipuzkoa), sin relación significativa con la riqueza (ρ = `r fmt(r_pib_pre$estimate)`, p = `r fmt(r_pib_pre$p.value)`).
 
 Los casos que más se desvían son Illes Balears y Málaga. Illes Balears combina el mayor peso de servicios (37,1 %) con el precio más alto (402.811 €) y un PIB per cápita de 31.030 €, algo por encima de la mediana. Málaga, con un 29,1 % de servicios, alcanza 275.159 € con un PIB per cápita de solo 21.470 €.
 
@@ -507,7 +507,7 @@ tab_terc <- bind_rows(
 
 La Figura \ref{fig:bivar} enfrenta el peso de cada sector con la presión inmobiliaria y la Tabla \ref{tab:tabterciles} compara la presión mediana entre grupos de provincias.
 
-```{r figbivar, fig.width=6.5, fig.height=3.6, fig.cap="Presión inmobiliaria según el peso de los servicios y de la industria. Línea: ajuste local (loess). Se etiquetan las diez provincias de mayor presión.\\label{fig:bivar}"}
+```{r figbivar, fig.width=5.5, fig.height=3.3, fig.cap="Presión inmobiliaria según el peso de los servicios y de la industria. Línea: ajuste local (loess). Se etiquetan las diez provincias de mayor presión.\\label{fig:bivar}"}
 ggplot(df_biv, aes(peso, presion_inmobiliaria)) +
   geom_point(alpha = 0.7, size = 1.6, colour = "grey35") +
   geom_smooth(method = "loess", formula = y ~ x, se = FALSE,
@@ -521,7 +521,7 @@ ggplot(df_biv, aes(peso, presion_inmobiliaria)) +
 ```
 
 ```{r tabterciles}
-kbl(tab_terc, format = "html", booktabs = TRUE, digits = 2,
+kbl(tab_terc, format = "latex", booktabs = TRUE, digits = 2,
     format.args = list(decimal.mark = ","),
     caption = "Presión inmobiliaria mediana según el tercil de peso de cada sector.",
     table.envir = "table", position = "H") %>%
@@ -577,7 +577,7 @@ par_ind  <- parcial(df_analisis, "presion_inmobiliaria", "pct_industria", "pct_s
 La Tabla \ref{tab:tabrobustez} recoge las correlaciones de Spearman en la muestra completa y en cuatro submuestras.
 
 ```{r tabrobustez}
-kbl(tab_rob_fmt, format = "html", booktabs = TRUE, escape = FALSE, align = "lrrrrrr",
+kbl(tab_rob_fmt, format = "latex", booktabs = TRUE, escape = FALSE, align = "lrrrrrr",
     caption = "Correlaciones de Spearman con la presión inmobiliaria y robustez a la exclusión de provincias singulares.",
     table.envir = "table", position = "H") %>%
   kable_styling(font_size = 8)
@@ -587,22 +587,29 @@ Con las 52 provincias, la presión inmobiliaria muestra una correlación moderad
 
 **Efecto conjunto.** El peso de la industria y el de los servicios están fuertemente correlacionados entre sí (entre `r fmt(min(tab_rob$rho_si))` y `r fmt(max(tab_rob$rho_si))`), como cabe esperar al ser porcentajes del mismo VAB. Para separar sus contribuciones calculamos la correlación parcial de Spearman. Al controlar por la industria, la asociación de la presión con los servicios cae a ρ = `r fmt(par_serv$rho)` y deja de ser significativa (p = `r fmt(par_serv$p)`), mientras que la asociación con la industria, controlando por los servicios, se mantiene (ρ = `r fmt(par_ind$rho)`, p = `r fmt(par_ind$p, 3)`).
 
-Lo que los datos sostienen es que las provincias menos industrializadas y las más terciarizadas presentan una mayor presión inmobiliaria, pero no permiten atribuirla específicamente a los servicios. Hay dos razones, independientes entre sí. La primera es estadística: servicios e industria son porcentajes del mismo VAB y están fuertemente correlacionados, de modo que, una vez descontada la industria, la asociación con los servicios no es significativa. La segunda es de medición: la rama G-J agrupa hostelería con comercio, transporte e información y comunicaciones, por lo que no aísla la dependencia turística.
-
-## Visualización de "el espejismo del PIB"
-
-
-
 # Discusión
 
-<!-- Pendiente (Pasos 7-8): robustez, limitaciones e interpretación de las correlaciones. -->
+## Interpretación de los resultados
+
+El análisis arroja dos hallazgos distintos. El primero se refiere al espejismo del PIB: la riqueza provincial explica poco del precio de la vivienda (ρ = `r fmt(r_pib_viv$estimate)`) y no guarda relación significativa con la presión inmobiliaria (ρ = `r fmt(r_pib_pre$estimate)`, p = `r fmt(r_pib_pre$p.value)`). El valor de la vivienda varía más del doble que el PIB per cápita (coeficientes de variación del 46 % y el 19 %), y una presión alta aparece tanto en provincias de PIB bajo, como Málaga o Melilla, como alto, como Madrid o Gipuzkoa. El PIB per cápita, por sí solo, no permite anticipar cuánto cuesta la vivienda en relación con la renta de un territorio.
+
+El segundo hallazgo se refiere a la estructura productiva. La presión inmobiliaria se asocia positivamente con el peso de los servicios (ρ = `r fmt(tab_rob$rho_s[1])`) y negativamente con el de la industria (ρ = `r fmt(tab_rob$rho_i[1])`), y ambas asociaciones resisten la exclusión de Ceuta y Melilla, de Madrid, de Illes Balears y Málaga, y de las cinco a la vez. Las dos tienen además una forma no lineal: la presión solo se eleva de manera apreciable en el tercio de provincias más terciarizadas (mediana de 5,91 frente a 4,20 y 4,21 en los otros dos) y es claramente mayor en el tercio menos industrial (6,18 frente a 4,39 y 3,95).
+
+Sin embargo, estos resultados no permiten atribuir la presión específicamente a los servicios. La razón es en parte estadística: servicios e industria son porcentajes del mismo VAB y están fuertemente correlacionados entre sí, de modo que, descontada la industria, la asociación con los servicios es pequeña y no significativa (ρ parcial = `r fmt(par_serv$rho)`, p = `r fmt(par_serv$p)`), mientras que la de la industria se mantiene (ρ parcial = `r fmt(par_ind$rho)`, p = `r fmt(par_ind$p, 3)`). Y en parte es de medición, porque la rama G-J agrupa hostelería con comercio, transporte, información y comunicaciones, y no aísla la dependencia turística. Por último, el patrón admite excepciones: Ceuta y Melilla presentan una presión elevada sin un peso de servicios destacado, y Gipuzkoa y Barcelona la presentan con perfiles industriales, lo que indica que hay otros factores en juego.
+
+## Limitaciones
+
+- **Medición del turismo.** La variable de servicios es una aproximación amplia. Una parte del peso de G-J en provincias como Madrid puede deberse a actividades no turísticas.
+- **PIB y vivienda.** El PIB provincial mide la actividad producida en el territorio, no la renta de sus residentes, y está sujeto al efecto sede en Madrid. El valor medio por transacción depende además del tipo y tamaño de las viviendas vendidas, y no equivale a un precio por metro cuadrado.
+- **Casos singulares.** Ceuta y Melilla son ciudades pequeñas sin hinterland, por lo que su comparación con provincias es discutible. Se verificó que excluirlas no altera las conclusiones.
+- **Diseño.** Se trata de un corte transversal de un solo año y 52 observaciones, con potencia limitada, que describe asociaciones entre agregados provinciales y no permite inferir causalidad ni extrapolar a individuos u hogares. Las correlaciones parciales se calcularon sobre rangos y sus p-valores son aproximados.
+
+Como líneas futuras, convendría desagregar la hostelería de las demás ramas, incorporar precios de alquiler, ampliar el análisis a varios años y considerar otras variables, como el saldo migratorio joven.
 
 # Conclusiones
 
-<!-- Texto original; se reescribirá en el Paso 8 respondiendo por separado a P5 y P1. -->
+**El espejismo del PIB.** Los datos respaldan que el PIB per cápita provincial es un indicador insuficiente para valorar la presión que soporta el mercado de la vivienda. Su relación con el valor de la vivienda es débil (ρ = `r fmt(r_pib_viv$estimate)`), la presión inmobiliaria no está significativamente asociada a él, y las provincias con mayor presión, Illes Balears (`r fmt(max(df_analisis$presion_inmobiliaria))`) y Málaga (`r fmt(sort(df_analisis$presion_inmobiliaria, decreasing = TRUE)[2])`), triplican aproximadamente la mediana nacional (`r fmt(median(df_analisis$presion_inmobiliaria))`) con niveles de PIB muy dispares entre sí.
 
-El análisis bivariante realizado revela una desconexión estructural entre la riqueza real generada en cada provincia (PIB per cápita) y el coste de acceso a la vivienda, evidenciando lo que hemos denominado "el espejismo del PIB". Como se observa en la gráfica, provincias con una fuerte dependencia del sector servicios y el turismo —tales como Illes Balears, Málaga, Santa Cruz de Tenerife o Alicante— presentan precios inmobiliarios desproporcionadamente altos en comparación con su nivel de renta local. Por el contrario, regiones con mayor peso industrial (como Araba/Álava, Bizkaia o Burgos) mantienen una relación mucho más equilibrada entre los ingresos de sus ciudadanos y el coste de las transacciones inmobiliarias.
+**La trampa turística.** La hipótesis se confirma solo en parte. Las provincias con más peso de servicios tienden a soportar mayor presión inmobiliaria (ρ = `r fmt(tab_rob$rho_s[1])`) y las más industrializadas, menor (ρ = `r fmt(tab_rob$rho_i[1])`), y ambas asociaciones son robustas a la exclusión de provincias singulares. Pero la asociación con los servicios no se sostiene al controlar por el peso de la industria, y la variable disponible no distingue el turismo del resto de servicios, por lo que no podemos afirmar que la especialización turística, en sentido estricto, sea la causa de la presión. Lo que los datos muestran es que el mayor coste de la vivienda en relación con la renta se concentra en las provincias terciarizadas y poco industriales, con excepciones relevantes.
 
-Este fenómeno se explica por la naturaleza del modelo productivo basado en la tercerización y el turismo. Este modelo tiende a atraer una fuerte demanda externa (inversores extranjeros, segundas residencias, nómadas digitales y pisos turísticos) que compite directamente por el suelo y la vivienda con la población residente. En consecuencia, los precios del mercado inmobiliario se inflan impulsados por capital foráneo, desvinculándose por completo de la capacidad adquisitiva real del territorio.
-
-En definitiva, la estructura productiva condiciona severamente la presión inmobiliaria. Dado que los salarios medios en la hostelería y los servicios de bajo valor añadido suelen ser inferiores a los del sector industrial, se produce una brecha insalvable: el mercado de la vivienda opera bajo lógicas de precios internacionales o especulativos, mientras que los ciudadanos compiten con salarios locales mermados. Esto confirma nuestra hipótesis inicial de que no basta con analizar el crecimiento del PIB de forma aislada; es fundamental comprender de qué sectores proviene dicha riqueza para entender la verdadera salud económica y social de una provincia.
+Estas conclusiones describen asociaciones transversales de 2022 en 52 provincias y no deben interpretarse como relaciones causales.
