@@ -63,6 +63,7 @@ Este trabajo estudia esa desconexión en las 52 provincias y ciudades autónomas
 El resto del artículo se organiza así. La sección de datos y métodos describe las fuentes del Instituto Nacional de Estadística (INE) y del Ministerio de Vivienda, la construcción del índice y el tratamiento de valores perdidos y atípicos. La sección de resultados presenta el análisis univariante y bivariante y comprueba su robustez. Cerramos con una discusión de las limitaciones y las conclusiones sobre las dos preguntas planteadas.
 
 # Datos y métodos
+Dado el tamaño muestral (52 provincias), la asimetría de las distribuciones y la presencia de valores atípicos, medimos la asociación entre variables con el coeficiente de correlación de Spearman, basado en rangos, y contrastamos su significación (H0: ρ = 0) al nivel del 5 %. Para evaluar la robustez de los resultados repetimos el cálculo excluyendo: Ceuta y Melilla (ciudades autónomas sin hinterland), Madrid (efecto sede de las empresas), Illes Balears y Málaga (los dos valores atípicos de presión inmobiliaria) y las cinco a la vez. Como el peso de los servicios y el de la industria son porcentajes del mismo valor añadido bruto y están correlacionados entre sí, calculamos también la correlación parcial de Spearman de cada uno con la presión, controlando por el otro. Todos los resultados describen asociaciones transversales y no se interpretan como efectos causales. El análisis se realizó con R y el ecosistema tidyverse.
 
 ## Fuentes de datos y año de referencia 
 Para la realización de este análisis y la contrastación de nuestra hipótesis sobre el impacto del sector servicios en el mercado inmobiliario, se ha optado por realizar un análisis de corte transversal (*cross-sectional*) centrado en el ejercicio fiscal 2022. Esta decisión metodológica se fundamenta en tres criterios operativos:
@@ -478,7 +479,7 @@ ggsave("espejismo.png", grafico_espejismo, width = 10, height = 8, dpi = 300)
 grafico_espejismo
 ```
 
-La Figura \ref{fig:espejismo} muestra que la relación entre riqueza y precio de la vivienda es débil. La correlación de Spearman entre el PIB per cápita y el valor medio de la vivienda es de ρ = `r fmt(r_pib_viv$estimate)`, y con la presión inmobiliaria resulta incluso negativa (ρ = `r fmt(r_pib_pre$estimate)`): las provincias más ricas no son sistemáticamente las de vivienda más cara en relación con su renta, que es lo que cabría esperar si el precio siguiera a la capacidad adquisitiva local.
+La Figura \ref{fig:espejismo} muestra que la relación entre riqueza y precio de la vivienda es débil. La correlación de Spearman entre el PIB per cápita y el valor medio de la vivienda es débil (ρ = `r fmt(r_pib_viv$estimate)`, p = `r fmt(r_pib_viv$p.value, 3)`): la riqueza provincial explica poco del nivel de precios. Si estos siguieran a la renta local, la vivienda sería mucho más cara en las provincias más ricas y la presión inmobiliaria sería similar en todas. Lo que se observa es que el precio varía mucho más (coeficiente de variación del 46 %) que el PIB per cápita (19 %), y que una presión alta aparece tanto en provincias de PIB bajo (Málaga, Melilla) como alto (Madrid, Gipuzkoa), sin relación significativa con la riqueza (ρ = `r fmt(r_pib_pre$estimate)`, p = `r fmt(r_pib_pre$p.value)`).
 
 Los casos que más se desvían son Illes Balears y Málaga. Illes Balears combina el mayor peso de servicios (37,1 %) con el precio más alto (402.811 €) y un PIB per cápita de 31.030 €, algo por encima de la mediana. Málaga, con un 29,1 % de servicios, alcanza 275.159 € con un PIB per cápita de solo 21.470 €.
 
@@ -536,6 +537,57 @@ kbl(tab_terc, format = "html", booktabs = TRUE, digits = 2,
 Estos resultados describen asociaciones y no permiten atribuir el nivel de presión a la estructura productiva. Además, servicios e industria se mueven en sentido contrario (se analiza en el apartado de robustez), y buena parte de las provincias menos industriales coincide con las más terciarizadas, por lo que sus efectos no pueden separarse con estos datos.
 
 ## Robustez de los resultados 
+```{r robustez-calculo, include=FALSE}
+muestras <- list(
+  "Todas las provincias"       = character(0),
+  "Sin Ceuta y Melilla"        = c("Ceuta", "Melilla"),
+  "Sin Madrid"                 = "Madrid",
+  "Sin Illes Balears y Málaga" = c("Balears, Illes", "Málaga"),
+  "Sin las cinco anteriores"   = c("Ceuta", "Melilla", "Madrid", "Balears, Illes", "Málaga")
+)
+
+fila_rob <- function(nombre, excluir) {
+  d  <- filter(df_analisis, !Provincia %in% excluir)
+  s  <- rho(d$pct_servicios_turismo, d$presion_inmobiliaria)
+  i  <- rho(d$pct_industria, d$presion_inmobiliaria)
+  si <- rho(d$pct_servicios_turismo, d$pct_industria)
+  tibble(Muestra = nombre, n = nrow(d),
+         rho_s = s$estimate, p_s = s$p.value,
+         rho_i = i$estimate, p_i = i$p.value, rho_si = si$estimate)
+}
+tab_rob <- bind_rows(lapply(names(muestras), function(n) fila_rob(n, muestras[[n]])))
+
+fmt_p <- function(p) ifelse(p < 0.001, "$<$0,001", format(round(p, 3), nsmall = 3, decimal.mark = ","))
+
+tab_rob_fmt <- tab_rob %>%
+  transmute(Muestra, n,
+            `$\\rho$ servicios` = fmt(rho_s), `p ` = fmt_p(p_s),
+            `$\\rho$ industria` = fmt(rho_i), `p` = fmt_p(p_i),
+            `$\\rho$ serv.-ind.` = fmt(rho_si))
+
+parcial <- function(df, x, y, z) {
+  rk <- df %>% transmute(x = rank(.data[[x]]), y = rank(.data[[y]]), z = rank(.data[[z]]))
+  r  <- cor(resid(lm(x ~ z, rk)), resid(lm(y ~ z, rk)))
+  n  <- nrow(rk); tt <- r * sqrt((n - 3) / (1 - r^2))
+  list(rho = r, p = 2 * pt(abs(tt), n - 3, lower.tail = FALSE))
+}
+par_serv <- parcial(df_analisis, "presion_inmobiliaria", "pct_servicios_turismo", "pct_industria")
+par_ind  <- parcial(df_analisis, "presion_inmobiliaria", "pct_industria", "pct_servicios_turismo")
+```
+La Tabla \ref{tab:tabrobustez} recoge las correlaciones de Spearman en la muestra completa y en cuatro submuestras.
+
+```{r tabrobustez}
+kbl(tab_rob_fmt, format = "html", booktabs = TRUE, escape = FALSE, align = "lrrrrrr",
+    caption = "Correlaciones de Spearman con la presión inmobiliaria y robustez a la exclusión de provincias singulares.",
+    table.envir = "table", position = "H") %>%
+  kable_styling(font_size = 8)
+```
+
+Con las 52 provincias, la presión inmobiliaria muestra una correlación moderada y positiva con el peso de los servicios (ρ = `r fmt(tab_rob$rho_s[1])`) y moderada y negativa con el peso de la industria (ρ = `r fmt(tab_rob$rho_i[1])`), ambas con p < 0,001. Las dos asociaciones **se mantienen en todas las submuestras**: sin Ceuta y Melilla la de servicios aumenta (`r fmt(tab_rob$rho_s[2])`); sin Madrid (`r fmt(tab_rob$rho_s[3])`) o sin Illes Balears y Málaga (`r fmt(tab_rob$rho_s[4])`) se reduce algo pero sigue siendo significativa; y al excluir a la vez las cinco provincias singulares los valores son `r fmt(tab_rob$rho_s[5])` en servicios y `r fmt(tab_rob$rho_i[5])` en industria. Ningún caso aislado explica, por tanto, los resultados.
+
+**Efecto conjunto.** El peso de la industria y el de los servicios están fuertemente correlacionados entre sí (entre `r fmt(min(tab_rob$rho_si))` y `r fmt(max(tab_rob$rho_si))`), como cabe esperar al ser porcentajes del mismo VAB. Para separar sus contribuciones calculamos la correlación parcial de Spearman. Al controlar por la industria, la asociación de la presión con los servicios cae a ρ = `r fmt(par_serv$rho)` y deja de ser significativa (p = `r fmt(par_serv$p)`), mientras que la asociación con la industria, controlando por los servicios, se mantiene (ρ = `r fmt(par_ind$rho)`, p = `r fmt(par_ind$p, 3)`).
+
+Lo que los datos sostienen es que las provincias menos industrializadas y las más terciarizadas presentan una mayor presión inmobiliaria, pero no permiten atribuirla específicamente a los servicios. Hay dos razones, independientes entre sí. La primera es estadística: servicios e industria son porcentajes del mismo VAB y están fuertemente correlacionados, de modo que, una vez descontada la industria, la asociación con los servicios no es significativa. La segunda es de medición: la rama G-J agrupa hostelería con comercio, transporte e información y comunicaciones, por lo que no aísla la dependencia turística.
 
 ## Visualización de "el espejismo del PIB"
 
