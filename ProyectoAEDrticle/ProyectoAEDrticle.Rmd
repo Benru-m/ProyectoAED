@@ -349,6 +349,58 @@ La presión inmobiliaria presenta dos valores atípicos por la parte alta, Illes
 
 # Resultados
 ## Análisis univariante 
+```{r descriptivos-calculo, include=FALSE}
+vars5 <- c(PIB_per_capita         = "PIB per cápita (€)",
+           Valor_Vivienda_2022    = "Valor medio vivienda (€)",
+           presion_inmobiliaria   = "Presión inmobiliaria",
+           pct_servicios_turismo  = "Servicios, G-J (%)",
+           pct_industria          = "Industria, B-E (%)")
+
+df5 <- df_analisis %>%
+  select(all_of(names(vars5))) %>%
+  pivot_longer(everything(), names_to = "variable", values_to = "valor") %>%
+  mutate(variable = factor(variable, levels = names(vars5), labels = unname(vars5)))
+
+tab_desc <- df5 %>%
+  group_by(Variable = variable) %>%
+  summarise(Media = mean(valor), Mediana = median(valor), DT = sd(valor),
+            `Mín.` = min(valor), `Máx.` = max(valor),
+            Asimetría = mean((valor - mean(valor))^3) / sd(valor)^3,
+            .groups = "drop")
+
+med5 <- df5 %>% group_by(variable) %>% summarise(mediana = median(valor), .groups = "drop")
+```
+La Tabla \ref{tab:tabdescriptiva} resume la distribución de las cinco variables y la Figura \ref{fig:hist} muestra su forma.
+
+```{r tabdescriptiva}
+kbl(tab_desc, format = "html", booktabs = TRUE, digits = 2,
+    format.args = list(big.mark = ".", decimal.mark = ","),
+    caption = "Estadísticos descriptivos de las variables de análisis (52 provincias, 2022).",
+    table.envir = "table", position = "H") %>%
+  kable_styling(font_size = 8)
+```
+
+```{r fighist, fig.width=6.5, fig.height=4.4, fig.cap="Distribución de las variables de análisis: histograma, densidad (azul) y mediana (rojo discontinuo).\\label{fig:hist}"}
+ggplot(df5, aes(valor)) +
+  geom_histogram(aes(y = after_stat(density)), bins = 12, fill = "grey80", colour = "white") +
+  geom_density(colour = "steelblue", linewidth = 0.7) +
+  geom_vline(data = med5, aes(xintercept = mediana),
+             linetype = "dashed", colour = "firebrick") +
+  scale_x_continuous(labels = scales::label_number(big.mark = ".", decimal.mark = ",")) +
+  facet_wrap(~ variable, scales = "free", ncol = 3) +
+  labs(x = NULL, y = "Densidad") +
+  theme_minimal(base_size = 9) +
+  theme(axis.text.y = element_blank())
+```
+Los resultados muestran tres rasgos. En primer lugar, el PIB per cápita es la variable más homogénea: la media (27.014 €) y la mediana (26.316 €) son próximas, la asimetría es moderada (0,46) y el coeficiente de variación ronda el 19 %. Los valores van desde 18.859 € en Jaén hasta 39.246 € en Madrid, seguida de Araba/Álava y Gipuzkoa.
+
+En segundo lugar, el valor medio de la vivienda es mucho más desigual que la riqueza. Su media (139.817 €) supera con claridad a la mediana (118.794 €) y la distribución presenta una cola larga hacia la derecha (asimetría de 1,90), con Illes Balears (402.811 €), Madrid (297.801 €) y Málaga (275.159 €) en el extremo. Entre la provincia más cara y la más barata, Ciudad Real (74.301 €), la vivienda se multiplica por 5,4, mientras que el PIB per cápita solo lo hace por 2,1. Esta diferencia de dispersión es el origen del espejismo: el precio de la vivienda varía mucho más que la riqueza que genera cada provincia.
+
+En tercer lugar, la presión inmobiliaria hereda esa asimetría positiva (1,74). El valor medio de una vivienda equivale en la provincia mediana a 4,5 veces el PIB per cápita, y la mitad de las provincias se sitúa entre 3,8 y 6,1; en cambio, Illes Balears y Málaga superan 12,8, más del doble de la mediana. La estructura productiva es más equilibrada: el peso de los servicios tiene una cola derecha moderada (asimetría de 0,83) debida a Illes Balears, Las Palmas y Madrid, y el de la industria es casi simétrico (−0,24), con una gran dispersión que va del 4,1 % de Melilla al 36,4 % de Guadalajara.
+
+El histograma de la presión inmobiliaria revela además un segundo grupo en torno a 7-8, formado por territorios de naturaleza muy distinta: islas turísticas (Santa Cruz de Tenerife, Las Palmas), grandes capitales (Madrid, Barcelona), ciudades autónomas (Ceuta, Melilla) y también Cádiz y Gipuzkoa. Es un primer indicio de que una presión elevada no responde a una única causa, algo que se analiza en el apartado siguiente. La distribución de la industria presenta, por su parte, un pequeño grupo de provincias por debajo del 10 % (entre ellas Melilla, Ceuta, Almería y Málaga) que genera un ligero hombro por la izquierda.
+
+Estas asimetrías, junto con los atípicos del apartado anterior, respaldan el uso de correlaciones basadas en rangos en lugar de la correlación de Pearson.
 
 ## El espejismo del PIB
 Vamos a enfrentar la riqueza (eje X) contra el coste de la vivienda (eje Y), y vamos a colorear los puntos según su dependencia del sector servicios/turismo.
