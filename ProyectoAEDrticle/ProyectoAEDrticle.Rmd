@@ -86,7 +86,7 @@ tabla_vars <- tibble(
     "Valor medio de las transacciones de vivienda libre, media de los cuatro trimestres de 2022 (euros)",
     "Cociente entre el valor medio de la vivienda y el PIB per cápita (adimensional)"),
   Fuente = c("INE, pr_cre_26.xls", "INE, 77776.xlsx", "INE, 77776.xlsx",
-             "Ministerio de Vivienda", "34020150.csv", "Elaboración propia")
+             "Ministerio de Vivienda, 34020150.csv", "Elaboración propia")
 )
 
 kbl(tabla_vars, format = "latex", booktabs = TRUE,
@@ -100,7 +100,7 @@ kbl(tabla_vars, format = "latex", booktabs = TRUE,
 
 ```{r importacion_limpieza}
 # 1.1 Leer el archivo en crudo, sin asumir cabeceras, desde la fila donde empiezan los datos (fila 7)
-pib_raw <- import("data/pr_cre_26.xls", sheet = "Tabla_2", skip = 6, col_names = FALSE)
+pib_raw <- import("datosPablo/pr_cre_26.xls", sheet = "Tabla_2", skip = 6, col_names = FALSE)
 
 # 1.2 Extraer solo las columnas que nos interesan.
 # Al inspeccionar el Excel, sabemos que la columna 2 es el Territorio y la columna 90 es el "Valor" del año 2022.
@@ -156,7 +156,7 @@ El archivo original del INE presenta una estructura orientada a la visualizació
 
 ```{r vab}
 # 2.1 Leer el archivo saltando la cabecera del INE
-vab_raw <- import("data/77776.xlsx", sheet = "tabla-77776", skip = 5, col_names = FALSE)
+vab_raw <- import("datosPablo/77776.xlsx", sheet = "tabla-77776", skip = 5, col_names = FALSE)
 
 # 2.2 Arreglar la jerarquía del INE (Provincias y Sectores mezclados)
 vab_step2 <- vab_raw %>%
@@ -203,7 +203,7 @@ Los archivos de transacciones inmobiliarias del INE (34020150...csv) del Ministe
 
 ```{r vivienda}
 # 3.1 Leer el archivo CSV de vivienda
-vivienda_raw <- read.csv("data/34020150(2020, 2021, 2022, 2023).csv",
+vivienda_raw <- read.csv("datosPablo/34020150(2020, 2021, 2022, 2023).csv",
                          sep = ";", dec = ",", skip = 15, header = FALSE,
                          encoding = "latin1", stringsAsFactors = FALSE)
 
@@ -276,6 +276,9 @@ n_prov     <- nrow(df_analisis)
 n_na_total <- sum(is.na(df_analisis))
 na_por_var <- colSums(is.na(df_analisis))
 stopifnot(n_prov == 52, !anyDuplicated(df_analisis$Provincia))
+n_prov
+n_na_total
+na_por_var
 ```
 
 Las tres fuentes se unieron por el nombre de la provincia, tras armonizar las denominaciones (por ejemplo, "Madrid, Comunidad de" y "Madrid (Comunidad de)" pasan a "Madrid"). El conjunto final contiene `r n_prov` observaciones y `r n_na_total` valores perdidos en el conjunto de variables analizadas. Todas las provincias con PIB per cápita disponen también de estructura productiva y de precio de la vivienda, de modo que ninguna observación quedó sin cruzar.
