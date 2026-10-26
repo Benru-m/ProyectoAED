@@ -75,7 +75,11 @@ Para la realización de este análisis y la contrastación de nuestra hipótesis
 
 La Tabla \ref{tab:tabvars} resume las variables empleadas y su origen.
 
-```{r tabvars}
+```{r tabvars, message=FALSE, warning=FALSE}
+# Asegúrate de tener cargada esta librería (puedes añadirla a tu pacman inicial)
+library(kableExtra) 
+library(tibble)
+
 tabla_vars <- tibble(
   Variable = c("PIB_per_capita", "pct_industria", "pct_servicios_turismo",
                "Valor_Vivienda_2022", "presion_inmobiliaria"),
@@ -89,10 +93,10 @@ tabla_vars <- tibble(
              "Ministerio de Vivienda, 34020150.csv", "Elaboración propia")
 )
 
-kbl(tabla_vars, format = "latex", booktabs = TRUE,
-    caption = "Variables utilizadas en el análisis (52 provincias y ciudades autónomas, 2022).",
-    table.envir = "table", position = "H") %>%
-  column_spec(2, width = "6.5cm")
+kbl(tabla_vars, format = "html", 
+    caption = "Variables utilizadas en el análisis (52 provincias y ciudades autónomas, 2022).") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "responsive"), full_width = F) %>%
+  column_spec(2, width = "40em")
 ```
 
 ## Importación y limpieza 
@@ -284,6 +288,62 @@ na_por_var
 Las tres fuentes se unieron por el nombre de la provincia, tras armonizar las denominaciones (por ejemplo, "Madrid, Comunidad de" y "Madrid (Comunidad de)" pasan a "Madrid"). El conjunto final contiene `r n_prov` observaciones y `r n_na_total` valores perdidos en el conjunto de variables analizadas. Todas las provincias con PIB per cápita disponen también de estructura productiva y de precio de la vivienda, de modo que ninguna observación quedó sin cruzar.
 
 **Decisión:** al no haber valores perdidos, no se imputa ni se elimina ninguna provincia. Este punto es relevante, porque con solo 52 observaciones cada exclusión alteraría de forma apreciable los resultados.
+
+### Valores atípicos
+```{r atipicos-calculo, include=FALSE}
+# Coherencia de rangos: descartar errores de datos antes de hablar de atípicos
+stopifnot(
+  all(df_analisis$pct_industria > 0 & df_analisis$pct_industria < 100),
+  all(df_analisis$pct_servicios_turismo > 0 & df_analisis$pct_servicios_turismo < 100),
+  all(df_analisis$presion_inmobiliaria > 0)
+)
+
+etiquetas <- c(presion_inmobiliaria   = "Presión inmobiliaria",
+               pct_servicios_turismo  = "Servicios, rama G-J (%)",
+               pct_industria          = "Industria, ramas B-E (%)")
+
+df_largo <- df_analisis %>%
+  select(Provincia, all_of(names(etiquetas))) %>%
+  pivot_longer(-Provincia, names_to = "variable", values_to = "valor") %>%
+  group_by(variable) %>%
+  mutate(q1 = quantile(valor, 0.25), q3 = quantile(valor, 0.75),
+         valla_inf = q1 - 1.5 * (q3 - q1),
+         valla_sup = q3 + 1.5 * (q3 - q1),
+         atipico = valor < valla_inf | valor > valla_sup) %>%
+  ungroup() %>%
+  mutate(variable = factor(variable, levels = names(etiquetas),
+                           labels = unname(etiquetas)))
+
+tab_atipicos <- df_largo %>%
+  filter(atipico) %>%
+  arrange(variable, desc(valor)) %>%
+  transmute(Variable = variable, Provincia,
+            Valor = round(valor, 2),
+            `Valla superada` = round(if_else(valor > valla_sup, valla_sup, valla_inf), 2))
+```
+Para identificar valores atípicos aplicamos el criterio de Tukey: se considera atípica una provincia cuyo valor queda por encima de Q3 + 1,5·RIC o por debajo de Q1 − 1,5·RIC, donde RIC es el rango intercuartílico. Previamente se comprobó que todos los valores son coherentes (porcentajes entre 0 y 100, precios y PIB positivos), de modo que ninguno responde a un error de importación. La Tabla \ref{tab:tabatipicos} recoge las provincias señaladas y la Figura \ref{fig:atipicos} su posición en la distribución.
+
+```{r tabatipicos}
+kbl(tab_atipicos, format = "html", booktabs = TRUE,
+    caption = "Provincias atípicas según el criterio de Tukey (1,5 veces el rango intercuartílico).",
+    table.envir = "table", position = "H")
+```
+
+```{r figatipicos, fig.width=6.5, fig.height=3.4, fig.cap="Diagramas de caja de las tres variables de análisis; en rojo, las provincias atípicas.\\label{fig:atipicos}"}
+ggplot(df_largo, aes(x = "", y = valor)) +
+  geom_boxplot(outlier.shape = NA, width = 0.45, fill = "grey92", colour = "grey35") +
+  geom_point(aes(colour = atipico), alpha = 0.7, size = 1.6) +
+  geom_text_repel(data = filter(df_largo, atipico), aes(label = Provincia),
+                  size = 2.6, nudge_x = 0.35, direction = "y",
+                  segment.size = 0.2, min.segment.length = 0) +
+  scale_colour_manual(values = c("FALSE" = "grey45", "TRUE" = "firebrick"), guide = "none") +
+  facet_wrap(~ variable, scales = "free_y", nrow = 1) +
+  labs(x = NULL, y = NULL) +
+  theme_minimal(base_size = 9)
+```
+La presión inmobiliaria presenta dos valores atípicos por la parte alta, Illes Balears (12,98) y Málaga (12,82), que superan ampliamente la valla de 9,58 y se separan de la siguiente provincia, Santa Cruz de Tenerife, con un índice en torno a 8. En el peso de los servicios resultan atípicas Illes Balears (37,1 %), Las Palmas (36,1 %) y Madrid (33,6 %), esta última por un margen muy estrecho sobre la valla de 33,2 %. En cambio, el peso de la industria no presenta ninguna provincia atípica según este criterio. Ceuta y Melilla son las provincias menos industrializadas, pero no quedan señaladas, ya que la valla inferior es negativa y el porcentaje no puede serlo.
+
+**Decisión:** no se elimina ninguna provincia. Los atípicos son valores reales, no errores de datos, y además son precisamente los casos que motivan la pregunta de investigación. Illes Balears resulta atípica a la vez en presión inmobiliaria y en peso de los servicios, lo que refleja el patrón que se quiere contrastar, no una anomalía de medición. Madrid supera la valla de los servicios por un margen muy estrecho (0,4 puntos), por lo que su condición de atípico es débil; aun así se trata aparte por la singularidad de su PIB per cápita, que refleja el efecto sede de las empresas. Excluir estos casos eliminaría de la muestra la evidencia que se quiere contrastar. Por ello empleamos la correlación de Spearman, que se basa en rangos y es poco sensible a valores extremos, y comprobamos en la sección de robustez que los resultados se mantienen al excluir los casos estructuralmente singulares: Madrid, y Ceuta y Melilla, ciudades pequeñas sin hinterland.
 
 ## Métodos estadísticos
 
