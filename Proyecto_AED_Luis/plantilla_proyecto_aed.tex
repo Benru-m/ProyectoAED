@@ -1,0 +1,456 @@
+%  LaTeX support: latex@mdpi.com
+%  For support, please attach all files needed for compiling as well as the log file, and specify your operating system, LaTeX version, and LaTeX editor.
+
+%=================================================================
+% pandoc conditionals added to preserve backwards compatibility with previous versions of rticles
+
+\documentclass[data,article,submit,moreauthors,pdftex]{Definitions/mdpi}
+
+
+%% Some pieces required from the pandoc template
+\setlist[itemize]{leftmargin=*,labelsep=5.8mm}
+\setlist[enumerate]{leftmargin=*,labelsep=4.9mm}
+
+
+%--------------------
+% Class Options:
+%--------------------
+
+%---------
+% article
+%---------
+% The default type of manuscript is "article", but can be replaced by:
+% abstract, addendum, article, book, bookreview, briefreport, casereport, comment, commentary, communication, conferenceproceedings, correction, conferencereport, entry, expressionofconcern, extendedabstract, datadescriptor, editorial, essay, erratum, hypothesis, interestingimage, obituary, opinion, projectreport, reply, retraction, review, perspective, protocol, shortnote, studyprotocol, systematicreview, supfile, technicalnote, viewpoint, guidelines, registeredreport, tutorial
+% supfile = supplementary materials
+
+%----------
+% submit
+%----------
+% The class option "submit" will be changed to "accept" by the Editorial Office when the paper is accepted. This will only make changes to the frontpage (e.g., the logo of the journal will get visible), the headings, and the copyright information. Also, line numbering will be removed. Journal info and pagination for accepted papers will also be assigned by the Editorial Office.
+
+%------------------
+% moreauthors
+%------------------
+% If there is only one author the class option oneauthor should be used. Otherwise use the class option moreauthors.
+
+%---------
+% pdftex
+%---------
+% The option pdftex is for use with pdfLaTeX. Remove "pdftex" for (1) compiling with LaTeX & dvi2pdf (if eps figures are used) or for (2) compiling with XeLaTeX.
+
+%=================================================================
+% MDPI internal commands - do not modify
+\firstpage{1}
+\makeatletter
+\setcounter{page}{\@firstpage}
+\makeatother
+\pubvolume{1}
+\issuenum{1}
+\articlenumber{0}
+\pubyear{2023}
+\copyrightyear{2023}
+%\externaleditor{Academic Editor: Firstname Lastname}
+\datereceived{ }
+\daterevised{ } % Comment out if no revised date
+\dateaccepted{ }
+\datepublished{ }
+%\datecorrected{} % For corrected papers: "Corrected: XXX" date in the original paper.
+%\dateretracted{} % For corrected papers: "Retracted: XXX" date in the original paper.
+\hreflink{https://doi.org/} % If needed use \linebreak
+%\doinum{}
+%\pdfoutput=1 % Uncommented for upload to arXiv.org
+
+%=================================================================
+% Add packages and commands here. The following packages are loaded in our class file: fontenc, inputenc, calc, indentfirst, fancyhdr, graphicx, epstopdf, lastpage, ifthen, float, amsmath, amssymb, lineno, setspace, enumitem, mathpazo, booktabs, titlesec, etoolbox, tabto, xcolor, colortbl, soul, multirow, microtype, tikz, totcount, changepage, attrib, upgreek, array, tabularx, pbox, ragged2e, tocloft, marginnote, marginfix, enotez, amsthm, natbib, hyperref, cleveref, scrextend, url, geometry, newfloat, caption, draftwatermark, seqsplit
+% cleveref: load \crefname definitions after \begin{document}
+
+%=================================================================
+% Please use the following mathematics environments: Theorem, Lemma, Corollary, Proposition, Characterization, Property, Problem, Example, ExamplesandDefinitions, Hypothesis, Remark, Definition, Notation, Assumption
+%% For proofs, please use the proof environment (the amsthm package is loaded by the MDPI class).
+
+%=================================================================
+% Full title of the paper (Capitalized)
+\Title{Estructura Productiva, Presión Inmobiliaria y su Impacto en el
+Ciclo Vital y Migratorio en España}
+
+% MDPI internal command: Title for citation in the left column
+\TitleCitation{Estructura Productiva, Presión Inmobiliaria y su Impacto
+en el Ciclo Vital y Migratorio en España}
+
+% Author Orchid ID: enter ID or remove command
+%\newcommand{\orcidauthorA}{0000-0000-0000-000X} % Add \orcidA{} behind the author's name
+%\newcommand{\orcidauthorB}{0000-0000-0000-000X} % Add \orcidB{} behind the author's name
+
+
+% Authors, for the paper (add full first names)
+\Author{Nombre Apellido 1$^{1}$, Nombre Apellido 2$^{1}$, Nombre
+Apellido 3$^{1}$}
+
+
+%\longauthorlist{yes}
+
+
+% MDPI internal command: Authors, for metadata in PDF
+\AuthorNames{Nombre Apellido 1, Nombre Apellido 2, Nombre Apellido 3}
+
+% MDPI internal command: Authors, for citation in the left column
+
+% Affiliations / Addresses (Add [1] after \address if there is only one affiliation.)
+\address{%
+$^{1}$ \quad Máster en Ciencia de Datos, Universitat de València (UV),
+España.; \\
+}
+
+% Contact information of the corresponding author
+\corres{Correspondence: }
+
+% Current address and/or shared authorship
+
+
+
+
+
+
+
+
+% The commands \thirdnote{} till \eighthnote{} are available for further notes
+
+% Simple summary
+\simplesumm{Este proyecto de Análisis Exploratorio de Datos (AED) evalúa
+las dinámicas entre el modelo productivo provincial, el coste de la
+vivienda y su impacto en la demografía española utilizando datos del
+INE.}
+
+%\conference{} % An extended version of a conference paper
+
+% Abstract (Do not insert blank lines, i.e. \\)
+\abstract{El presente trabajo desarrolla un Análisis Exploratorio de
+Datos (AED) exhaustivo cruzando dimensiones económicas, inmobiliarias y
+sociodemográficas a nivel provincial en España. Se emplean datos del
+Instituto Nacional de Estadística (INE) para analizar cómo la
+hiperdependencia de ciertos sectores tensiona el mercado inmobiliario,
+afectando a los saldos migratorios y al ciclo vital. El análisis cubre
+la importación y limpieza de datos, el tratamiento de valores perdidos y
+atípicos, y un análisis univariante y bivariante para dar respuesta a
+las preguntas planteadas.}
+
+
+% Keywords
+\keyword{Análisis Exploratorio de Datos; Demografía; Mercado
+Inmobiliario; R; MDPI}
+
+% The fields PACS, MSC, and JEL may be left empty or commented out if not applicable
+%\PACS{J0101}
+%\MSC{}
+%\JEL{}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Only for the journal Diversity
+%\LSID{\url{http://}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Only for the journal Applied Sciences
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Only for the journal Data
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Only for the journal Toxins
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Only for the journal Encyclopedia
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Only for the journal Advances in Respiratory Medicine
+%\addhighlights{yes}
+%\renewcommand{\addhighlights}{%
+
+%\noindent This is an obligatory section in “Advances in Respiratory Medicine”, whose goal is to increase the discoverability and readability of the article via search engines and other scholars. Highlights should not be a copy of the abstract, but a simple text allowing the reader to quickly and simplified find out what the article is about and what can be cited from it. Each of these parts should be devoted up to 2~bullet points.\vspace{3pt}\\
+%\textbf{What are the main findings?}
+% \begin{itemize}[labelsep=2.5mm,topsep=-3pt]
+% \item First bullet.
+% \item Second bullet.
+% \end{itemize}\vspace{3pt}
+%\textbf{What is the implication of the main finding?}
+% \begin{itemize}[labelsep=2.5mm,topsep=-3pt]
+% \item First bullet.
+% \item Second bullet.
+% \end{itemize}
+%}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Pandoc syntax highlighting
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+
+% tightlist command for lists without linebreak
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+
+
+
+
+\begin{document}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{1. Introducción y Planteamiento de
+Preguntas}\label{introducciuxf3n-y-planteamiento-de-preguntas}
+
+El objetivo de este proyecto es analizar cómo el modelo productivo de
+las diferentes provincias españolas condiciona sus mercados laborales e
+inmobiliarios y, consecuentemente, altera el ciclo vital y demográfico
+de sus habitantes.
+
+A partir del cruce de datos, nos planteamos responder a las siguientes
+preguntas de investigación:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  \textbf{La trampa del sector servicios:} ¿Existe una correlación entre
+  el porcentaje de empleo en hostelería/turismo y el encarecimiento de
+  la vivienda respecto al salario medio?
+\item
+  \textbf{El coste de la maternidad:} ¿Hay un umbral crítico en la ratio
+  Salario/Vivienda a partir del cual la edad media a la maternidad
+  aumenta significativamente?
+\item
+  \textbf{El refugio industrial:} ¿Logran las provincias con un tejido
+  industrial fuerte retener mejor a la población joven (saldo migratorio
+  positivo) frente a aquellas con modelos primarios?
+\item
+  \textbf{Densidad de los hogares:} En mercados inmobiliarios
+  tensionados (ej. Madrid, Barcelona, Baleares), ¿se observa un aumento
+  del tamaño medio del hogar sin estar ligado a la natalidad?
+\end{enumerate}
+
+\section{2. Importación y Acondicionamiento de
+Datos}\label{importaciuxf3n-y-acondicionamiento-de-datos}
+
+En esta sección procedemos a cargar los conjuntos de datos descargados
+del INE. Los ficheros originales se encuentran almacenados en la carpeta
+local \texttt{data/}.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Ejemplo de carga de datos (Sustituir por nombres reales de ficheros)}
+\CommentTok{\# df\_economia \textless{}{-} read\_csv("data/datos\_economia\_ine.csv")}
+\CommentTok{\# df\_demografia \textless{}{-} read\_csv("data/datos\_demografia\_ine.csv")}
+
+\CommentTok{\# Aquí se realizará el proceso de limpieza inicial y el \textquotesingle{}left\_join\textquotesingle{} }
+\CommentTok{\# por el código de provincia para unificar todo en un único dataset \textquotesingle{}df\_final\textquotesingle{}.}
+\end{Highlighting}
+\end{Shaded}
+
+\emph{Explicación detallada de los pasos seguidos para homogeneizar los
+nombres de las columnas, filtrar los años de estudio (ej. 2015-2022) y
+el cruce de las tablas.}
+
+\section{3. Análisis de Datos Perdidos (NAs) e
+Imputación}\label{anuxe1lisis-de-datos-perdidos-nas-e-imputaciuxf3n}
+
+Durante la integración de diferentes fuentes oficiales, es habitual
+encontrar valores perdidos. A continuación, cuantificamos y analizamos
+la naturaleza de estos \emph{missing values}.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Código para identificar y visualizar NAs}
+\CommentTok{\# Aplicación de métodos de imputación si procede (ej. media, interpolación) o eliminación de filas.}
+\end{Highlighting}
+\end{Shaded}
+
+\emph{Justificación de la decisión tomada: por qué se ha elegido un
+método de imputación concreto o por qué se ha descartado una variable
+con demasiados valores nulos.}
+
+\section{4. Análisis de Valores Atípicos
+(Outliers)}\label{anuxe1lisis-de-valores-atuxedpicos-outliers}
+
+Algunas provincias (como Madrid, Barcelona o regiones insulares) pueden
+presentar comportamientos extremos que distorsionen el análisis general.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Código para visualizar outliers mediante boxplots}
+\CommentTok{\# Métodos aplicados (ej. Rango Intercuartílico {-} IQR) para filtrar o transformar variables.}
+\end{Highlighting}
+\end{Shaded}
+
+\emph{Explicación del tratamiento de los outliers. Se debe justificar si
+se mantienen en el dataset porque representan información real valiosa o
+si se aplican transformaciones logarítmicas para suavizar su impacto.}
+
+\section{5. Análisis Exploratorio de Datos
+(EDA)}\label{anuxe1lisis-exploratorio-de-datos-eda}
+
+\subsection{5.1 Análisis Univariante}\label{anuxe1lisis-univariante}
+
+Exploración de la distribución individual de las principales variables
+de estudio (Salario, Precio Vivienda, Edad Maternidad).
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Código para histogramas, densidades y estadísticos descriptivos básicos.}
+\end{Highlighting}
+\end{Shaded}
+
+\emph{Comentarios sobre las distribuciones obtenidas (simetría, sesgos,
+concentración de datos).}
+
+\subsection{5.2 Análisis Bivariante y
+Multivariante}\label{anuxe1lisis-bivariante-y-multivariante}
+
+En esta sección cruzamos las variables para dar respuesta a las
+preguntas planteadas en la introducción.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Código para gráficos de dispersión (scatter plots), matrices de correlación (corrplot), etc.}
+\end{Highlighting}
+\end{Shaded}
+
+\emph{Explicación detallada de los gráficos mostrados. ``Contar la
+historia'' que revelan los datos. ¿Se confirman las hipótesis
+iniciales?}
+
+\section{6. Conclusiones Finales}\label{conclusiones-finales}
+
+A partir del análisis exploratorio realizado, podemos extraer las
+siguientes conclusiones:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Sobre el mercado inmobiliario y demografía:} (Respuesta a las
+  preguntas 1 y 2).
+\item
+  \textbf{Sobre el modelo productivo y migración:} (Respuesta a las
+  preguntas 3 y 4).
+\item
+  \textbf{Aportaciones adicionales:} (Limitaciones del estudio, posibles
+  líneas futuras o reflexiones sobre los datos).
+\end{itemize}
+
+\newpage
+
+\section{Referencias}\label{referencias}
+
+\begin{itemize}
+\tightlist
+\item
+  Instituto Nacional de Estadística (INE). (2026). \emph{Bases de datos
+  provinciales}. Recuperado de
+  \url{https://www.ine.es/dyngs/DAB/index.htm?cid=1722}
+\item
+  Xie, Y., Allaire, J. J., \& Grolemund, G. (2018). \emph{R Markdown:
+  The Definitive Guide}. Chapman and Hall/CRC.
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\vspace{6pt}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% optional
+
+% Only for the journal Methods and Protocols:
+% If you wish to submit a video article, please do so with any other supplementary material.
+% \supplementary{The following supporting information can be downloaded at: \linksupplementary{s1}, Figure S1: title; Table S1: title; Video S1: title. A supporting video article is available at doi: link.}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Optional
+
+%% Only for journal Encyclopedia
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Optional
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{adjustwidth}{-\extralength}{0cm}
+
+%\printendnotes[custom] % Un-comment to print a list of endnotes
+
+
+
+% If authors have biography, please use the format below
+%\section*{Short Biography of Authors}
+%\bio
+%{\raisebox{-0.35cm}{\includegraphics[width=3.5cm,height=5.3cm,clip,keepaspectratio]{Definitions/author1.pdf}}}
+%{\textbf{Firstname Lastname} Biography of first author}
+%
+%\bio
+%{\raisebox{-0.35cm}{\includegraphics[width=3.5cm,height=5.3cm,clip,keepaspectratio]{Definitions/author2.jpg}}}
+%{\textbf{Firstname Lastname} Biography of second author}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% for journal Sci
+%\reviewreports{\\
+%Reviewer 1 comments and authors’ response\\
+%Reviewer 2 comments and authors’ response\\
+%Reviewer 3 comments and authors’ response
+%}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\PublishersNote{}
+\end{adjustwidth}
+
+
+\end{document}
