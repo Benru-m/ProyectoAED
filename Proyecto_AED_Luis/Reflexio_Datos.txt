@@ -61,5 +61,5 @@ enlace: https://www.ine.es/jaxiT3/Tabla.htm?t=1581&L=0
 enlace_descarga_csv:https://www.ine.es/jaxiT3/files/t/es/csv_bd/1581.csv?nocab=1
 
 7. Distribución Poblacional (Nivel Provincial, del 2021 a 2025)
-enlace:https://www.ine.es/jaxiT3/Tabla.htm?t=68528&L=0
-enlace_descarga_csv:https://www.ine.es/jaxiT3/files/t/es/csv_bd/68528.csv?nocab=1
+enlace:https://www.ine.es/jaxi/Tabla.htm?t=2852
+enlace_descarga_csv:https://www.ine.es/jaxi/files/t/es/csv_bd/2852.csv?nocab=1

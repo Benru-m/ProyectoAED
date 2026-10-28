@@ -9,22 +9,286 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+Este archivo carga y transforma los datos en crudo para obtener los conjuntos
+de datos que se utilizarán en el análisis.
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+## Carga con funciones de base R
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+Se emplean únicamente funciones de base R. La función auxiliar lee los
+ficheros mediante `readLines()` y después los transforma con `read.table()`.
+También elimina el marcador BOM que aparece al principio de algunos ficheros.
 
-```{r cars}
-summary(cars)
+```{r}
+leer_base <- function(fichero, separador) {
+  lineas <- readLines(fichero, encoding = "UTF-8", warn = FALSE)
+  lineas[1] <- sub("^\ufeff", "", lineas[1])
+  tabla <- read.table(text = paste(lineas, collapse = "\n"),
+                      header = TRUE, sep = separador, quote = "",
+                      comment.char = "", fill = TRUE,
+                      na.strings = c("", "null"),
+                      stringsAsFactors = FALSE, check.names = FALSE)
+  names(tabla) <- sub("^\ufeff", "", names(tabla))
+  tabla
+}
+
+coste_vivienda <- leer_base("raw/coste_vivienda.csv", ";")
+distr_pobl <- leer_base("raw/distribucion_poblacional.csv", "\t")
+edad_maternidad <- leer_base("raw/edad_maternidad.csv", "\t")
+migracion_interior <- leer_base("raw/migracion_interior.csv", "\t")
+ocupacion_sector <- leer_base("raw/Ocupados_Sector_Provincia.csv", "\t")
+pib_per_capita <- leer_base("raw/pib_per_capita.csv", ";")
+renta_bruta_media <- leer_base("raw/renta_bruta_media.csv", "\t")
+valor_bruto_sector <- leer_base("raw/valor_bruto_sector.csv", "\t")
 ```
 
-## Including Plots
+## Selección del nivel provincial
 
-You can also embed plots, for example:
+El criterio general es excluir los registros nacionales y autonómicos,
+conservando las 51 provincias y las dos ciudades autónomas. En las tablas con
+una columna `Provincias` o `Provincia` se conservan sus valores no perdidos.
+En `pib_per_capita`, provincias y comunidades aparecen mezcladas en una misma
+columna, por lo que se excluyen los nombres autonómicos escritos en mayúsculas
+y se incorporan expresamente Ceuta y Melilla.
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+No se eliminan otras dimensiones propias de cada fuente (sector, régimen,
+orden de nacimiento o indicador de renta), porque no son desgloses por sexo o
+nacionalidad y representan información analítica distinta.
+
+```{r}
+es_provincia <- function(x) {
+  !is.na(x) & nzchar(x) & !grepl("^Total Nacional$", x,
+                                  ignore.case = TRUE)
+}
+
+# La fuente ofrece Ceuta y Melilla como una única categoría agregada.
+coste_vivienda <- coste_vivienda[
+  es_provincia(coste_vivienda$Provincia), , drop = FALSE]
+
+# Total de sexo y total de país de nacimiento.
+distr_pobl <- distr_pobl[
+  es_provincia(distr_pobl$Provincias) &
+    distr_pobl$Sexo == "Total" &
+    distr_pobl$`País de nacimiento` == "Total", , drop = FALSE]
+
+# La variable territorial ya identifica provincias.
+edad_maternidad <- edad_maternidad[
+  es_provincia(edad_maternidad$Provincias), , drop = FALSE]
+
+# En esta fuente la categoría total de sexo se denomina "Ambos sexos".
+migracion_interior <- migracion_interior[
+  es_provincia(migracion_interior$Provincias) &
+    migracion_interior$Sexo == "Ambos sexos", , drop = FALSE]
+
+# Se conservan todos los sectores económicos de cada provincia.
+ocupacion_sector <- ocupacion_sector[
+  es_provincia(ocupacion_sector$Provincias), , drop = FALSE]
+
+# Las comunidades están en mayúsculas; las provincias aparecen en formato
+# título. Las comunidades uniprovinciales equivalen territorialmente a su
+# provincia; Ceuta y Melilla son otra excepción. Se usa
+# toupper() en lugar de una expresión regular para que también funcione con
+# nombres que contienen vocales acentuadas.
+nombre_territorio <- pib_per_capita[[1]]
+territorios_uniprovinciales <- c(
+  "03 ASTURIAS, PRINCIPADO DE", "04 BALEARS, ILLES", "06 CANTABRIA",
+  "13 MADRID, COMUNIDAD DE", "14 MURCIA, REGIÓN DE",
+  "15 NAVARRA, COMUNIDAD FORAL DE", "17 RIOJA, LA"
+)
+es_provincia_pib <- es_provincia(nombre_territorio) &
+  (toupper(nombre_territorio) != nombre_territorio |
+     nombre_territorio %in% c(territorios_uniprovinciales,
+                              "18 CEUTA", "19 MELILLA") |
+     grepl("^14 MURCIA", nombre_territorio))
+pib_per_capita <- pib_per_capita[es_provincia_pib, , drop = FALSE]
+
+# Se conservan todos los indicadores de renta para las provincias.
+renta_bruta_media <- renta_bruta_media[
+  es_provincia(renta_bruta_media$Provincias), , drop = FALSE]
+
+# La fuente ya está desglosada territorialmente por provincia.
+valor_bruto_sector <- valor_bruto_sector[
+  es_provincia(valor_bruto_sector$Provincias), , drop = FALSE]
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+La selección de sexo y nacionalidad se hace sobre la categoría que la fuente
+denomina `Total` (o `Ambos sexos` en migración). Así se evita sumar a mano
+hombres y mujeres o países de nacimiento, lo que podría producir duplicidades
+o diferencias por redondeo. En las tablas sin estas variables se conserva la
+información provincial disponible sin agregar dimensiones distintas.
+
+```{r}
+resumen_provincial <- data.frame(
+  data_frame = c("coste_vivienda", "distr_pobl", "edad_maternidad",
+                 "migracion_interior", "ocupacion_sector", "pib_per_capita",
+                 "renta_bruta_media", "valor_bruto_sector"),
+  filas_seleccionadas = c(nrow(coste_vivienda), nrow(distr_pobl),
+                          nrow(edad_maternidad), nrow(migracion_interior),
+                          nrow(ocupacion_sector), nrow(pib_per_capita),
+                          nrow(renta_bruta_media), nrow(valor_bruto_sector))
+)
+resumen_provincial
+```
+
+## Selección de los años comunes
+
+Las fuentes no utilizan exactamente el mismo nombre ni el mismo formato para
+el año: `coste_vivienda` lo contiene en `Año`, mientras que el resto lo
+contiene en `Periodo`. Además, algunas observaciones incluyen información
+adicional, como `2026T3` o `2023(P)`. Para poder compararlas, se extraen los
+cuatro primeros dígitos y se convierten a números.
+
+```{r}
+# Obtiene el año de cada data frame sin modificar sus columnas originales.
+obtener_anio <- function(df) {
+  columna_anio <- if ("Año" %in% names(df)) "Año" else "Periodo"
+  as.integer(sub("^(\\d{4}).*", "\\1", as.character(df[[columna_anio]])))
+}
+
+# Se reúnen todos los data frames ya filtrados a nivel provincial.
+data_frames <- list(
+  coste_vivienda = coste_vivienda,
+  distr_pobl = distr_pobl,
+  edad_maternidad = edad_maternidad,
+  migracion_interior = migracion_interior,
+  ocupacion_sector = ocupacion_sector,
+  pib_per_capita = pib_per_capita,
+  renta_bruta_media = renta_bruta_media,
+  valor_bruto_sector = valor_bruto_sector
+)
+
+# Reduce(intersect, ...) conserva únicamente los años presentes en todos.
+anios_comunes <- Reduce(
+  intersect,
+  lapply(data_frames, function(df) unique(na.omit(obtener_anio(df))))
+)
+anios_comunes <- sort(anios_comunes)
+anios_comunes
+```
+
+El siguiente paso conserva únicamente las filas cuyo año pertenece a la
+intersección anterior. Se reasignan los resultados a los mismos nombres para
+que el resto del análisis pueda utilizar directamente los data frames
+armonizados. No se eliminan las columnas originales ni los detalles de cada
+fuente (trimestre, sector, indicador, etc.).
+
+```{r}
+filtrar_anios_comunes <- function(df, anios) {
+  anio <- obtener_anio(df)
+  df[!is.na(anio) & anio %in% anios, , drop = FALSE]
+}
+
+coste_vivienda <- filtrar_anios_comunes(coste_vivienda, anios_comunes)
+distr_pobl <- filtrar_anios_comunes(distr_pobl, anios_comunes)
+edad_maternidad <- filtrar_anios_comunes(edad_maternidad, anios_comunes)
+migracion_interior <- filtrar_anios_comunes(migracion_interior, anios_comunes)
+ocupacion_sector <- filtrar_anios_comunes(ocupacion_sector, anios_comunes)
+pib_per_capita <- filtrar_anios_comunes(pib_per_capita, anios_comunes)
+renta_bruta_media <- filtrar_anios_comunes(renta_bruta_media, anios_comunes)
+valor_bruto_sector <- filtrar_anios_comunes(valor_bruto_sector, anios_comunes)
+
+resumen_anios_comunes <- data.frame(
+  data_frame = names(data_frames),
+  anios_comunes = paste(anios_comunes, collapse = ", "),
+  filas_finales = c(nrow(coste_vivienda), nrow(distr_pobl),
+                    nrow(edad_maternidad), nrow(migracion_interior),
+                    nrow(ocupacion_sector), nrow(pib_per_capita),
+                    nrow(renta_bruta_media), nrow(valor_bruto_sector)),
+  row.names = NULL
+)
+resumen_anios_comunes
+```
+
+## Agregación de datos trimestrales por año
+
+Algunas fuentes contienen varias observaciones dentro del mismo año. En
+`coste_vivienda`, el trimestre aparece en la columna `Trimestre`; en
+`ocupacion_sector`, aparece dentro de `Periodo`, con formatos como `2026T3`.
+Para obtener una observación anual se calcula la media aritmética de los
+trimestres disponibles, manteniendo las demás dimensiones de cada fuente.
+
+Se utiliza la media porque estas variables representan valores o niveles
+medidos durante el trimestre. Si se tratara de flujos acumulables, como
+ingresos o cantidades producidas, sería más apropiado utilizar una suma.
+
+```{r}
+# Convierte números escritos con formato español, por ejemplo "22.852,6",
+# a números utilizables por mean() y aggregate().
+convertir_numerico_es <- function(x) {
+  x <- trimws(as.character(x))
+  x[x %in% c("", "null", "NA")] <- NA
+  x <- gsub("\\.", "", x)
+  x <- sub(",", ".", x, fixed = TRUE)
+  as.numeric(x)
+}
+
+# Media que devuelve NA cuando todos los trimestres de un grupo son NA.
+media_disponible <- function(x) {
+  if (all(is.na(x))) NA_real_ else mean(x, na.rm = TRUE)
+}
+
+# Se utilizan los data frames provinciales guardados antes del filtro de años
+# comunes. Así la agregación no depende de que alguna fuente tenga años vacíos.
+coste_trimestral <- data_frames$coste_vivienda
+columna_anio_coste <- names(coste_trimestral)[grepl("^A", names(coste_trimestral))][1]
+columna_regimen <- names(coste_trimestral)[grepl("^R", names(coste_trimestral))][1]
+columna_comunidad <- names(coste_trimestral)[grepl("^Comunidad", names(coste_trimestral))][1]
+coste_trimestral[["Valor"]] <- convertir_numerico_es(
+  coste_trimestral[["Valor"]]
+)
+coste_trimestral[[columna_anio_coste]] <- as.integer(
+  coste_trimestral[[columna_anio_coste]]
+)
+
+coste_vivienda_anual <- aggregate(
+  x = list(Valor = coste_trimestral[["Valor"]]),
+  by = setNames(
+    list(coste_trimestral[[columna_anio_coste]],
+         coste_trimestral[[columna_regimen]],
+         coste_trimestral[["CPRO"]], coste_trimestral[["Provincia"]],
+         coste_trimestral[[columna_comunidad]],
+         coste_trimestral[["CODAUTO"]]),
+    c("Año", "Régimen", "CPRO", "Provincia", "Comunidad_Autónoma",
+      "CODAUTO")
+  ),
+  FUN = media_disponible
+)
+names(coste_vivienda_anual)[1] <- "Valor"
+
+# En ocupacion_sector se conservan solo los registros que tienen trimestre.
+ocupacion_trimestral <- data_frames$ocupacion_sector
+ocupacion_trimestral <- ocupacion_trimestral[
+  grepl("^\\d{4}T[1-4]$", ocupacion_trimestral[["Periodo"]]),
+  , drop = FALSE]
+ocupacion_trimestral[["Año"]] <- as.integer(
+  sub("^(\\d{4}).*", "\\1", ocupacion_trimestral[["Periodo"]])
+)
+ocupacion_trimestral[["Total"]] <- convertir_numerico_es(
+  ocupacion_trimestral[["Total"]]
+)
+
+ocupacion_sector_anual <- aggregate(
+  x = list(Total = ocupacion_trimestral[["Total"]]),
+  by = setNames(
+    list(ocupacion_trimestral[["Año"]],
+         ocupacion_trimestral[["Provincias"]],
+         ocupacion_trimestral[["Sector económico"]]),
+    c("Año", "Provincias", "Sector económico")
+  ),
+  FUN = media_disponible
+)
+names(ocupacion_sector_anual)[1] <- "Total"
+
+# Se muestra un resumen para comprobar el número de filas anuales obtenidas.
+resumen_agregacion_anual <- data.frame(
+  data_frame = c("coste_vivienda_anual", "ocupacion_sector_anual"),
+  filas_finales = c(nrow(coste_vivienda_anual),
+                    nrow(ocupacion_sector_anual)),
+  row.names = NULL
+)
+resumen_agregacion_anual
+```
+
+Los nuevos objetos `coste_vivienda_anual` y `ocupacion_sector_anual` contienen
+una fila por año y por combinación de dimensiones territoriales y analíticas.
+Las columnas trimestrales dejan de ser necesarias porque su información ya
+está resumida en la media anual.
