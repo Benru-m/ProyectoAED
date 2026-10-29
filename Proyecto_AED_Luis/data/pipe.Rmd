@@ -10,6 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(dplyr)
 library(tidyr)
 library(stringr)
+library(readr)
 ```
 
 Este archivo carga y transforma los datos en crudo para obtener los conjuntos
@@ -91,9 +92,8 @@ distr_pobl <- distr_pobl %>% separate(
     into = c("id_prov", "Provincia"), 
     sep = " ",                             
     extra = "merge"                        
-  ) %>% filter(as.numeric(id_prov)<=52) %>% arrange(id_prov,Periodo) %>% filter(Sexo=="Total")
+  ) %>% filter(as.numeric(id_prov)<=52) %>% arrange(id_prov,Periodo) %>% filter(Sexo=="Total") %>% select(-Sexo)
 
-distr_pobl$Sexo <- NULL
 distr_pobl <- generar_id_obs(distr_pobl,col_anyo = distr_pobl$Periodo, col_prov = distr_pobl$id_prov)
 ```
 
@@ -107,8 +107,57 @@ edad_maternidad <- edad_maternidad %>% filter(Orden_de_nacimiento=="Todos")%>%se
     into = c("id_prov", "Provincia"), 
     sep = " ",                             
     extra = "merge"                        
-  ) %>% filter(as.numeric(id_prov)<=52) %>% arrange(id_prov,Periodo) 
+  ) %>% filter(as.numeric(id_prov)<=52) %>% arrange(id_prov,Periodo) %>% select(-Orden_de_nacimiento)
 
-edad_maternidad$Orden_de_nacimiento <- NULL
 edad_maternidad <- generar_id_obs(edad_maternidad,col_anyo =edad_maternidad$Periodo, col_prov = edad_maternidad$id_prov)
+```
+
+## Preparacion de migración interior
+Este dataset tiene una estructura similar a la anterior, por lo que el proceso seguido es el mismo, solo que seleccionamos el valor total por sexo, y nos quedamos con las edades 19-35.  Antes de filtrar por edad tenemos que transformar ese dato en un número, ya que viene expresada como `x Años`.
+
+```{r}
+migracion_interior <- migracion_interior %>% filter(Sexo=="Ambos sexos")%>%separate(
+    col = Provincias,                   
+    into = c("id_prov", "Provincia"), 
+    sep = " ",                             
+    extra = "merge"                        
+  )   %>%filter(as.numeric(id_prov)<=52)%>% select(-Sexo) %>%mutate(Edad = as.numeric(gsub("\\D", "", Edad)))  %>% filter(Edad >= 19 & Edad <= 35) %>% select(-Edad)
+  
+migracion_interior <- generar_id_obs(migracion_interior,col_anyo =migracion_interior$Periodo, col_prov = migracion_interior$id_prov)
+  
+migracion_interior <- migracion_interior %>%  group_by(id)%>%  
+  mutate(Total = sum(as.numeric(Total), na.rm = TRUE)) %>% 
+  ungroup()%>% distinct()%>%  arrange(id_prov,Periodo)  
+
+```
+
+## Preparamos ocupacion_sector
+Convertimos las columnas numçericas a números de forma segura con parse_number (readr). Separamos la columna provincias en nombre e índice. Cambiamos el valor `Construcción` por `Construccion` para evitar que el acento de errores, y expandimos los sectores como columnas, fusionando construcción e industria .En la columna trimestral sustituimos el trimestre por el año, ya que acabaremos agregando por año, y así podemos generar un id. Agregamos los datos de cada trimestre (diferenciando cada sector), teniendo en cuenta que la unidad del Total es miles de personas, y ordenamos los datos.
+```{r}
+colnames(ocupacion_sector)[2]<-"sector_econ"
+ocupacion_sector <- ocupacion_sector %>%
+  mutate(
+    Total = parse_number(
+      as.character(Total), 
+      locale = locale(decimal_mark = ",", grouping_mark = ".")
+    ))%>%
+  mutate(sector_econ = gsub("Construcción", "Construccion", sector_econ, ignore.case = TRUE))%>%
+  pivot_wider(names_from=sector_econ,values_from=Total)%>%
+mutate(Industria = Industria + Construccion) %>% select(-Construccion)%>% distinct()%>%
+  separate(
+    col = Provincias,                   
+    into = c("id_prov", "Provincia"), 
+    sep = " ",                             
+    extra = "merge"                        
+  )   %>%filter(as.numeric(id_prov)<=52) %>% mutate(Periodo = as.numeric(gsub("T.*", "", Periodo)))
+
+ocupacion_sector <- generar_id_obs(ocupacion_sector,col_anyo =ocupacion_sector$Periodo, col_prov = ocupacion_sector$id_prov)
+  
+ocupacion_sector <-ocupacion_sector %>%  group_by(id)%>%  
+  mutate(Agricultura = mean(1000*as.numeric(Agricultura), na.rm = TRUE)) %>% 
+  mutate(Servicios = mean(1000*as.numeric(Servicios), na.rm = TRUE)) %>%
+  mutate(Industria = mean(1000*as.numeric(Industria), na.rm = TRUE)) %>%
+  mutate(Total = mean(1000*as.numeric(Total), na.rm = TRUE)) %>%
+  ungroup()%>% distinct()%>%  arrange(id_prov,Periodo)  
+
 ```
