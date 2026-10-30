@@ -140,7 +140,7 @@ leer_base <- function(fichero, separador) {
     file = fichero,
     delim = separador,
     locale = readr::locale(decimal_mark = ",", grouping_mark = "."),
-    na = c("", "NA", "null"),
+    na = c("", "NA", "null",".."),
     name_repair = "minimal",
     show_col_types = FALSE,
     progress = FALSE
@@ -216,7 +216,18 @@ edad_maternidad <- edad_maternidad %>% filter(Orden_de_nacimiento=="Todos")%>%se
     into = c("id_prov", "Provincia"), 
     sep = " ",                             
     extra = "merge"                        
-  ) %>% filtrar_provincias() %>% arrange(id_prov,Periodo) %>% select(-Orden_de_nacimiento) %>% rename(Edad_Media_Maternidad = Total)
+  ) %>% filtrar_provincias() %>% arrange(id_prov,Periodo) %>%
+  select(-Orden_de_nacimiento) %>%
+  mutate(
+    Total = readr::parse_number(
+      Total,
+      na = c("", "NA", "null", ".."),
+      locale = readr::locale(decimal_mark = ",", grouping_mark = ".")
+    )
+  ) %>%
+  rename(Edad_Media_Maternidad = Total)
+
+stopifnot(is.numeric(edad_maternidad$Edad_Media_Maternidad))
 
 edad_maternidad <- generar_id_obs(edad_maternidad,col_anyo =edad_maternidad$Periodo, col_prov = edad_maternidad$id_prov)
 ```

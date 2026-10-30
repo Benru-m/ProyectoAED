@@ -1,0 +1,242 @@
+---
+title: "ejemplo_exploración"
+author: "Luis Molina Villar"
+date: "2026-10-30"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyr)
+library(ggplot2)
+library(readr)
+library(knitr)
+library(kableExtra)
+library(mapSpain)
+library(sf)
+library(corrplot)
+library(scales)
+library(dplyr)
+library(stringr)
+library(ggrepel) # Recomendado para evitar que las etiquetas se solapen
+
+# Mapeo entre nombre de provincias y códigos, todos los oficiales y usados por el INE
+ine_provincias <- tibble::tribble(
+  ~id_prov, ~Provincia_clean,
+  "01", "Araba/Álava",
+  "02", "Albacete",
+  "03", "Alicante/Alacant",
+  "04", "Almería",
+  "05", "Ávila",
+  "06", "Badajoz",
+  "07", "Balears, Illes",
+  "08", "Barcelona",
+  "09", "Burgos",
+  "10", "Cáceres",
+  "11", "Cádiz",
+  "12", "Castellón/Castelló",
+  "13", "Ciudad Real",
+  "14", "Córdoba",
+  "15", "Coruña, A",
+  "16", "Cuenca",
+  "17", "Girona",
+  "18", "Granada",
+  "19", "Guadalajara",
+  "20", "Gipuzkoa",
+  "21", "Huelva",
+  "22", "Huesca",
+  "23", "Jaén",
+  "24", "León",
+  "25", "Lleida",
+  "26", "Rioja, La",
+  "27", "Lugo",
+  "28", "Madrid",
+  "29", "Málaga",
+  "30", "Murcia",
+  "31", "Navarra",
+  "32", "Ourense",
+  "33", "Asturias",
+  "34", "Palencia",
+  "35", "Palmas, Las",
+  "36", "Pontevedra",
+  "37", "Salamanca",
+  "38", "Santa Cruz de Tenerife",
+  "39", "Cantabria",
+  "40", "Segovia",
+  "41", "Sevilla",
+  "42", "Soria",
+  "43", "Tarragona",
+  "44", "Teruel",
+  "45", "Toledo",
+  "46", "Valencia/València",
+  "47", "Valladolid",
+  "48", "Bizkaia",
+  "49", "Zamora",
+  "50", "Zaragoza",
+  "51", "Ceuta",
+  "52", "Melilla"
+)
+
+```
+En este archivo se desarrolla una exploración del conjunto de datos `datos_SocioEcon_ESP` para un corte de un único año. Los resultados son reproducibles para cualquier año seleccionado del conjunto de datos.
+```{r}
+
+load("./data/Datos_SocioEcon.Rdata")
+
+# 1. Selección de un único año para el análisis de sección cruzada
+anio_estudio <- 2021 # Cambiar al año que prefieras
+
+df_corte <- datos_socioecon_ESP %>%
+  filter(Año == anio_estudio)
+``` 
+
+```{r}
+
+vars_num <- df_corte %>% select(where(is.numeric)) %>%
+  select(-any_of(c("Periodo"))) %>%
+  colnames()
+resumen_cuant <- df_corte %>%
+  pivot_longer(cols = all_of(vars_num), names_to = "Variable", values_to = "Valor") %>%
+  group_by(Variable) %>%
+  summarise(
+    N = sum(!is.na(Valor)),
+    Media = mean(Valor, na.rm = TRUE),
+    Mediana = median(Valor, na.rm = TRUE),
+    Desv_Est = sd(Valor, na.rm = TRUE),
+    IQR = IQR(Valor, na.rm = TRUE),
+    Min = min(Valor, na.rm = TRUE),
+    Max = max(Valor, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+resumen_cuant %>%
+  kable(
+    caption = paste("Estadísticos Descriptivos Provinciales - Año", anio_estudio),
+    digits = 2
+  ) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = TRUE)
+```
+
+```{r}
+df_corte %>%
+  select(all_of(vars_num)) %>%
+  pivot_longer(cols = everything(), names_to = "Variable", values_to = "Valor") %>%
+  filter(!is.na(Valor)) %>%
+  ggplot(aes(x = Valor)) +
+  geom_histogram(aes(y = after_stat(density)), bins = 20, fill = "#2C3E50", color = "white", alpha = 0.7) +
+  geom_density(color = "#E74C3C", linewidth = 1) +
+  facet_wrap(~ Variable, scales = "free", ncol = 3) +
+  theme_minimal() +
+  labs(
+    title = paste("Distribución Empírica de Variables Socioeconómicas (Año", anio_estudio, ")"),
+    subtitle = "Histograma y estimación de densidad Kernel por variable",
+    x = NULL,
+    y = "Densidad"
+  )
+
+```
+```{r}
+df_outliers <- df_corte %>%
+  select(Provincia, all_of(vars_num)) %>%
+  pivot_longer(cols = -Provincia, names_to = "Variable", values_to = "Valor") %>%
+  filter(!is.na(Valor)) %>%
+  group_by(Variable) %>%
+  mutate(
+    q1 = quantile(Valor, 0.25, na.rm = TRUE),
+    q3 = quantile(Valor, 0.75, na.rm = TRUE),
+    iqr = q3 - q1,
+    # Criterio estándar de Tukey para identificar outliers
+    is_outlier = Valor < (q1 - 1.5 * iqr) | Valor > (q3 + 1.5 * iqr),
+    etiqueta = if_else(is_outlier, Provincia, NA_character_)
+  ) %>%
+  ungroup()
+
+# 2. Representación gráfica con etiquetas dinámicas
+ggplot(df_outliers, aes(x = Variable, y = log10(Valor))) +
+  # Omitimos la gráfica de outliers por defecto para dibujarlos manualmente
+  geom_boxplot(fill = "#3498DB", alpha = 0.5, outlier.shape = NA) +
+  # Dibujamos manualmente solo los puntos atípicos
+  geom_point(
+    data = filter(df_outliers, is_outlier),
+    color = "red",
+    size = 2
+  ) +
+  # Añadimos los nombres de las provincias atípicas con ggrepel
+  geom_text_repel(
+    aes(label = etiqueta),
+    color = "red",
+    size = 3,
+    max.overlaps = 15,
+    box.padding = 0.3,
+    na.rm = TRUE
+  ) +
+  facet_wrap(~ Variable, scales = "free", ncol = 3) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank()
+  ) +
+  labs(
+    title = paste("Dispersión Interprovincial e Identificación de Outliers (Año", anio_estudio, ")"),
+    subtitle = "Etiquetas rojas corresponden a provincias fuera del rango intercuartílico (1.5 * IQR)",
+    x = NULL,
+    y = "Valor en Escala Logarítmica"
+  )
+```
+
+```{r}
+
+if (!"id_prov" %in% colnames(df_corte)) {
+  df_corte <- df_corte %>%
+    left_join(ine_provincias, by = c("Provincia" = "Provincia_clean"))
+} else {
+  df_corte <- df_corte %>%
+    mutate(id_prov = str_pad(as.character(id_prov), width = 2, side = "left", pad = "0"))
+}
+
+# 3. Cargar la cartografía oficial y realizar el cruce seguro por cpro = id_prov
+mapa_spain <- esp_get_prov() %>%
+  mutate(cpro = str_pad(cpro, width = 2, side = "left", pad = "0")) %>%
+  left_join(df_corte, by = c("cpro" = "id_prov"))
+
+# 4. Representación gráfica del mapa
+var_principal <- vars_num[1]
+
+ggplot(mapa_spain) +
+  geom_sf(aes(fill = .data[[var_principal]]), color = "white", size = 0.2) +
+  scale_fill_viridis_c(option = "mako", na.value = "grey80", labels = comma) +
+  theme_void() +
+  labs(
+    title = paste("Distribución Espacial Provincial:", var_principal),
+    subtitle = paste("Sección cruzada correspondiente al año", anio_estudio),
+    fill = var_principal,
+    caption = "Fuente: INE / mapSpain"
+  ) +
+  theme(
+    legend.position = "right",
+    plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
+    plot.subtitle = element_text(size = 10, hjust = 0.5)
+  )
+```
+
+```{r}
+matriz_corr <- df_corte %>%
+  select(all_of(vars_num)) %>%
+  drop_na() %>%
+  cor(method = "pearson")
+
+corrplot(
+  matriz_corr,
+  method = "color",
+  type = "upper",
+  addCoef.col = "black",
+  number.cex = 0.75,
+  tl.col = "black",
+  tl.srt = 45,
+  diag = FALSE,
+  title = paste("\nMatriz de Correlación de Pearson (Año", anio_estudio, ")")
+)
+```
