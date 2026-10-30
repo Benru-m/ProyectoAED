@@ -93,6 +93,12 @@ ine_provincias <- tibble::tribble(
   "51", "Ceuta",
   "52", "Melilla"
 )
+
+filtrar_provincias <- function(df) {
+  df %>%
+    mutate(id_prov = str_pad(as.character(id_prov), width = 2, side = "left", pad = "0")) %>%
+    filter(id_prov %in% ine_provincias$id_prov)
+}
 ``` 
 
 ```{r descargar_datos, include=FALSE}
@@ -165,6 +171,7 @@ coste_vivienda$Comunidad_Autónoma <- NULL
 Renombramos la columna `CPRO` como `id_prov`, la ponemos como primera columna de la tabla (este y el año serán los identificadores que usaremos para unir las distintas tablas), y reordenamos las filas para que estén en orden. Finalmente asignamos un id a cada instancia.
 ```{r}
 colnames(coste_vivienda)[5]<- "id_prov"
+coste_vivienda <- filtrar_provincias(coste_vivienda)
 coste_vivienda <- coste_vivienda %>% arrange(id_prov) %>% arrange(Año)
 coste_vivienda <- coste_vivienda[c(5,6,1,2,3,4)]
 
@@ -189,7 +196,7 @@ distr_pobl <- distr_pobl %>% separate(
     into = c("id_prov", "Provincia"), 
     sep = " ",                             
     extra = "merge"                        
-  ) %>% filter(as.numeric(id_prov)<=52) %>% arrange(id_prov,Periodo) %>% filter(Sexo=="Total") %>% select(-Sexo) %>% rename(Habitantes = Total)
+  ) %>% filtrar_provincias() %>% arrange(id_prov,Periodo) %>% filter(Sexo=="Total") %>% select(-Sexo) %>% rename(Habitantes = Total)
 
 distr_pobl <- generar_id_obs(distr_pobl,col_anyo = distr_pobl$Periodo, col_prov = distr_pobl$id_prov)
 ```
@@ -209,7 +216,7 @@ edad_maternidad <- edad_maternidad %>% filter(Orden_de_nacimiento=="Todos")%>%se
     into = c("id_prov", "Provincia"), 
     sep = " ",                             
     extra = "merge"                        
-  ) %>% filter(as.numeric(id_prov)<=52) %>% arrange(id_prov,Periodo) %>% select(-Orden_de_nacimiento) %>% rename(Edad_Media_Maternidad = Total)
+  ) %>% filtrar_provincias() %>% arrange(id_prov,Periodo) %>% select(-Orden_de_nacimiento) %>% rename(Edad_Media_Maternidad = Total)
 
 edad_maternidad <- generar_id_obs(edad_maternidad,col_anyo =edad_maternidad$Periodo, col_prov = edad_maternidad$id_prov)
 ```
@@ -226,7 +233,7 @@ migracion_interior <- migracion_interior %>% filter(Sexo=="Ambos sexos")%>%separ
     into = c("id_prov", "Provincia"), 
     sep = " ",                             
     extra = "merge"                        
-  )   %>%filter(as.numeric(id_prov)<=52)%>% select(-Sexo) %>%mutate(Edad = readr::parse_number(Edad))  %>% filter(Edad >= 19 & Edad <= 35) %>% select(-Edad)
+  )   %>% filtrar_provincias() %>% select(-Sexo) %>%mutate(Edad = parse_number(Edad))  %>% filter(Edad >= 19 & Edad <= 35) %>% select(-Edad)
   
 migracion_interior <- generar_id_obs(migracion_interior,col_anyo =migracion_interior$Periodo, col_prov = migracion_interior$id_prov)
   
@@ -245,7 +252,6 @@ Convertimos las columnas numçericas a números de forma segura con parse_number
 ```{r}
 colnames(ocupacion_sector)[2]<-"sector_econ"
 ocupacion_sector <- ocupacion_sector %>%
-  mutate(
   mutate(sector_econ = gsub("Construcción", "Construccion", sector_econ, ignore.case = TRUE))%>%
   pivot_wider(names_from=sector_econ,values_from=Total)%>%
 mutate(Industria = Industria + Construccion) %>% select(-Construccion)%>% distinct()%>%
@@ -254,7 +260,7 @@ mutate(Industria = Industria + Construccion) %>% select(-Construccion)%>% distin
     into = c("id_prov", "Provincia"), 
     sep = " ",                             
     extra = "merge"                        
-  )   %>%filter(as.numeric(id_prov)<=52) %>% mutate(Periodo = readr::parse_number(Periodo))
+  )   %>% filtrar_provincias() %>% mutate(Periodo = readr::parse_number(Periodo))
 
 ocupacion_sector <- generar_id_obs(ocupacion_sector,col_anyo =ocupacion_sector$Periodo, col_prov = ocupacion_sector$id_prov)
   
@@ -282,7 +288,7 @@ pib_per_capita <- pib_per_capita %>% pivot_wider(names_from=Magnitud,values_from
     into = c("id_prov", "Provincia"), 
     sep = " ",                             
     extra = "merge"                        
-  )   %>%filter(as.numeric(id_prov)<=52) %>% 
+  )   %>% filtrar_provincias() %>% 
   filter(str_detect(Provincia, "[[:lower:]]"))
 
 pib_per_capita <- generar_id_obs(pib_per_capita,col_anyo =pib_per_capita$Periodo, col_prov = pib_per_capita$id_prov)
@@ -302,7 +308,7 @@ colnames(renta_bruta_media)[1] <- "Total_Nacional"
 colnames(renta_bruta_media)[5] <- "Indicadores"
 
 renta_bruta_media <- renta_bruta_media %>% filter(Indicadores == "Renta bruta media por persona") %>%
-  select(-Indicadores,-2,-1,-Islas) %>% rename(RentaBrutaMedia=Total) %>% filter(Provincias!="NA") %>% left_join(ine_provincias, by = c("Provincias" = "Provincia_clean"))
+  select(-Indicadores,-2,-1,-Islas) %>% rename(RentaBrutaMedia=Total) %>% filter(!is.na(Provincias), Provincias != "NA") %>% inner_join(ine_provincias, by = c("Provincias" = "Provincia_clean"))
 
 
 
@@ -334,7 +340,7 @@ valor_bruto_sector <- valor_bruto_sector %>% separate(
     into = c("id_prov", "Provincia"), 
     sep = " ",                             
     extra = "merge"                        
-  )   %>%filter(as.numeric(id_prov)<=52) %>% filter(Rama_Actividad != "Impuestos netos sobre los productos") %>%  filter(Rama_Actividad != "Valor añadido bruto total") %>%
+  )   %>% filtrar_provincias() %>% filter(Rama_Actividad != "Impuestos netos sobre los productos") %>%  filter(Rama_Actividad != "Valor añadido bruto total") %>%
   filter(Rama_Actividad != "PRODUCTO INTERIOR BRUTO A PRECIOS DE MERCADO") %>%
   pivot_wider(names_from = Rama_Actividad,values_from = Total) %>% mutate(Periodo = readr::parse_number(Periodo))
 
