@@ -11,6 +11,7 @@ library(dplyr)
 library(tidyr)
 library(stringr)
 library(readr)
+library(tibble)
 ```
 
 Este archivo carga y transforma los datos en crudo para obtener los conjuntos
@@ -29,6 +30,62 @@ generar_id_obs <- function(df, col_anyo, col_prov) {
       )
     )
 }
+
+ine_provincias <- tibble::tribble(
+  ~id_prov, ~Provincia_clean,
+  "01", "Araba/Álava",
+  "02", "Albacete",
+  "03", "Alicante/Alacant",
+  "04", "Almería",
+  "05", "Ávila",
+  "06", "Badajoz",
+  "07", "Balears, Illes",
+  "08", "Barcelona",
+  "09", "Burgos",
+  "10", "Cáceres",
+  "11", "Cádiz",
+  "12", "Castellón/Castelló",
+  "13", "Ciudad Real",
+  "14", "Córdoba",
+  "15", "Coruña, A",
+  "16", "Cuenca",
+  "17", "Girona",
+  "18", "Granada",
+  "19", "Guadalajara",
+  "20", "Gipuzkoa",
+  "21", "Huelva",
+  "22", "Huesca",
+  "23", "Jaén",
+  "24", "León",
+  "25", "Lleida",
+  "26", "Rioja, La",
+  "27", "Lugo",
+  "28", "Madrid",
+  "29", "Málaga",
+  "30", "Murcia",
+  "31", "Navarra",
+  "32", "Ourense",
+  "33", "Asturias",
+  "34", "Palencia",
+  "35", "Palmas, Las",
+  "36", "Pontevedra",
+  "37", "Salamanca",
+  "38", "Santa Cruz de Tenerife",
+  "39", "Cantabria",
+  "40", "Segovia",
+  "41", "Sevilla",
+  "42", "Soria",
+  "43", "Tarragona",
+  "44", "Teruel",
+  "45", "Toledo",
+  "46", "Valencia/València",
+  "47", "Valladolid",
+  "48", "Bizkaia",
+  "49", "Zamora",
+  "50", "Zaragoza",
+  "51", "Ceuta",
+  "52", "Melilla"
+)
 ``` 
 
 ## Carga de los datos en R
@@ -81,7 +138,12 @@ coste_vivienda <- generar_id_obs(coste_vivienda,col_anyo = coste_vivienda$Año, 
 
 Los datos son trimestrales, pero nuestro análisis es anual, y no diferenciará entre vivienda libre y protegida, por lo que agregamos los datos por id usando el valor medio, cosa que ahora podemos hacer sin dificultad, al disponer de un id para cada instancia.
 ```{r}
-coste_vivienda <- coste_vivienda %>% group_by(id) %>% mutate(Valor_anual = mean(Valor, na.rm = TRUE)) %>% ungroup() %>%select(-Valor, -Trimestre,-Régimen) %>%  distinct()
+coste_vivienda <- coste_vivienda %>% group_by(id) %>% mutate(Precio_m2 = mean(Valor, na.rm = TRUE)) %>% ungroup() %>%select(-Valor, -Trimestre,-Régimen) %>%  distinct()
+```
+
+Nos quedamos solo con el valor del metro cuadrado y el id de la instancia.
+```{r}
+coste_vivienda <- coste_vivienda %>% select(id,Precio_m2)
 ```
 
 ## Preparación de la distribución poblacional
@@ -92,9 +154,14 @@ distr_pobl <- distr_pobl %>% separate(
     into = c("id_prov", "Provincia"), 
     sep = " ",                             
     extra = "merge"                        
-  ) %>% filter(as.numeric(id_prov)<=52) %>% arrange(id_prov,Periodo) %>% filter(Sexo=="Total") %>% select(-Sexo)
+  ) %>% filter(as.numeric(id_prov)<=52) %>% arrange(id_prov,Periodo) %>% filter(Sexo=="Total") %>% select(-Sexo) %>% rename(Habitantes = Total)
 
 distr_pobl <- generar_id_obs(distr_pobl,col_anyo = distr_pobl$Periodo, col_prov = distr_pobl$id_prov)
+```
+
+Nos quedamos con el id, y el valor de la población.
+```{r}
+distr_pobl <- distr_pobl %>% select(id,Habitantes)
 ```
 
 ## Preparación de edad_maternidad
@@ -107,11 +174,14 @@ edad_maternidad <- edad_maternidad %>% filter(Orden_de_nacimiento=="Todos")%>%se
     into = c("id_prov", "Provincia"), 
     sep = " ",                             
     extra = "merge"                        
-  ) %>% filter(as.numeric(id_prov)<=52) %>% arrange(id_prov,Periodo) %>% select(-Orden_de_nacimiento)
+  ) %>% filter(as.numeric(id_prov)<=52) %>% arrange(id_prov,Periodo) %>% select(-Orden_de_nacimiento) %>% rename(Edad_Media_Maternidad = Total)
 
 edad_maternidad <- generar_id_obs(edad_maternidad,col_anyo =edad_maternidad$Periodo, col_prov = edad_maternidad$id_prov)
 ```
-
+Nos quedamos con el id y la edad media de maternidad
+```{r}
+edad_maternidad <- edad_maternidad %>% select(id,Edad_Media_Maternidad)
+```
 ## Preparacion de migración interior
 Este dataset tiene una estructura similar a la anterior, por lo que el proceso seguido es el mismo, solo que seleccionamos el valor total por sexo, y nos quedamos con las edades 19-35.  Antes de filtrar por edad tenemos que transformar ese dato en un número, ya que viene expresada como `x Años`.
 
@@ -127,10 +197,14 @@ migracion_interior <- generar_id_obs(migracion_interior,col_anyo =migracion_inte
   
 migracion_interior <- migracion_interior %>%  group_by(id)%>%  
   mutate(Total = sum(as.numeric(Total), na.rm = TRUE)) %>% 
-  ungroup()%>% distinct()%>%  arrange(id_prov,Periodo)  
+  ungroup()%>% distinct()%>%  arrange(id_prov,Periodo)  %>% rename(Migracion_Interior=Total)
 
 ```
 
+Nos quedamos con el id y con la variable `Migracion_Interior`
+```{r}
+migracion_interior <- migracion_interior %>% select(id,Migracion_Interior)
+```
 ## Preparamos ocupacion_sector
 Convertimos las columnas numçericas a números de forma segura con parse_number (readr). Separamos la columna provincias en nombre e índice. Cambiamos el valor `Construcción` por `Construccion` para evitar que el acento de errores, y expandimos los sectores como columnas, fusionando construcción e industria .En la columna trimestral sustituimos el trimestre por el año, ya que acabaremos agregando por año, y así podemos generar un id. Agregamos los datos de cada trimestre (diferenciando cada sector), teniendo en cuenta que la unidad del Total es miles de personas, y ordenamos los datos.
 ```{r}
@@ -160,4 +234,116 @@ ocupacion_sector <-ocupacion_sector %>%  group_by(id)%>%
   mutate(Total = mean(1000*as.numeric(Total), na.rm = TRUE)) %>%
   ungroup()%>% distinct()%>%  arrange(id_prov,Periodo)  
 
+```
+Nos quedamos con los sectores, y el id
+```{r}
+ocupacion_sector <- ocupacion_sector %>% select(id,Agricultura,Industria,Servicios) %>% rename(Ocupados_Agricultura =Agricultura,Ocupados_Industria=Industria,Ocupados_Servicios=Servicios)
+```
+
+
+## Preparamos pib_per_capita
+Separamos la columna Magnitud según sus valores, y nos quedamos solo con el valor Total. Extraemos las provincias, este dataset también incluye las CCAA's, para que no entren también, filtramos para deshacernos de los nombres que están en mayúsculas (considerando los que tienen al menos alguna minúscula). Asignamos el identificador único, y ordenamos los datos correctamente.
+```{r}
+colnames(pib_per_capita)[1] <- "Provincias"
+pib_per_capita <- pib_per_capita %>% pivot_wider(names_from=Magnitud,values_from = Total) %>% select(-4,-5) %>%
+  separate(
+    col = Provincias,                   
+    into = c("id_prov", "Provincia"), 
+    sep = " ",                             
+    extra = "merge"                        
+  )   %>%filter(as.numeric(id_prov)<=52) %>% 
+  filter(str_detect(Provincia, "[[:lower:]]"))
+
+pib_per_capita <- generar_id_obs(pib_per_capita,col_anyo =pib_per_capita$Periodo, col_prov = pib_per_capita$id_prov)
+
+pib_per_capita <- pib_per_capita %>% arrange(id_prov,Periodo) %>% rename(PIB_per_capita = Valor)
+``` 
+Nos quedamos con el id y el `pib_per_capita`
+```{r}
+pib_per_capita <- pib_per_capita %>% select(id,PIB_per_capita)
+```
+
+## Preparamos renta_bruta
+De la columna `Indicadores de rentas media`  nos quedamos solo con el valor `Renta bruta media por persona`, adaptando los nombres de los valores y columnas antes para evitar errores. Extraemos los valores numéricos de manera segura, y eliminamos las columnas cuya información no queremos. Le asignamos a las provincias un identificador numérico. Le asignamos un identificador único. Usamos el identificador para agragar los valores de cada instancia (ya que los valores de las islas venían separados).
+
+```{r}
+colnames(renta_bruta_media)[1] <- "Total_Nacional"
+colnames(renta_bruta_media)[5] <- "Indicadores"
+
+renta_bruta_media <- renta_bruta_media %>% filter(Indicadores == "Renta bruta media por persona") %>% mutate(
+    Total = parse_number(
+      as.character(Total), 
+      locale = locale(decimal_mark = ",", grouping_mark = ".")
+    )
+  )%>% select(-Indicadores,-2,-1,-Islas) %>% rename(RentaBrutaMedia=Total) %>% filter(Provincias!="NA") %>% left_join(ine_provincias, by = c("Provincias" = "Provincia_clean"))
+
+
+
+renta_bruta_media <- generar_id_obs(renta_bruta_media,col_anyo =renta_bruta_media$Periodo, col_prov = renta_bruta_media$id_prov)
+
+renta_bruta_media <- renta_bruta_media %>% group_by(id) %>%
+    mutate(RentaBrutaMedia = mean(RentaBrutaMedia, na.rm = TRUE)) %>%
+ ungroup() %>%
+  distinct() %>% arrange(id_prov,Periodo) 
+``` 
+Nos quedamos con la `renta_bruta_media` y el id.
+```{r}
+renta_bruta_media <- renta_bruta_media %>% select(id,RentaBrutaMedia)
+```
+
+## Preparando valor_bruto_sector
+Empezamos separando la columna `Provincias` en nombre y número, y de las ramas de actividad nos deshacemos de `Impuestos netos sobre los productos`, del `Valor bruto añadido total`, y del `PRODUCTO INTERIOR BRUTO A PRECIOS DE MERCADO`. Separamos los sectores de actividad restantes en provincias, para poder asignar identificadores únicos, y  agrupamos en tres grandes sectores, primario, secundario y terciario.
+
+```{r}
+colnames(valor_bruto_sector)[2] <- "Rama_Actividad"
+sectores <- unique(valor_bruto_sector[[2]])
+
+sector_primario <- c(sectores[[1]])
+sector_secundario <- c(sectores[2:4])
+sector_terciario <- c(sectores[5:7])
+
+valor_bruto_sector <- valor_bruto_sector %>% separate(
+    col = Provincias,                   
+    into = c("id_prov", "Provincia"), 
+    sep = " ",                             
+    extra = "merge"                        
+  )   %>%filter(as.numeric(id_prov)<=52) %>% filter(Rama_Actividad != "Impuestos netos sobre los productos") %>%  filter(Rama_Actividad != "Valor añadido bruto total") %>%
+  filter(Rama_Actividad != "PRODUCTO INTERIOR BRUTO A PRECIOS DE MERCADO") %>%
+  mutate(
+    Total = parse_number(
+      as.character(Total), 
+      locale = locale(decimal_mark = ",", grouping_mark = ".")
+    )
+  )%>%
+  pivot_wider(names_from = Rama_Actividad,values_from = Total) %>% mutate(Periodo = as.numeric(gsub("\\D", "", Periodo)))
+
+valor_bruto_sector <- generar_id_obs(valor_bruto_sector,col_anyo =valor_bruto_sector$Periodo, col_prov = valor_bruto_sector$id_prov)
+
+valor_bruto_sector <- valor_bruto_sector %>% mutate(VAB_Secundario= rowSums(pick(all_of(sector_secundario)), na.rm = TRUE)) %>%
+  select(-all_of(sector_secundario)) %>%  mutate(VAB_Terciario= rowSums(pick(all_of(sector_terciario)), na.rm = TRUE)) %>%
+  select(-all_of(sector_terciario)) %>% rename(VAB_Primario=sector_primario)
+```
+Nos quedamos con el id y el VAB de cada sector.
+```{r}
+valor_bruto_sector <- valor_bruto_sector %>% select(id,VAB_Primario,VAB_Secundario,VAB_Terciario)
+``` 
+
+
+## Unimos todos los datos en una tabla y los guardamos
+
+Ahora usamos el identificador único para unir los datos en una única tabla, y los guardamos en un fichero.
+```{r}
+datos_socioecon_ESP <- coste_vivienda %>% full_join(distr_pobl,by="id") %>% full_join(edad_maternidad,by="id")%>% full_join(migracion_interior,by="id") %>% 
+  full_join(ocupacion_sector,by="id") %>% full_join(pib_per_capita,by="id")%>% full_join(renta_bruta_media,by="id")%>% full_join(valor_bruto_sector,by="id")
+```
+
+Ahora que tenemos los datos unidos, separamos el id en año y provincia de cada observación, y a la provincia le asignamos el nombre.
+```{r}
+codigos_vec <- deframe(ine_provincias)
+datos_socioecon_ESP <- datos_socioecon_ESP %>% separate(id,c("Año","Provincia"),sep="_") %>%  mutate(Provincia= codigos_vec[Provincia])
+``` 
+Guardamos los datos como `csv` y como `Rdata`
+```{r}
+save(datos_socioecon_ESP,file = "Datos_SocioEcon.Rdata")
+write_delim(datos_socioecon_ESP,file = "Datos_SocioEcon.csv",delim = ";")
 ```
