@@ -90,7 +90,7 @@ load("./data/Datos_SocioEcon.Rdata")
 anio_estudio <- 2021 # Cambiar al año que prefieras
 
 df_corte <- datos_socioecon_ESP %>%
-  filter(Año == anio_estudio)
+  filter(Periodo == anio_estudio)
 ``` 
 
 ```{r}

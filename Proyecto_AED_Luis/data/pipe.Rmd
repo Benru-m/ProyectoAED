@@ -155,6 +155,12 @@ ocupacion_sector <- leer_base("raw/Ocupados_Sector_Provincia.csv", "\t")
 pib_per_capita <- leer_base("raw/pib_per_capita.csv", ";")
 renta_bruta_media <- leer_base("raw/renta_bruta_media.csv", "\t")
 valor_bruto_sector <- leer_base("raw/valor_bruto_sector.csv", "\t")
+
+# Normalizamos nombres problemáticos antes de usarlos en expresiones de R.
+# Esto evita errores de codificación con tildes y deja una clave temporal común.
+names(coste_vivienda)[1] <- "Periodo"
+names(coste_vivienda)[4] <- "Regimen"
+names(coste_vivienda)[7] <- "Comunidad_Autonoma"
 ```
 
 
@@ -165,22 +171,22 @@ Ahora vamos a preparar cada una de las tablas para poder unirlas en una tabla fi
 Para empezar, eliminamos las columnas `Comunidad_Autónoma` y `CODAUTO`, ya que no nos interesan.
 ```{r}
 coste_vivienda$CODAUTO <- NULL
-coste_vivienda$Comunidad_Autónoma <- NULL
+coste_vivienda$Comunidad_Autonoma <- NULL
 ```
 
 Renombramos la columna `CPRO` como `id_prov`, la ponemos como primera columna de la tabla (este y el año serán los identificadores que usaremos para unir las distintas tablas), y reordenamos las filas para que estén en orden. Finalmente asignamos un id a cada instancia.
 ```{r}
 colnames(coste_vivienda)[5]<- "id_prov"
 coste_vivienda <- filtrar_provincias(coste_vivienda)
-coste_vivienda <- coste_vivienda %>% arrange(id_prov) %>% arrange(Año)
+coste_vivienda <- coste_vivienda %>% arrange(id_prov) %>% arrange(Periodo)
 coste_vivienda <- coste_vivienda[c(5,6,1,2,3,4)]
 
-coste_vivienda <- generar_id_obs(coste_vivienda,col_anyo = coste_vivienda$Año, col_prov = coste_vivienda$id_prov)
+coste_vivienda <- generar_id_obs(coste_vivienda,col_anyo = coste_vivienda$Periodo, col_prov = coste_vivienda$id_prov)
 ```
 
 Los datos son trimestrales, pero nuestro análisis es anual, y no diferenciará entre vivienda libre y protegida, por lo que agregamos los datos por id usando el valor medio, cosa que ahora podemos hacer sin dificultad, al disponer de un id para cada instancia.
 ```{r}
-coste_vivienda <- coste_vivienda %>% group_by(id) %>% mutate(Precio_m2 = mean(Valor, na.rm = TRUE)) %>% ungroup() %>%select(-Valor, -Trimestre,-Régimen) %>%  distinct()
+coste_vivienda <- coste_vivienda %>% group_by(id) %>% mutate(Precio_m2 = mean(Valor, na.rm = TRUE)) %>% ungroup() %>%select(-Valor, -Trimestre,-Regimen) %>%  distinct()
 ```
 
 Nos quedamos solo con el valor del metro cuadrado y el id de la instancia.
@@ -219,11 +225,15 @@ edad_maternidad <- edad_maternidad %>% filter(Orden_de_nacimiento=="Todos")%>%se
   ) %>% filtrar_provincias() %>% arrange(id_prov,Periodo) %>%
   select(-Orden_de_nacimiento) %>%
   mutate(
-    Total = readr::parse_number(
-      Total,
-      na = c("", "NA", "null", ".."),
-      locale = readr::locale(decimal_mark = ",", grouping_mark = ".")
-    )
+    Total = if (is.numeric(Total)) {
+      as.numeric(Total)
+    } else {
+      readr::parse_number(
+        as.character(Total),
+        na = c("", "NA", "null", ".."),
+        locale = readr::locale(decimal_mark = ",", grouping_mark = ".")
+      )
+    }
   ) %>%
   rename(Edad_Media_Maternidad = Total)
 
@@ -263,7 +273,11 @@ Convertimos las columnas numçericas a números de forma segura con parse_number
 ```{r}
 colnames(ocupacion_sector)[2]<-"sector_econ"
 ocupacion_sector <- ocupacion_sector %>%
-  mutate(sector_econ = gsub("Construcción", "Construccion", sector_econ, ignore.case = TRUE))%>%
+  mutate(sector_econ = ifelse(
+    stringr::str_detect(stringr::str_to_lower(sector_econ), "^constru"),
+    "Construccion",
+    sector_econ
+  ))%>%
   pivot_wider(names_from=sector_econ,values_from=Total)%>%
 mutate(Industria = Industria + Construccion) %>% select(-Construccion)%>% distinct()%>%
   separate(
@@ -378,7 +392,7 @@ datos_socioecon_ESP <- coste_vivienda %>% full_join(distr_pobl,by="id") %>% full
 Ahora que tenemos los datos unidos, separamos el id en año y provincia de cada observación, y a la provincia le asignamos el nombre.
 ```{r}
 codigos_vec <- deframe(ine_provincias)
-datos_socioecon_ESP <- datos_socioecon_ESP %>% separate(id,c("Año","Provincia"),sep="_") %>%  mutate(Provincia= codigos_vec[Provincia])
+datos_socioecon_ESP <- datos_socioecon_ESP %>% separate(id,c("Periodo","Provincia"),sep="_") %>%  mutate(Periodo = as.integer(Periodo), Provincia= codigos_vec[Provincia])
 ``` 
 Guardamos los datos como `csv` y como `Rdata`
 ```{r}
