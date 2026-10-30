@@ -7,11 +7,18 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-library(dplyr)
-library(tidyr)
-library(stringr)
-library(readr)
-library(tibble)
+```
+
+```{r paquetes, include=FALSE}
+paquetes <- c("dplyr", "tidyr", "stringr", "readr", "tibble")
+
+paquetes_faltantes <- paquetes[!paquetes %in% rownames(installed.packages())]
+
+if (length(paquetes_faltantes) > 0) {
+  install.packages(paquetes_faltantes, repos = "https://cloud.r-project.org")
+}
+
+invisible(lapply(paquetes, library, character.only = TRUE))
 ```
 
 Este archivo carga y transforma los datos en crudo para obtener los conjuntos
@@ -30,7 +37,7 @@ generar_id_obs <- function(df, col_anyo, col_prov) {
       )
     )
 }
-
+# Mapeo entre nombre de provincias y códigos, todos los oficiales y usados por el INE
 ine_provincias <- tibble::tribble(
   ~id_prov, ~Provincia_clean,
   "01", "Araba/Álava",
@@ -88,6 +95,34 @@ ine_provincias <- tibble::tribble(
 )
 ``` 
 
+```{r descargar_datos, include=FALSE}
+dir.create("raw", showWarnings = FALSE, recursive = TRUE)
+
+enlaces_datos <- c(
+  "coste_vivienda.csv" = "https://cdn.mivau.gob.es/portal-web-mivau/Datos_MIVAU/CSV/VDP006_01.csv",
+  "distribucion_poblacional.csv" = "https://www.ine.es/jaxi/files/t/es/csv_bd/2852.csv?nocab=1",
+  "edad_maternidad.csv" = "https://www.ine.es/jaxiT3/files/t/es/csv_bd/1581.csv?nocab=1",
+  "migracion_interior.csv" = "https://www.ine.es/jaxiT3/files/t/es/csv_bd/24380.csv?nocab=1",
+  "Ocupados_Sector_Provincia.csv" = "https://www.ine.es/jaxiT3/files/t/es/csv_bd/65354.csv?nocab=1",
+  "pib_per_capita.csv" = "https://www.ine.es/jaxiT3/files/t/es/csv_bdsc/80110.csv",
+  "renta_bruta_media.csv" = "https://www.ine.es/jaxiT3/files/t/es/csv_bd/53689.csv?nocab=1",
+  "valor_bruto_sector.csv" = "https://www.ine.es/jaxi/files/tpx/es/csv_bd/76926.csv?nocab=1"
+)
+
+for (nombre_archivo in names(enlaces_datos)) {
+  ruta_archivo <- file.path("raw", nombre_archivo)
+
+  if (!file.exists(ruta_archivo)) {
+    download.file(
+      url = enlaces_datos[[nombre_archivo]],
+      destfile = ruta_archivo,
+      mode = "wb",
+      quiet = FALSE
+    )
+  }
+}
+```
+
 ## Carga de los datos en R
 Se emplean únicamente funciones de base R. La función auxiliar lee los
 ficheros mediante `readLines()` y después los transforma con `read.table()`.
@@ -95,15 +130,15 @@ También elimina el marcador BOM que aparece al principio de algunos ficheros.
 
 ```{r}
 leer_base <- function(fichero, separador) {
-  lineas <- readLines(fichero, encoding = "UTF-8", warn = FALSE)
-  lineas[1] <- sub("^\ufeff", "", lineas[1])
-  tabla <- read.table(text = paste(lineas, collapse = "\n"),
-                      header = TRUE, sep = separador, quote = "",
-                      comment.char = "", fill = TRUE,
-                      na.strings = c("", "null"),
-                      stringsAsFactors = FALSE, check.names = FALSE)
-  names(tabla) <- sub("^\ufeff", "", names(tabla))
-  tabla
+  readr::read_delim(
+    file = fichero,
+    delim = separador,
+    locale = readr::locale(decimal_mark = ",", grouping_mark = "."),
+    na = c("", "NA", "null"),
+    name_repair = "minimal",
+    show_col_types = FALSE,
+    progress = FALSE
+  )
 }
 
 coste_vivienda <- leer_base("raw/coste_vivienda.csv", ";")
@@ -191,12 +226,12 @@ migracion_interior <- migracion_interior %>% filter(Sexo=="Ambos sexos")%>%separ
     into = c("id_prov", "Provincia"), 
     sep = " ",                             
     extra = "merge"                        
-  )   %>%filter(as.numeric(id_prov)<=52)%>% select(-Sexo) %>%mutate(Edad = as.numeric(gsub("\\D", "", Edad)))  %>% filter(Edad >= 19 & Edad <= 35) %>% select(-Edad)
+  )   %>%filter(as.numeric(id_prov)<=52)%>% select(-Sexo) %>%mutate(Edad = readr::parse_number(Edad))  %>% filter(Edad >= 19 & Edad <= 35) %>% select(-Edad)
   
 migracion_interior <- generar_id_obs(migracion_interior,col_anyo =migracion_interior$Periodo, col_prov = migracion_interior$id_prov)
   
 migracion_interior <- migracion_interior %>%  group_by(id)%>%  
-  mutate(Total = sum(as.numeric(Total), na.rm = TRUE)) %>% 
+  mutate(Total = sum(Total, na.rm = TRUE)) %>% 
   ungroup()%>% distinct()%>%  arrange(id_prov,Periodo)  %>% rename(Migracion_Interior=Total)
 
 ```
@@ -211,10 +246,6 @@ Convertimos las columnas numçericas a números de forma segura con parse_number
 colnames(ocupacion_sector)[2]<-"sector_econ"
 ocupacion_sector <- ocupacion_sector %>%
   mutate(
-    Total = parse_number(
-      as.character(Total), 
-      locale = locale(decimal_mark = ",", grouping_mark = ".")
-    ))%>%
   mutate(sector_econ = gsub("Construcción", "Construccion", sector_econ, ignore.case = TRUE))%>%
   pivot_wider(names_from=sector_econ,values_from=Total)%>%
 mutate(Industria = Industria + Construccion) %>% select(-Construccion)%>% distinct()%>%
@@ -223,15 +254,15 @@ mutate(Industria = Industria + Construccion) %>% select(-Construccion)%>% distin
     into = c("id_prov", "Provincia"), 
     sep = " ",                             
     extra = "merge"                        
-  )   %>%filter(as.numeric(id_prov)<=52) %>% mutate(Periodo = as.numeric(gsub("T.*", "", Periodo)))
+  )   %>%filter(as.numeric(id_prov)<=52) %>% mutate(Periodo = readr::parse_number(Periodo))
 
 ocupacion_sector <- generar_id_obs(ocupacion_sector,col_anyo =ocupacion_sector$Periodo, col_prov = ocupacion_sector$id_prov)
   
 ocupacion_sector <-ocupacion_sector %>%  group_by(id)%>%  
-  mutate(Agricultura = mean(1000*as.numeric(Agricultura), na.rm = TRUE)) %>% 
-  mutate(Servicios = mean(1000*as.numeric(Servicios), na.rm = TRUE)) %>%
-  mutate(Industria = mean(1000*as.numeric(Industria), na.rm = TRUE)) %>%
-  mutate(Total = mean(1000*as.numeric(Total), na.rm = TRUE)) %>%
+  mutate(Agricultura = mean(1000*Agricultura, na.rm = TRUE)) %>% 
+  mutate(Servicios = mean(1000*Servicios, na.rm = TRUE)) %>%
+  mutate(Industria = mean(1000*Industria, na.rm = TRUE)) %>%
+  mutate(Total = mean(1000*Total, na.rm = TRUE)) %>%
   ungroup()%>% distinct()%>%  arrange(id_prov,Periodo)  
 
 ```
@@ -270,12 +301,8 @@ De la columna `Indicadores de rentas media`  nos quedamos solo con el valor `Ren
 colnames(renta_bruta_media)[1] <- "Total_Nacional"
 colnames(renta_bruta_media)[5] <- "Indicadores"
 
-renta_bruta_media <- renta_bruta_media %>% filter(Indicadores == "Renta bruta media por persona") %>% mutate(
-    Total = parse_number(
-      as.character(Total), 
-      locale = locale(decimal_mark = ",", grouping_mark = ".")
-    )
-  )%>% select(-Indicadores,-2,-1,-Islas) %>% rename(RentaBrutaMedia=Total) %>% filter(Provincias!="NA") %>% left_join(ine_provincias, by = c("Provincias" = "Provincia_clean"))
+renta_bruta_media <- renta_bruta_media %>% filter(Indicadores == "Renta bruta media por persona") %>%
+  select(-Indicadores,-2,-1,-Islas) %>% rename(RentaBrutaMedia=Total) %>% filter(Provincias!="NA") %>% left_join(ine_provincias, by = c("Provincias" = "Provincia_clean"))
 
 
 
@@ -309,13 +336,7 @@ valor_bruto_sector <- valor_bruto_sector %>% separate(
     extra = "merge"                        
   )   %>%filter(as.numeric(id_prov)<=52) %>% filter(Rama_Actividad != "Impuestos netos sobre los productos") %>%  filter(Rama_Actividad != "Valor añadido bruto total") %>%
   filter(Rama_Actividad != "PRODUCTO INTERIOR BRUTO A PRECIOS DE MERCADO") %>%
-  mutate(
-    Total = parse_number(
-      as.character(Total), 
-      locale = locale(decimal_mark = ",", grouping_mark = ".")
-    )
-  )%>%
-  pivot_wider(names_from = Rama_Actividad,values_from = Total) %>% mutate(Periodo = as.numeric(gsub("\\D", "", Periodo)))
+  pivot_wider(names_from = Rama_Actividad,values_from = Total) %>% mutate(Periodo = readr::parse_number(Periodo))
 
 valor_bruto_sector <- generar_id_obs(valor_bruto_sector,col_anyo =valor_bruto_sector$Periodo, col_prov = valor_bruto_sector$id_prov)
 
