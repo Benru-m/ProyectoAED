@@ -349,7 +349,8 @@ ocupacion_sector <- ocupacion_sector %>%
   ungroup()%>%
   pivot_longer(cols=c(Total,Primario,Secundario,Terciario),
                names_to ="Sector",values_to ="Personas_Ocupadas" )%>%
-  select(id,Sector,Personas_Ocupadas)
+  select(id,Sector,Personas_Ocupadas) %>%
+  distinct()
 ```
 
 
@@ -379,7 +380,8 @@ pib_per_capita <- pib_per_capita %>%
   group_by(Provincia) %>%
   mutate(across(PIB_per_capita,imputation_value))%>%
   ungroup()%>%
-  select(id,PIB_per_capita)
+  select(id,PIB_per_capita) %>%
+  distinct()
 ```
 
 ## Preparamos renta_bruta
@@ -408,7 +410,8 @@ renta_bruta_media <- renta_bruta_media %>%
   group_by(Provincias)%>%
   mutate(across(RentaBrutaMedia,imputation_value))%>%
   ungroup()%>%
-  select(id,RentaBrutaMedia)
+  select(id,RentaBrutaMedia) %>%
+  distinct()
 ```
 
 ## Preparando valor_bruto_sector
@@ -455,7 +458,7 @@ valor_bruto_sector <- valor_bruto_sector %>%
   pivot_longer(c(Total,Primario,Secundario,Terciario),
                names_to = "Sector",
                values_to = "VAB") %>%
-  select(id,Sector,VAB)
+  select(id,Sector,VAB) %>% distinct()
 ``` 
 
 
