@@ -346,6 +346,7 @@ Imputamos los datos faltantes, volvemos a mandar los sectores a una columna, sig
 ocupacion_sector <- ocupacion_sector %>%  
   group_by(Provincia) %>%
   mutate(across(c(Total,Primario,Secundario,Terciario),imputation_value))%>%
+  ungroup()%>%
   pivot_longer(cols=c(Total,Primario,Secundario,Terciario),
                names_to ="Sector",values_to ="Personas_Ocupadas" )%>%
   select(id,Sector,Personas_Ocupadas)
@@ -464,7 +465,8 @@ Ahora usamos el identificador único para unir los datos en una única tabla, y 
 ```{r}
 datos_socioecon_ESP <- coste_vivienda %>% full_join(distr_pobl,by="id") %>% full_join(edad_maternidad,by="id")%>% full_join(migracion_interior,by="id") %>% full_join(pib_per_capita,by="id")%>% full_join(renta_bruta_media,by="id")
 
-datos_laborales_ESP <- ocupacion_sector %>% full_join(valor_bruto_sector,by=c("id","Sector"))
+datos_laborales_ESP <- ocupacion_sector %>%
+  full_join(valor_bruto_sector,by=c("id","Sector"))
 ```
 
 Ahora que tenemos los datos unidos, separamos el id en año y provincia de cada observación, y a la provincia le asignamos el nombre.
