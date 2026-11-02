@@ -474,8 +474,8 @@ datos_laborales_ESP <- ocupacion_sector %>%
 
 Ahora que tenemos los datos unidos, separamos el id en año y provincia de cada observación, y a la provincia le asignamos el nombre.
 ```{r}
-codigos_vec <- deframe(ine_provincias)
-datos_socioecon_ESP <- datos_socioecon_ESP %>% separate(id,c("Periodo","Provincia"),sep="_") %>%  mutate(Periodo = as.integer(Periodo), Provincia= codigos_vec[Provincia])
+#codigos_vec <- deframe(ine_provincias)
+#datos_socioecon_ESP <- datos_socioecon_ESP %>% separate(id,c("Periodo","Provincia"),sep="_") %>%  mutate(Periodo = as.integer(Periodo), Provincia= codigos_vec[Provincia])
 ``` 
 Guardamos los datos en formato `csv` y en formato `Rdata`
 ```{r}
