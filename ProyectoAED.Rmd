@@ -12,7 +12,7 @@ always_allow_html: true
 params:
   lang: ES
 lang: "`r switch(params$lang, ES = 'es-ES', EN = 'en-US')`"
-subtitle: "Introducción a la Ciencia de Datos. Máster en Ciencia de Datos- UV"
+subtitle: "Análisis exploratorio de datos. Máster en Ciencia de Datos- UV"
 language:
   label:
     fig: 'Figura '
