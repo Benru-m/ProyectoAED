@@ -219,6 +219,7 @@ coste_vivienda <- coste_vivienda %>% group_by(id) %>% mutate(Precio_m2 = mean(Va
 Nos quedamos solo con el valor del metro cuadrado y el id de la instancia.
 ```{r}
 coste_vivienda <- coste_vivienda %>%
+  arrange(id_prov, Periodo) %>%
   group_by(Provincia)%>%
   mutate(across(Precio_m2,imputation_value))%>%
   ungroup()%>%
@@ -241,6 +242,7 @@ distr_pobl <- generar_id_obs(distr_pobl,col_anyo = distr_pobl$Periodo, col_prov 
 Nos quedamos con el id, y el valor de la población.
 ```{r}
 distr_pobl <- distr_pobl %>%
+  arrange(id_prov, Periodo) %>%
   group_by(Provincia)%>%
   mutate(across(Habitantes,imputation_value))%>%
   ungroup()%>%
@@ -279,6 +281,7 @@ edad_maternidad <- generar_id_obs(edad_maternidad,col_anyo =edad_maternidad$Peri
 Nos quedamos con el id y la edad media de maternidad
 ```{r}
 edad_maternidad <- edad_maternidad %>%
+  arrange(id_prov, Periodo) %>%
   group_by(Provincia ) %>%
   mutate(across(Edad_Media_Maternidad,imputation_value)) %>%
   ungroup()%>%
@@ -306,6 +309,7 @@ migracion_interior <- migracion_interior %>%  group_by(id)%>%
 Nos quedamos con el id y con la variable `Migracion_Interior`
 ```{r}
 migracion_interior <- migracion_interior %>%
+  arrange(id_prov, Periodo) %>%
   group_by(Provincia) %>%
   mutate(across(Migracion_Interior,imputation_value)) %>%
   ungroup()%>%
@@ -344,6 +348,7 @@ ocupacion_sector <-ocupacion_sector %>%  group_by(id)%>%
 Imputamos los datos faltantes, volvemos a mandar los sectores a una columna, siguiendo los principios tidy, , y nos quedamos con los valores de ocupación, y el id
 ```{r}
 ocupacion_sector <- ocupacion_sector %>%  
+  arrange(id_prov, Periodo) %>%
   group_by(Provincia) %>%
   mutate(across(c(Total,Primario,Secundario,Terciario),imputation_value))%>%
   ungroup()%>%
@@ -377,6 +382,7 @@ pib_per_capita <- pib_per_capita %>% arrange(id_prov,Periodo) %>% rename(PIB_per
 Imputamos los valores faltantes,nos quedamos con el id y el `pib_per_capita`
 ```{r}
 pib_per_capita <- pib_per_capita %>%
+  arrange(id_prov, Periodo) %>%
   group_by(Provincia) %>%
   mutate(across(PIB_per_capita,imputation_value))%>%
   ungroup()%>%
@@ -407,6 +413,7 @@ renta_bruta_media <- renta_bruta_media %>% group_by(id) %>%
 Nos quedamos con la `renta_bruta_media` y el id.
 ```{r}
 renta_bruta_media <- renta_bruta_media %>%
+  arrange(id_prov, Periodo) %>%
   group_by(Provincias)%>%
   mutate(across(RentaBrutaMedia,imputation_value))%>%
   ungroup()%>%
@@ -452,6 +459,7 @@ valor_bruto_sector <- valor_bruto_sector %>%
 Nos quedamos con el id y el VAB de cada sector.
 ```{r}
 valor_bruto_sector <- valor_bruto_sector %>%
+  arrange(id_prov, Periodo) %>%
   group_by(Provincia)%>%
   mutate(across(c(Total,Primario,Secundario,Terciario),imputation_value))%>% 
   ungroup() %>% 
