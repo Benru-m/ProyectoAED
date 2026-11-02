@@ -197,6 +197,44 @@ Ahora vamos a preparar cada una de las tablas para poder unirlas en una tabla fi
 ## Preparación Coste Vivienda
 Para empezar, eliminamos las columnas `Comunidad_Autónoma` y `CODAUTO`, ya que no nos interesan.
 ```{r}
+# En las comunidades uniprovinciales, el fichero incluye filas regionales
+# (CPRO vacio) cuyo valor coincide con el de la provincia. Las incorporamos
+# usando el codigo de comunidad autonoma antes de eliminar CODAUTO.
+coste_uniprov_codes <- c(
+  "03" = "33", # Asturias
+  "04" = "07", # Illes Balears
+  "06" = "39", # Cantabria
+  "13" = "28", # Madrid
+  "14" = "30", # Murcia
+  "15" = "31", # Navarra
+  "17" = "26", # La Rioja
+  "18" = "51", # Ceuta
+  "19" = "52"  # Melilla
+)
+
+coste_vivienda <- coste_vivienda %>%
+  mutate(
+    codigo_ccaa = str_pad(as.character(.data[["CODAUTO"]]), width = 2, side = "left", pad = "0"),
+    codigo_ccaa = case_when(
+      str_detect(str_to_lower(Comunidad_Autonoma), "astur") ~ "03",
+      str_detect(str_to_lower(Comunidad_Autonoma), "balear") ~ "04",
+      str_detect(str_to_lower(Comunidad_Autonoma), "cantabr") ~ "06",
+      str_detect(str_to_lower(Comunidad_Autonoma), "madrid") ~ "13",
+      str_detect(str_to_lower(Comunidad_Autonoma), "murcia") ~ "14",
+      str_detect(str_to_lower(Comunidad_Autonoma), "navarr") ~ "15",
+      str_detect(str_to_lower(Comunidad_Autonoma), "rioja") ~ "17",
+      str_detect(str_to_lower(Comunidad_Autonoma), "ceuta") ~ "18",
+      str_detect(str_to_lower(Comunidad_Autonoma), "melilla") ~ "19",
+      TRUE ~ codigo_ccaa
+    ),
+    CPRO = if_else(
+      is.na(CPRO),
+      unname(coste_uniprov_codes[codigo_ccaa]),
+      as.character(CPRO)
+    )
+  ) %>%
+  select(-codigo_ccaa)
+
 coste_vivienda$CODAUTO <- NULL
 coste_vivienda$Comunidad_Autonoma <- NULL
 ```
@@ -220,7 +258,7 @@ Nos quedamos solo con el valor del metro cuadrado y el id de la instancia.
 ```{r}
 coste_vivienda <- coste_vivienda %>%
   arrange(id_prov, Periodo) %>%
-  group_by(Provincia)%>%
+  group_by(id_prov)%>%
   mutate(across(Precio_m2,imputation_value))%>%
   ungroup()%>%
   select(id,Precio_m2)
@@ -371,9 +409,34 @@ pib_per_capita <- pib_per_capita %>%
     into = c("id_prov", "Provincia"), 
     sep = " ",                             
     extra = "merge"                        
-  )   %>%
-  filtrar_provincias() %>% 
-  filter(str_detect(Provincia, "[[:lower:]]"))
+  )
+
+# El fichero de PIB mezcla comunidades autónomas y provincias. Para las
+# comunidades uniprovinciales, el valor regional coincide con el de su única
+# provincia; las comunidades pluriprovinciales se excluyen porque no permiten
+# recuperar valores provinciales a partir de un total regional.
+pib_uniprov_codes <- c(
+  "03" = "33", # Asturias
+  "04" = "07", # Illes Balears
+  "06" = "39", # Cantabria
+  "13" = "28", # Madrid
+  "14" = "30", # Murcia
+  "15" = "31", # Navarra
+  "17" = "26", # La Rioja
+  "18" = "51", # Ceuta
+  "19" = "52"  # Melilla
+)
+
+pib_per_capita <- pib_per_capita %>%
+  mutate(
+    es_provincia = str_detect(Provincia, "[[:lower:]]"),
+    id_prov = if_else(
+      es_provincia,
+      id_prov,
+      unname(pib_uniprov_codes[id_prov])
+    )
+  ) %>%
+  filter(id_prov %in% ine_provincias$id_prov)
 
 pib_per_capita <- generar_id_obs(pib_per_capita,col_anyo =pib_per_capita$Periodo, col_prov = pib_per_capita$id_prov)
 
