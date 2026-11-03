@@ -358,12 +358,25 @@ display: none;
 
 
 <p>Este archivo carga y transforma los datos en crudo para obtener los
-conjuntos de datos que se utilizarán en el análisis.</p>
+conjuntos de datos que se utilizarán en el análisis. El flujo de trabajo
+es similar para las distintas tablas, en primer lugar se adecúa la tabla
+para trabajar con ella (Eliminando espacios y acentos en nombres que
+<code>R</code> no entiende), después se identifican las instancias
+correctamente para poder unirlas correctamente, imputamos los datos
+faltantes, y por último seleccionamos los datos que nos interesan.</p>
+<p>Para imputar, dado que tenemos series temporales de valores
+numéricos, se imputan los valores faltantes con la media del primer
+valor anterior no faltante, y el primer valor posterior no faltante.</p>
 <p>Para empezar, tenemos las funciones comunes al tratamiento de todos
 los datos. La primera función nos servirá para generar un id común a
 cada instancia (observación de cierta variable en un año y una
 provincia), que nos permitirá unir correctamente todas las tablas de
-datos con las que queramos trabajar.</p>
+datos con las que queramos trabajar. En caso de que los datos faltantes
+sean los primeros o los últimos se usa el primer/último valor no nulo.
+La función no distingue si los datos de la lista vienen de una provincia
+u otra, por eso antes de imputar los datos se agrupan por provincia,
+impidiendo que los datos de una provincia se imputen con los de
+otra.</p>
 <pre class="r"><code># Función para generar el ID único
 generar_id_obs &lt;- function(df, col_anyo, col_prov) {
   df %&gt;%
@@ -436,6 +449,31 @@ filtrar_provincias &lt;- function(df) {
   df %&gt;%
     mutate(id_prov = str_pad(as.character(id_prov), width = 2, side = &quot;left&quot;, pad = &quot;0&quot;)) %&gt;%
     filter(id_prov %in% ine_provincias$id_prov)
+}
+
+
+imputation_value &lt;- function(x){
+  # Si el vector está completamente vacío (solo NAs) o no tiene faltantes, se devuelve igual
+  if (all(is.na(x)) || !any(is.na(x))) {
+    return(x)
+  }
+  
+  n &lt;- length(x)
+  valid_idx &lt;- which(!is.na(x))
+  
+  # 1. Obtener el valor válido ANTES de cada posición (NA si no existe)
+  idx_before_pos &lt;- findInterval(1:n, valid_idx)
+  val_before &lt;- ifelse(idx_before_pos == 0, NA_real_, x[valid_idx[pmax(1, idx_before_pos)]])
+  
+  # 2. Obtener el valor válido DESPUÉS de cada posición (NA si no existe)
+  idx_after_pos &lt;- findInterval((1:n) - 0.0001, valid_idx) + 1
+  val_after &lt;- ifelse(idx_after_pos &gt; length(valid_idx), NA_real_, x[valid_idx[pmin(length(valid_idx), idx_after_pos)]])
+  
+  # 3. Media entre ambos vecinos
+  # rowMeans con na.rm = TRUE asigna el único valor disponible en los extremos inicial/final
+  res &lt;- rowMeans(cbind(val_before, val_after), na.rm = TRUE)
+  
+  return(res)
 }</code></pre>
 <div id="carga-de-los-datos-en-r" class="section level2">
 <h2>Carga de los datos en R</h2>
@@ -476,7 +514,45 @@ una tabla final que contenga los datos que deseamos.</p>
 <h2>Preparación Coste Vivienda</h2>
 <p>Para empezar, eliminamos las columnas <code>Comunidad_Autónoma</code>
 y <code>CODAUTO</code>, ya que no nos interesan.</p>
-<pre class="r"><code>coste_vivienda$CODAUTO &lt;- NULL
+<pre class="r"><code># En las comunidades uniprovinciales, el fichero incluye filas regionales
+# (CPRO vacio) cuyo valor coincide con el de la provincia. Las incorporamos
+# usando el codigo de comunidad autonoma antes de eliminar CODAUTO.
+coste_uniprov_codes &lt;- c(
+  &quot;03&quot; = &quot;33&quot;, # Asturias
+  &quot;04&quot; = &quot;07&quot;, # Illes Balears
+  &quot;06&quot; = &quot;39&quot;, # Cantabria
+  &quot;13&quot; = &quot;28&quot;, # Madrid
+  &quot;14&quot; = &quot;30&quot;, # Murcia
+  &quot;15&quot; = &quot;31&quot;, # Navarra
+  &quot;17&quot; = &quot;26&quot;, # La Rioja
+  &quot;18&quot; = &quot;51&quot;, # Ceuta
+  &quot;19&quot; = &quot;52&quot;  # Melilla
+)
+
+coste_vivienda &lt;- coste_vivienda %&gt;%
+  mutate(
+    codigo_ccaa = str_pad(as.character(.data[[&quot;CODAUTO&quot;]]), width = 2, side = &quot;left&quot;, pad = &quot;0&quot;),
+    codigo_ccaa = case_when(
+      str_detect(str_to_lower(Comunidad_Autonoma), &quot;astur&quot;) ~ &quot;03&quot;,
+      str_detect(str_to_lower(Comunidad_Autonoma), &quot;balear&quot;) ~ &quot;04&quot;,
+      str_detect(str_to_lower(Comunidad_Autonoma), &quot;cantabr&quot;) ~ &quot;06&quot;,
+      str_detect(str_to_lower(Comunidad_Autonoma), &quot;madrid&quot;) ~ &quot;13&quot;,
+      str_detect(str_to_lower(Comunidad_Autonoma), &quot;murcia&quot;) ~ &quot;14&quot;,
+      str_detect(str_to_lower(Comunidad_Autonoma), &quot;navarr&quot;) ~ &quot;15&quot;,
+      str_detect(str_to_lower(Comunidad_Autonoma), &quot;rioja&quot;) ~ &quot;17&quot;,
+      str_detect(str_to_lower(Comunidad_Autonoma), &quot;ceuta&quot;) ~ &quot;18&quot;,
+      str_detect(str_to_lower(Comunidad_Autonoma), &quot;melilla&quot;) ~ &quot;19&quot;,
+      TRUE ~ codigo_ccaa
+    ),
+    CPRO = if_else(
+      is.na(CPRO),
+      unname(coste_uniprov_codes[codigo_ccaa]),
+      as.character(CPRO)
+    )
+  ) %&gt;%
+  select(-codigo_ccaa)
+
+coste_vivienda$CODAUTO &lt;- NULL
 coste_vivienda$Comunidad_Autonoma &lt;- NULL</code></pre>
 <p>Renombramos la columna <code>CPRO</code> como <code>id_prov</code>,
 la ponemos como primera columna de la tabla (este y el año serán los
@@ -496,7 +572,12 @@ dificultad, al disponer de un id para cada instancia.</p>
 <pre class="r"><code>coste_vivienda &lt;- coste_vivienda %&gt;% group_by(id) %&gt;% mutate(Precio_m2 = mean(Valor, na.rm = TRUE)) %&gt;% ungroup() %&gt;%select(-Valor, -Trimestre,-Regimen) %&gt;%  distinct()</code></pre>
 <p>Nos quedamos solo con el valor del metro cuadrado y el id de la
 instancia.</p>
-<pre class="r"><code>coste_vivienda &lt;- coste_vivienda %&gt;% select(id,Precio_m2)</code></pre>
+<pre class="r"><code>coste_vivienda &lt;- coste_vivienda %&gt;%
+  arrange(id_prov, Periodo) %&gt;%
+  group_by(id_prov)%&gt;%
+  mutate(across(Precio_m2,imputation_value))%&gt;%
+  ungroup()%&gt;%
+  select(id,Precio_m2)</code></pre>
 </div>
 <div id="preparación-de-la-distribución-poblacional" class="section level2">
 <h2>Preparación de la distribución poblacional</h2>
@@ -516,7 +597,12 @@ valores por sexo), y eliminamos la columna sexo.</p>
 ## 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, ...].</code></pre>
 <pre class="r"><code>distr_pobl &lt;- generar_id_obs(distr_pobl,col_anyo = distr_pobl$Periodo, col_prov = distr_pobl$id_prov)</code></pre>
 <p>Nos quedamos con el id, y el valor de la población.</p>
-<pre class="r"><code>distr_pobl &lt;- distr_pobl %&gt;% select(id,Habitantes)</code></pre>
+<pre class="r"><code>distr_pobl &lt;- distr_pobl %&gt;%
+  arrange(id_prov, Periodo) %&gt;%
+  group_by(Provincia)%&gt;%
+  mutate(across(Habitantes,imputation_value))%&gt;%
+  ungroup()%&gt;%
+  select(id,Habitantes)</code></pre>
 </div>
 <div id="preparación-de-edad_maternidad" class="section level2">
 <h2>Preparación de edad_maternidad</h2>
@@ -550,7 +636,12 @@ stopifnot(is.numeric(edad_maternidad$Edad_Media_Maternidad))
 
 edad_maternidad &lt;- generar_id_obs(edad_maternidad,col_anyo =edad_maternidad$Periodo, col_prov = edad_maternidad$id_prov)</code></pre>
 <p>Nos quedamos con el id y la edad media de maternidad</p>
-<pre class="r"><code>edad_maternidad &lt;- edad_maternidad %&gt;% select(id,Edad_Media_Maternidad)</code></pre>
+<pre class="r"><code>edad_maternidad &lt;- edad_maternidad %&gt;%
+  arrange(id_prov, Periodo) %&gt;%
+  group_by(Provincia ) %&gt;%
+  mutate(across(Edad_Media_Maternidad,imputation_value)) %&gt;%
+  ungroup()%&gt;%
+  select(id,Edad_Media_Maternidad)</code></pre>
 </div>
 <div id="preparacion-de-migración-interior" class="section level2">
 <h2>Preparacion de migración interior</h2>
@@ -566,7 +657,7 @@ como <code>x Años</code>.</p>
     extra = &quot;merge&quot;                        
   )   %&gt;% filtrar_provincias() %&gt;% select(-Sexo) %&gt;%mutate(Edad = parse_number(Edad))  %&gt;% filter(Edad &gt;= 19 &amp; Edad &lt;= 35) %&gt;% select(-Edad)</code></pre>
 <pre><code>## Warning: There was 1 warning in `mutate()`.
-## i In argument: `Edad = parse_number(Edad)`.
+## ℹ In argument: `Edad = parse_number(Edad)`.
 ## Caused by warning:
 ## ! 728 parsing failures.
 ## row col expected actual
@@ -584,11 +675,16 @@ migracion_interior &lt;- migracion_interior %&gt;%  group_by(id)%&gt;%
   ungroup()%&gt;% distinct()%&gt;%  arrange(id_prov,Periodo)  %&gt;% rename(Migracion_Interior=Total)</code></pre>
 <p>Nos quedamos con el id y con la variable
 <code>Migracion_Interior</code></p>
-<pre class="r"><code>migracion_interior &lt;- migracion_interior %&gt;% select(id,Migracion_Interior)</code></pre>
+<pre class="r"><code>migracion_interior &lt;- migracion_interior %&gt;%
+  arrange(id_prov, Periodo) %&gt;%
+  group_by(Provincia) %&gt;%
+  mutate(across(Migracion_Interior,imputation_value)) %&gt;%
+  ungroup()%&gt;%
+  select(id,Migracion_Interior)</code></pre>
 </div>
 <div id="preparamos-ocupacion_sector" class="section level2">
 <h2>Preparamos ocupacion_sector</h2>
-<p>Convertimos las columnas numçericas a números de forma segura con
+<p>Convertimos las columnas numéricas a números de forma segura con
 parse_number (readr). Separamos la columna provincias en nombre e
 índice. Cambiamos el valor <code>Construcción</code> por
 <code>Construccion</code> para evitar que el acento de errores, y
@@ -606,7 +702,8 @@ ocupacion_sector &lt;- ocupacion_sector %&gt;%
     sector_econ
   ))%&gt;%
   pivot_wider(names_from=sector_econ,values_from=Total)%&gt;%
-mutate(Industria = Industria + Construccion) %&gt;% select(-Construccion)%&gt;% distinct()%&gt;%
+mutate(Secundario = Industria + Construccion) %&gt;% select(-c(Construccion,Industria))%&gt;%
+  distinct()%&gt;%
   separate(
     col = Provincias,                   
     into = c(&quot;id_prov&quot;, &quot;Provincia&quot;), 
@@ -617,13 +714,23 @@ mutate(Industria = Industria + Construccion) %&gt;% select(-Construccion)%&gt;% 
 ocupacion_sector &lt;- generar_id_obs(ocupacion_sector,col_anyo =ocupacion_sector$Periodo, col_prov = ocupacion_sector$id_prov)
   
 ocupacion_sector &lt;-ocupacion_sector %&gt;%  group_by(id)%&gt;%  
-  mutate(Agricultura = mean(1000*Agricultura, na.rm = TRUE)) %&gt;% 
-  mutate(Servicios = mean(1000*Servicios, na.rm = TRUE)) %&gt;%
-  mutate(Industria = mean(1000*Industria, na.rm = TRUE)) %&gt;%
+  mutate(Primario = mean(1000*Agricultura, na.rm = TRUE)) %&gt;% 
+  mutate(Terciario = mean(1000*Servicios, na.rm = TRUE)) %&gt;%
+  mutate(Secundario = mean(1000*Secundario, na.rm = TRUE)) %&gt;%
   mutate(Total = mean(1000*Total, na.rm = TRUE)) %&gt;%
   ungroup()%&gt;% distinct()%&gt;%  arrange(id_prov,Periodo)  </code></pre>
-<p>Nos quedamos con los sectores, y el id</p>
-<pre class="r"><code>ocupacion_sector &lt;- ocupacion_sector %&gt;% select(id,Agricultura,Industria,Servicios) %&gt;% rename(Ocupados_Agricultura =Agricultura,Ocupados_Industria=Industria,Ocupados_Servicios=Servicios)</code></pre>
+<p>Imputamos los datos faltantes, volvemos a mandar los sectores a una
+columna, siguiendo los principios tidy, , y nos quedamos con los valores
+de ocupación, y el id</p>
+<pre class="r"><code>ocupacion_sector &lt;- ocupacion_sector %&gt;%  
+  arrange(id_prov, Periodo) %&gt;%
+  group_by(Provincia) %&gt;%
+  mutate(across(c(Total,Primario,Secundario,Terciario),imputation_value))%&gt;%
+  ungroup()%&gt;%
+  pivot_longer(cols=c(Total,Primario,Secundario,Terciario),
+               names_to =&quot;Sector&quot;,values_to =&quot;Personas_Ocupadas&quot; )%&gt;%
+  select(id,Sector,Personas_Ocupadas) %&gt;%
+  distinct()</code></pre>
 </div>
 <div id="preparamos-pib_per_capita" class="section level2">
 <h2>Preparamos pib_per_capita</h2>
@@ -634,20 +741,55 @@ deshacernos de los nombres que están en mayúsculas (considerando los que
 tienen al menos alguna minúscula). Asignamos el identificador único, y
 ordenamos los datos correctamente.</p>
 <pre class="r"><code>colnames(pib_per_capita)[1] &lt;- &quot;Provincias&quot;
-pib_per_capita &lt;- pib_per_capita %&gt;% pivot_wider(names_from=Magnitud,values_from = Total) %&gt;% select(-4,-5) %&gt;%
+pib_per_capita &lt;- pib_per_capita %&gt;%
+  pivot_wider(names_from=Magnitud,values_from = Total) %&gt;%
+  select(-4,-5) %&gt;%
   separate(
     col = Provincias,                   
     into = c(&quot;id_prov&quot;, &quot;Provincia&quot;), 
     sep = &quot; &quot;,                             
     extra = &quot;merge&quot;                        
-  )   %&gt;% filtrar_provincias() %&gt;% 
-  filter(str_detect(Provincia, &quot;[[:lower:]]&quot;))
+  )
+
+# El fichero de PIB mezcla comunidades autónomas y provincias. Para las
+# comunidades uniprovinciales, el valor regional coincide con el de su única
+# provincia; las comunidades pluriprovinciales se excluyen porque no permiten
+# recuperar valores provinciales a partir de un total regional.
+pib_uniprov_codes &lt;- c(
+  &quot;03&quot; = &quot;33&quot;, # Asturias
+  &quot;04&quot; = &quot;07&quot;, # Illes Balears
+  &quot;06&quot; = &quot;39&quot;, # Cantabria
+  &quot;13&quot; = &quot;28&quot;, # Madrid
+  &quot;14&quot; = &quot;30&quot;, # Murcia
+  &quot;15&quot; = &quot;31&quot;, # Navarra
+  &quot;17&quot; = &quot;26&quot;, # La Rioja
+  &quot;18&quot; = &quot;51&quot;, # Ceuta
+  &quot;19&quot; = &quot;52&quot;  # Melilla
+)
+
+pib_per_capita &lt;- pib_per_capita %&gt;%
+  mutate(
+    es_provincia = str_detect(Provincia, &quot;[[:lower:]]&quot;),
+    id_prov = if_else(
+      es_provincia,
+      id_prov,
+      unname(pib_uniprov_codes[id_prov])
+    )
+  ) %&gt;%
+  filter(id_prov %in% ine_provincias$id_prov)
 
 pib_per_capita &lt;- generar_id_obs(pib_per_capita,col_anyo =pib_per_capita$Periodo, col_prov = pib_per_capita$id_prov)
 
 pib_per_capita &lt;- pib_per_capita %&gt;% arrange(id_prov,Periodo) %&gt;% rename(PIB_per_capita = Valor)</code></pre>
-<p>Nos quedamos con el id y el <code>pib_per_capita</code></p>
-<pre class="r"><code>pib_per_capita &lt;- pib_per_capita %&gt;% select(id,PIB_per_capita)</code></pre>
+<p>Imputamos los valores faltantes,nos quedamos con el id y el
+<code>pib_per_capita</code></p>
+<pre class="r"><code>pib_per_capita &lt;- pib_per_capita %&gt;%
+  arrange(id_prov, Periodo) %&gt;%
+  group_by(Provincia) %&gt;%
+  mutate(across(PIB_per_capita,imputation_value))%&gt;%
+  ungroup()%&gt;%
+  select(id,PIB_per_capita) %&gt;%
+  distinct()</code></pre>
 </div>
 <div id="preparamos-renta_bruta" class="section level2">
 <h2>Preparamos renta_bruta</h2>
@@ -663,7 +805,8 @@ valores de las islas venían separados).</p>
 colnames(renta_bruta_media)[5] &lt;- &quot;Indicadores&quot;
 
 renta_bruta_media &lt;- renta_bruta_media %&gt;% filter(Indicadores == &quot;Renta bruta media por persona&quot;) %&gt;%
-  select(-Indicadores,-2,-1,-Islas) %&gt;% rename(RentaBrutaMedia=Total) %&gt;% filter(!is.na(Provincias), Provincias != &quot;NA&quot;) %&gt;% inner_join(ine_provincias, by = c(&quot;Provincias&quot; = &quot;Provincia_clean&quot;))
+  select(-Indicadores,-2,-1,-Islas) %&gt;% rename(RentaBrutaMedia=Total) %&gt;% filter(!is.na(Provincias), Provincias != &quot;NA&quot;) %&gt;% 
+  inner_join(ine_provincias, by = c(&quot;Provincias&quot; = &quot;Provincia_clean&quot;))
 
 
 
@@ -674,7 +817,13 @@ renta_bruta_media &lt;- renta_bruta_media %&gt;% group_by(id) %&gt;%
  ungroup() %&gt;%
   distinct() %&gt;% arrange(id_prov,Periodo) </code></pre>
 <p>Nos quedamos con la <code>renta_bruta_media</code> y el id.</p>
-<pre class="r"><code>renta_bruta_media &lt;- renta_bruta_media %&gt;% select(id,RentaBrutaMedia)</code></pre>
+<pre class="r"><code>renta_bruta_media &lt;- renta_bruta_media %&gt;%
+  arrange(id_prov, Periodo) %&gt;%
+  group_by(Provincias)%&gt;%
+  mutate(across(RentaBrutaMedia,imputation_value))%&gt;%
+  ungroup()%&gt;%
+  select(id,RentaBrutaMedia) %&gt;%
+  distinct()</code></pre>
 </div>
 <div id="preparando-valor_bruto_sector" class="section level2">
 <h2>Preparando valor_bruto_sector</h2>
@@ -693,36 +842,31 @@ sector_primario &lt;- c(sectores[[1]])
 sector_secundario &lt;- c(sectores[2:4])
 sector_terciario &lt;- c(sectores[5:7])
 
-valor_bruto_sector &lt;- valor_bruto_sector %&gt;% separate(
+valor_bruto_sector &lt;- valor_bruto_sector %&gt;%
+  separate(
     col = Provincias,                   
     into = c(&quot;id_prov&quot;, &quot;Provincia&quot;), 
     sep = &quot; &quot;,                             
     extra = &quot;merge&quot;                        
-  )   %&gt;% filtrar_provincias() %&gt;% filter(Rama_Actividad != &quot;Impuestos netos sobre los productos&quot;) %&gt;%  filter(Rama_Actividad != &quot;Valor añadido bruto total&quot;) %&gt;%
+  )   %&gt;% filtrar_provincias() %&gt;%
+  filter(Rama_Actividad != &quot;Impuestos netos sobre los productos&quot;) %&gt;%
   filter(Rama_Actividad != &quot;PRODUCTO INTERIOR BRUTO A PRECIOS DE MERCADO&quot;) %&gt;%
-  pivot_wider(names_from = Rama_Actividad,values_from = Total) %&gt;% mutate(Periodo = readr::parse_number(Periodo))
+  pivot_wider(names_from = Rama_Actividad,values_from = Total) %&gt;%
+  rename(Total= c(&quot;Valor añadido bruto total&quot;)) %&gt;%
+  mutate(Periodo = readr::parse_number(Periodo))
 
-valor_bruto_sector &lt;- generar_id_obs(valor_bruto_sector,col_anyo =valor_bruto_sector$Periodo, col_prov = valor_bruto_sector$id_prov)
+valor_bruto_sector &lt;- generar_id_obs(valor_bruto_sector,
+                                     col_anyo =valor_bruto_sector$Periodo,
+                                     col_prov = valor_bruto_sector$id_prov)
 
-valor_bruto_sector &lt;- valor_bruto_sector %&gt;% mutate(VAB_Secundario= rowSums(pick(all_of(sector_secundario)), na.rm = TRUE)) %&gt;%
-  select(-all_of(sector_secundario)) %&gt;%  mutate(VAB_Terciario= rowSums(pick(all_of(sector_terciario)), na.rm = TRUE)) %&gt;%
-  select(-all_of(sector_terciario)) %&gt;% rename(VAB_Primario=sector_primario)</code></pre>
-<pre><code>## Warning: There were 2 warnings in `mutate()`.
-## The first warning was:
-## i In argument: `VAB_Secundario = rowSums(pick(all_of(sector_secundario)), na.rm
-##   = TRUE)`.
-## Caused by warning in `enexpr()`:
-## ! unable to translate &#39;B_E. Industrias extractivas, industria manufacturera, suministro de energ&lt;U+00ED&gt;a el&lt;U+00E9&gt;ctrica, gas, vapor y aire acondicionado, suministro de agua, actividades de saneamiento, gesti&lt;U+00F3&gt;n de residuos y descontaminaci&lt;U+00F3&gt;n&#39; to native encoding
-## i Run `dplyr::last_dplyr_warnings()` to see the 1 remaining warning.</code></pre>
-<pre><code>## Warning: There were 3 warnings in `mutate()`.
-## The first warning was:
-## i In argument: `VAB_Terciario = rowSums(pick(all_of(sector_terciario)), na.rm =
-##   TRUE)`.
-## Caused by warning in `enexpr()`:
-## ! unable to translate &#39;G_J. Comercio al por mayor y al por menor, reparaci&lt;U+00F3&gt;n de veh&lt;U+00ED&gt;culos de motor y motocicletas, transporte y almacenamiento, hosteler&lt;U+00ED&gt;a, informaci&lt;U+00F3&gt;n y comunicaciones&#39; to native encoding
-## i Run `dplyr::last_dplyr_warnings()` to see the 2 remaining warnings.</code></pre>
+valor_bruto_sector &lt;- valor_bruto_sector %&gt;%
+  mutate(Secundario= rowSums(pick(all_of(sector_secundario)), na.rm = TRUE)) %&gt;%
+  select(-all_of(sector_secundario)) %&gt;%
+  mutate(Terciario= rowSums(pick(all_of(sector_terciario)), na.rm = TRUE)) %&gt;%
+  select(-all_of(sector_terciario)) %&gt;%
+  rename(Primario=sector_primario)</code></pre>
 <pre><code>## Warning: Using an external vector in selections was deprecated in tidyselect 1.1.0.
-## i Please use `all_of()` or `any_of()` instead.
+## ℹ Please use `all_of()` or `any_of()` instead.
 ##   # Was:
 ##   data %&gt;% select(sector_primario)
 ## 
@@ -734,23 +878,36 @@ valor_bruto_sector &lt;- valor_bruto_sector %&gt;% mutate(VAB_Secundario= rowSum
 ## Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
 ## generated.</code></pre>
 <p>Nos quedamos con el id y el VAB de cada sector.</p>
-<pre class="r"><code>valor_bruto_sector &lt;- valor_bruto_sector %&gt;% select(id,VAB_Primario,VAB_Secundario,VAB_Terciario)</code></pre>
+<pre class="r"><code>valor_bruto_sector &lt;- valor_bruto_sector %&gt;%
+  arrange(id_prov, Periodo) %&gt;%
+  group_by(Provincia)%&gt;%
+  mutate(across(c(Total,Primario,Secundario,Terciario),imputation_value))%&gt;% 
+  ungroup() %&gt;% 
+  pivot_longer(c(Total,Primario,Secundario,Terciario),
+               names_to = &quot;Sector&quot;,
+               values_to = &quot;VAB&quot;) %&gt;%
+  select(id,Sector,VAB) %&gt;% distinct()</code></pre>
 </div>
 <div id="unimos-todos-los-datos-en-una-tabla-y-los-guardamos" class="section level2">
 <h2>Unimos todos los datos en una tabla y los guardamos</h2>
 <p>Ahora usamos el identificador único para unir los datos en una única
 tabla, y los guardamos en un fichero.</p>
-<pre class="r"><code>datos_socioecon_ESP &lt;- coste_vivienda %&gt;% full_join(distr_pobl,by=&quot;id&quot;) %&gt;% full_join(edad_maternidad,by=&quot;id&quot;)%&gt;% full_join(migracion_interior,by=&quot;id&quot;) %&gt;% 
-  full_join(ocupacion_sector,by=&quot;id&quot;) %&gt;% full_join(pib_per_capita,by=&quot;id&quot;)%&gt;% full_join(renta_bruta_media,by=&quot;id&quot;)%&gt;% full_join(valor_bruto_sector,by=&quot;id&quot;)</code></pre>
+<pre class="r"><code>datos_socioecon_ESP &lt;- coste_vivienda %&gt;% full_join(distr_pobl,by=&quot;id&quot;) %&gt;% full_join(edad_maternidad,by=&quot;id&quot;)%&gt;% full_join(migracion_interior,by=&quot;id&quot;) %&gt;% full_join(pib_per_capita,by=&quot;id&quot;)%&gt;% full_join(renta_bruta_media,by=&quot;id&quot;)
+
+datos_laborales_ESP &lt;- ocupacion_sector %&gt;%
+  full_join(valor_bruto_sector,by=c(&quot;id&quot;,&quot;Sector&quot;))</code></pre>
 <p>Ahora que tenemos los datos unidos, separamos el id en año y
 provincia de cada observación, y a la provincia le asignamos el
 nombre.</p>
-<pre class="r"><code>codigos_vec &lt;- deframe(ine_provincias)
-datos_socioecon_ESP &lt;- datos_socioecon_ESP %&gt;% separate(id,c(&quot;Periodo&quot;,&quot;Provincia&quot;),sep=&quot;_&quot;) %&gt;%  mutate(Periodo = as.integer(Periodo), Provincia= codigos_vec[Provincia])</code></pre>
-<p>Guardamos los datos como <code>csv</code> y como
+<pre class="r"><code>#codigos_vec &lt;- deframe(ine_provincias)
+#datos_socioecon_ESP &lt;- datos_socioecon_ESP %&gt;% separate(id,c(&quot;Periodo&quot;,&quot;Provincia&quot;),sep=&quot;_&quot;) %&gt;%  mutate(Periodo = as.integer(Periodo), Provincia= codigos_vec[Provincia])</code></pre>
+<p>Guardamos los datos en formato <code>csv</code> y en formato
 <code>Rdata</code></p>
 <pre class="r"><code>save(datos_socioecon_ESP,file = &quot;Datos_SocioEcon.Rdata&quot;)
-write_delim(datos_socioecon_ESP,file = &quot;Datos_SocioEcon.csv&quot;,delim = &quot;;&quot;)</code></pre>
+write_delim(datos_socioecon_ESP,file = &quot;Datos_SocioEcon.csv&quot;,delim = &quot;;&quot;)
+
+save(datos_laborales_ESP,file = &quot;Datos_Laborales.Rdata&quot;)
+write_delim(datos_laborales_ESP,file = &quot;Datos_Laborales.csv&quot;,delim = &quot;;&quot;)</code></pre>
 </div>
 
 
