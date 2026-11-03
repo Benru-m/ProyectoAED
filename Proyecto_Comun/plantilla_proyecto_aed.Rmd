@@ -34,6 +34,62 @@ knitr::opts_chunk$set(
   fig.pos = "H"
 )
 
+# Mapeo entre nombre de provincias y códigos, todos los oficiales y usados por el INE
+ine_provincias <- tibble::tribble(
+  ~Cod_Provincia, ~Nom_Provincia,
+  "01", "Araba/Álava",
+  "02", "Albacete",
+  "03", "Alicante/Alacant",
+  "04", "Almería",
+  "05", "Ávila",
+  "06", "Badajoz",
+  "07", "Balears, Illes",
+  "08", "Barcelona",
+  "09", "Burgos",
+  "10", "Cáceres",
+  "11", "Cádiz",
+  "12", "Castellón/Castelló",
+  "13", "Ciudad Real",
+  "14", "Córdoba",
+  "15", "Coruña, A",
+  "16", "Cuenca",
+  "17", "Girona",
+  "18", "Granada",
+  "19", "Guadalajara",
+  "20", "Gipuzkoa",
+  "21", "Huelva",
+  "22", "Huesca",
+  "23", "Jaén",
+  "24", "León",
+  "25", "Lleida",
+  "26", "Rioja, La",
+  "27", "Lugo",
+  "28", "Madrid",
+  "29", "Málaga",
+  "30", "Murcia",
+  "31", "Navarra",
+  "32", "Ourense",
+  "33", "Asturias",
+  "34", "Palencia",
+  "35", "Palmas, Las",
+  "36", "Pontevedra",
+  "37", "Salamanca",
+  "38", "Santa Cruz de Tenerife",
+  "39", "Cantabria",
+  "40", "Segovia",
+  "41", "Sevilla",
+  "42", "Soria",
+  "43", "Tarragona",
+  "44", "Teruel",
+  "45", "Toledo",
+  "46", "Valencia/València",
+  "47", "Valladolid",
+  "48", "Bizkaia",
+  "49", "Zamora",
+  "50", "Zaragoza",
+  "51", "Ceuta",
+  "52", "Melilla"
+)
 
 
 # Carga de librerías necesarias
@@ -59,6 +115,30 @@ A partir del cruce de datos, nos planteamos responder a las siguientes preguntas
 En esta sección procedemos a cargar los conjuntos de datos descargados del INE. Los ficheros originales se encuentran almacenados en la carpeta local `data/raw`.
 
 ```{r importacion-datos}
+# Los datos no se deberían cargar limpios, si no sucios y tratarlos en este archivo, se cargan limpios para que Pablo y Ruben puedan trabajar con la estructura final que tendrán sin que tenga que estar todo el proceso incluido en el documento
+load("./data/Datos_SocioEcon.Rdata")
+load("./data/Datos_Laborales.Rdata")
+
+# Juntamos los datos en formato tidy. Para lo cual separamos los datos laborales en las columnas correspondientes, los unimos y deshacemos la variable id en provincia y año.
+
+laborales_tidy <- datos_laborales_ESP %>%
+  pivot_wider(
+    names_from = Sector,
+    values_from = c(Personas_Ocupadas, VAB),
+    # Modificamos el nombre para que quede claro, ej: "Personas_Ocupadas_Primario"
+    names_glue = "{.value}_{Sector}" 
+  ) 
+
+df_completo <- datos_socioecon_ESP %>%
+  full_join(laborales_tidy,by = "id") %>%
+  separate(id, into = c("Periodo", "Cod_Provincia"), sep = "_", convert = FALSE) %>%
+  mutate(Periodo = as.integer(Periodo)) %>% 
+  left_join(ine_provincias,by = "Cod_Provincia") %>%
+  rename(Provincia = Nom_Provincia) %>%
+  select(-Cod_Provincia)
+
+
+
 # Ejemplo de carga de datos (Sustituir por nombres reales de ficheros)
 # df_economia <- read_csv("data/datos_economia_ine.csv")
 # df_demografia <- read_csv("data/datos_demografia_ine.csv")
