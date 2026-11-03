@@ -1,0 +1,274 @@
+---
+title: "Estructura Productiva, Presión Inmobiliaria y su Impacto en el Ciclo Vital y Migratorio en España"
+author:
+  - name: "Nombre Apellido 1"
+    affil: 1
+  - name: "Nombre Apellido 2"
+    affil: 1
+  - name: "Nombre Apellido 3"
+    affil: 1
+affiliation:
+  - num: 1
+    address: |
+      Máster en Ciencia de Datos, Universitat de València (UV), España.
+
+# Variables obligatorias para la plantilla MDPI
+journal: "data"
+type: "article"
+status: "submit"
+simplesummary: |
+  Este proyecto de Análisis Exploratorio de Datos (AED) evalúa las dinámicas entre el modelo productivo provincial, el coste de la vivienda y su impacto en la demografía española utilizando datos del INE.
+abstract: |
+  El presente trabajo desarrolla un Análisis Exploratorio de Datos (AED) cruzando dimensiones económicas, inmobiliarias y sociodemográficas a nivel provincial en España. Se emplean datos del Instituto Nacional de Estadística (INE) para analizar cómo la hiperdependencia de ciertos sectores tensiona el mercado inmobiliario, afectando a los saldos migratorios y al ciclo vital. El análisis cubre la importación y limpieza de datos, el tratamiento de valores perdidos y atípicos, y un análisis univariante y bivariante para dar respuesta a las preguntas planteadas.
+keywords: "Análisis Exploratorio de Datos; Demografía; Mercado Inmobiliario; R"
+output: rticles::mdpi_article
+---
+
+```{r setup, include=FALSE}
+# Configuración global de los chunks de código
+knitr::opts_chunk$set(
+  echo = TRUE,       # Mostrar el código
+  warning = FALSE,   # Ocultar advertencias en el PDF final
+  message = FALSE,   # Ocultar mensajes de carga de librerías
+  fig.align = "center",
+  fig.pos = "H"
+)
+# Carga/Descarga de paquetes necesarios
+
+#AVISO: Es normal que la librería MapSpain tarde cierto tiempo en descargarse, por lo que se recomienda hacerlo antes de querer compilar el archivo.
+paquetes <- c("knitr","dplyr", "tidyr", "stringr", "readr", "tibble","ggplot2","mapSpain","sf","corrplot","scales","ggrepel","tidyverse")
+
+paquetes_faltantes <- paquetes[!paquetes %in% rownames(installed.packages())]
+
+if (length(paquetes_faltantes) > 0) {
+  install.packages(paquetes_faltantes, repos = "https://cloud.r-project.org")
+}
+
+invisible(lapply(paquetes, library, character.only = TRUE))
+
+
+# Mapeo entre nombre de provincias y códigos, todos los oficiales y usados por el INE
+ine_provincias <- tibble::tribble(
+  ~Cod_Provincia, ~Nom_Provincia,
+  "01", "Araba/Álava",
+  "02", "Albacete",
+  "03", "Alicante/Alacant",
+  "04", "Almería",
+  "05", "Ávila",
+  "06", "Badajoz",
+  "07", "Balears, Illes",
+  "08", "Barcelona",
+  "09", "Burgos",
+  "10", "Cáceres",
+  "11", "Cádiz",
+  "12", "Castellón/Castelló",
+  "13", "Ciudad Real",
+  "14", "Córdoba",
+  "15", "Coruña, A",
+  "16", "Cuenca",
+  "17", "Girona",
+  "18", "Granada",
+  "19", "Guadalajara",
+  "20", "Gipuzkoa",
+  "21", "Huelva",
+  "22", "Huesca",
+  "23", "Jaén",
+  "24", "León",
+  "25", "Lleida",
+  "26", "Rioja, La",
+  "27", "Lugo",
+  "28", "Madrid",
+  "29", "Málaga",
+  "30", "Murcia",
+  "31", "Navarra",
+  "32", "Ourense",
+  "33", "Asturias",
+  "34", "Palencia",
+  "35", "Palmas, Las",
+  "36", "Pontevedra",
+  "37", "Salamanca",
+  "38", "Santa Cruz de Tenerife",
+  "39", "Cantabria",
+  "40", "Segovia",
+  "41", "Sevilla",
+  "42", "Soria",
+  "43", "Tarragona",
+  "44", "Teruel",
+  "45", "Toledo",
+  "46", "Valencia/València",
+  "47", "Valladolid",
+  "48", "Bizkaia",
+  "49", "Zamora",
+  "50", "Zaragoza",
+  "51", "Ceuta",
+  "52", "Melilla"
+)
+
+
+# Carga de librerías necesarias
+library(rticles)
+library(tidyverse)
+library(ggplot2)
+library(corrplot)
+# Añadir más librerías según sea necesario (ej. mice, dplyr, etc.)
+```
+
+# 1. Introducción y Planteamiento de Preguntas
+
+El objetivo de este proyecto es analizar cómo el modelo productivo de las diferentes provincias españolas condiciona sus mercados laborales e inmobiliarios y, consecuentemente, altera el ciclo vital y demográfico de sus habitantes.
+
+A partir del cruce de datos, nos planteamos responder a las siguientes preguntas de investigación:
+1. **El espejismo del PIB:** ¿En qué provincias es mayor la brecha entre la riqueza generada (PIB per cápita) y la riqueza percibida por los trabajadores (salario medio)? ¿Correlaciona esta desigualdad de manera directa con un peso excesivo del sector servicios?
+2. **La trampa del sector servicios:** ¿Existe una correlación entre el porcentaje de empleo en hostelería/turismo y el encarecimiento de la vivienda respecto al salario medio?¿Existe una brecha salarial más acentuada en aquellas provincias cuyo PIB depende mayoritariamente del sector agrícola frente a las centradas en servicios?¿Genera la hiperdependencia del sector turismo una expulsión de la población joven nativa (saldo migratorio interior negativo para la franja de 20-35 años)?
+3. **El coste de la maternidad:** ¿Hay un umbral crítico en la ratio Salario/Vivienda a partir del cual la edad media a la maternidad aumenta significativamente?
+4. **El refugio industrial:** ¿Logran las provincias con un tejido industrial fuerte retener mejor a la población joven (saldo migratorio positivo) frente a aquellas con modelos primarios?¿Se constata una relación entre el nivel de industrialización de una provincia y una distribución poblacional más homogénea (evitando la macrocefalia poblacional concentrada solo en la capital)?
+
+# 2. Importación y Acondicionamiento de Datos
+
+En esta sección procedemos a cargar los conjuntos de datos descargados del INE. Como la fuente de datos no proporcionaba los datos estrictamente necesarios para el análisis que queremos realizar (buscamos un análisis anual a nivel provincial de ciertas variables socioeconómicas), el primer paso será acondicionar los datos para seleccionar los que nos interesan y juntarlos todos en la misma estructura de datos.  
+
+```{r,include = FALSE}
+#Aún así, en caso de que por algún casual los archivos no se encuentren como tal, incluimos este chunk de código que crea la carpeta e intenta realizar la descarga directamente del INE, para evitar que haya errores antes de cargarlos.
+dir.create("raw", showWarnings = FALSE, recursive = TRUE)
+
+enlaces_datos <- c(
+  "coste_vivienda.csv" = "https://cdn.mivau.gob.es/portal-web-mivau/Datos_MIVAU/CSV/VDP006_01.csv",
+  "distribucion_poblacional.csv" = "https://www.ine.es/jaxi/files/t/es/csv_bd/2852.csv?nocab=1",
+  "edad_maternidad.csv" = "https://www.ine.es/jaxiT3/files/t/es/csv_bd/1581.csv?nocab=1",
+  "migracion_interior.csv" = "https://www.ine.es/jaxiT3/files/t/es/csv_bd/24380.csv?nocab=1",
+  "Ocupados_Sector_Provincia.csv" = "https://www.ine.es/jaxiT3/files/t/es/csv_bd/65354.csv?nocab=1",
+  "pib_per_capita.csv" = "https://www.ine.es/jaxiT3/files/t/es/csv_bdsc/80110.csv",
+  "renta_bruta_media.csv" = "https://www.ine.es/jaxiT3/files/t/es/csv_bd/53689.csv?nocab=1",
+  "valor_bruto_sector.csv" = "https://www.ine.es/jaxi/files/tpx/es/csv_bd/76926.csv?nocab=1"
+)
+
+for (nombre_archivo in names(enlaces_datos)) {
+  ruta_archivo <- file.path("./data/raw", nombre_archivo)
+
+  if (!file.exists(ruta_archivo)) {
+    download.file(
+      url = enlaces_datos[[nombre_archivo]],
+      destfile = ruta_archivo,
+      mode = "wb",
+      quiet = FALSE
+    )
+  }
+}
+
+``` 
+
+Para ello, comenzamos cargando los datos, los ficheros originales se encuentran almacenados en la carpeta local `data/raw`. Los datos han sido tomados y guardados en español, por lo que hemos de tener cuidado con el indicador de millares y decimales en los datos numéricos. Como el proceso es común para todos los ficheros a cargar, hemos implementado una función basada en `read_delim` de `readr` para tratar adecuadamente las variables numéricas. Usamos esta función para cargar los distintos conjuntos de datos.
+
+```{r}
+leer_base <- function(fichero, separador) {
+  readr::read_delim(
+    file = fichero,
+    delim = separador,
+    locale = readr::locale(decimal_mark = ",", grouping_mark = "."),
+    na = c("", "NA", "null",".."),
+    name_repair = "minimal",
+    show_col_types = FALSE,
+    progress = FALSE
+  )
+}
+``` 
+
+```{r,include = FALSE}
+coste_vivienda <- leer_base("./data/raw/coste_vivienda.csv", ";")
+distr_pobl <- leer_base("./data/raw/distribucion_poblacional.csv", "\t")
+edad_maternidad <- leer_base("./data/raw/edad_maternidad.csv", "\t")
+migracion_interior <- leer_base("./data/raw/migracion_interior.csv", "\t")
+ocupacion_sector <- leer_base("./data/raw/Ocupados_Sector_Provincia.csv", "\t")
+pib_per_capita <- leer_base("./data/raw/pib_per_capita.csv", ";")
+renta_bruta_media <- leer_base("./data/raw/renta_bruta_media.csv", "\t")
+valor_bruto_sector <- leer_base("./data/raw/valor_bruto_sector.csv", "\t")
+```
+
+El proceso de preparación de los datos se hace siguiendo la filosofía tidy. Al ser un proceso mecánico y repetitivo, no se explicitarán todos y cada uno de los pasos hechos, aunque se comentarán aquellos que requieran mayor detenimiento. En general, el acondicionamiento de los datos ha requerido los siguientes 
+
+```{r importacion-datos}
+# Los datos no se deberían cargar limpios, si no sucios y tratarlos en este archivo, se cargan limpios para que Pablo y Ruben puedan trabajar con la estructura final que tendrán sin que tenga que estar todo el proceso incluido en el documento
+#load("./data/Datos_SocioEcon.Rdata")
+#load("./data/Datos_Laborales.Rdata")
+
+# Juntamos los datos en formato tidy. Para lo cual separamos los datos laborales en las columnas correspondientes, los unimos y deshacemos la variable id en provincia y año.
+
+#laborales_tidy <- datos_laborales_ESP %>%
+#  pivot_wider(
+#    names_from = Sector,
+#    values_from = c(Personas_Ocupadas, VAB),
+    # Modificamos el nombre para que quede claro, ej: "Personas_Ocupadas_Primario"
+#    names_glue = "{.value}_{Sector}" 
+#  ) 
+
+#df_completo <- datos_socioecon_ESP %>%
+#  full_join(laborales_tidy,by = "id") %>%
+#  separate(id, into = c("Periodo", "Cod_Provincia"), sep = "_", convert = FALSE) %>%
+#  mutate(Periodo = as.integer(Periodo)) %>% 
+#  left_join(ine_provincias,by = "Cod_Provincia") %>%
+#  rename(Provincia = Nom_Provincia) %>%
+#  select(-Cod_Provincia)
+
+# Aquí se realizará el proceso de limpieza inicial y el 'left_join' 
+# por el código de provincia para unificar todo en un único dataset 'df_final'.
+```
+
+*Explicación detallada de los pasos seguidos para homogeneizar los nombres de las columnas, filtrar los años de estudio (ej. 2015-2022) y el cruce de las tablas.*
+
+# 3. Análisis de Datos Perdidos (NAs) e Imputación
+
+Durante la integración de diferentes fuentes oficiales, es habitual encontrar valores perdidos. A continuación, cuantificamos y analizamos la naturaleza de estos *missing values*.
+
+```{r analisis-nas}
+# Código para identificar y visualizar NAs
+# Aplicación de métodos de imputación si procede (ej. media, interpolación) o eliminación de filas.
+```
+
+*Justificación de la decisión tomada: por qué se ha elegido un método de imputación concreto o por qué se ha descartado una variable con demasiados valores nulos.*
+
+# 4. Análisis de Valores Atípicos (Outliers)
+
+Algunas provincias (como Madrid, Barcelona o regiones insulares) pueden presentar comportamientos extremos que distorsionen el análisis general. 
+
+```{r analisis-outliers}
+# Código para visualizar outliers mediante boxplots
+# Métodos aplicados (ej. Rango Intercuartílico - IQR) para filtrar o transformar variables.
+```
+
+*Explicación del tratamiento de los outliers. Se debe justificar si se mantienen en el dataset porque representan información real valiosa o si se aplican transformaciones logarítmicas para suavizar su impacto.*
+
+# 5. Análisis Exploratorio de Datos (EDA)
+
+## 5.1 Análisis Univariante
+
+Exploración de la distribución individual de las principales variables de estudio (Salario, Precio Vivienda, Edad Maternidad).
+
+```{r univariante}
+# Código para histogramas, densidades y estadísticos descriptivos básicos.
+```
+
+*Comentarios sobre las distribuciones obtenidas (simetría, sesgos, concentración de datos).*
+
+## 5.2 Análisis Bivariante y Multivariante
+
+En esta sección cruzamos las variables para dar respuesta a las preguntas planteadas en la introducción.
+
+```{r bivariante}
+# Código para gráficos de dispersión (scatter plots), matrices de correlación (corrplot), etc.
+```
+
+*Explicación detallada de los gráficos mostrados. "Contar la historia" que revelan los datos. ¿Se confirman las hipótesis iniciales?*
+
+# 6. Conclusiones Finales
+
+A partir del análisis exploratorio realizado, podemos extraer las siguientes conclusiones:
+
+*   **Sobre el mercado inmobiliario y demografía:** (Respuesta a las preguntas 1 y 2).
+*   **Sobre el modelo productivo y migración:** (Respuesta a las preguntas 3 y 4).
+*   **Aportaciones adicionales:** (Limitaciones del estudio, posibles líneas futuras o reflexiones sobre los datos).
+
+\newpage
+# Referencias
+
+*   Instituto Nacional de Estadística (INE). (2026). *Bases de datos provinciales*. Recuperado de https://www.ine.es/dyngs/DAB/index.htm?cid=1722
+*   Xie, Y., Allaire, J. J., & Grolemund, G. (2018). *R Markdown: The Definitive Guide*. Chapman and Hall/CRC.
