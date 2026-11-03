@@ -49,7 +49,7 @@ invisible(lapply(paquetes, library, character.only = TRUE))
 
 # Mapeo entre nombre de provincias y códigos, todos los oficiales y usados por el INE
 ine_provincias <- tibble::tribble(
-  ~Cod_Provincia, ~Nom_Provincia,
+  ~id_prov, ~Provincia_clean,
   "01", "Araba/Álava",
   "02", "Albacete",
   "03", "Alicante/Alacant",
@@ -125,7 +125,7 @@ A partir del cruce de datos, nos planteamos responder a las siguientes preguntas
 
 # 2. Importación y Acondicionamiento de Datos
 
-En esta sección procedemos a cargar los conjuntos de datos descargados del INE. Como la fuente de datos no proporcionaba los datos estrictamente necesarios para el análisis que queremos realizar (buscamos un análisis anual a nivel provincial de ciertas variables socioeconómicas), el primer paso será acondicionar los datos para seleccionar los que nos interesan y juntarlos todos en la misma estructura de datos.  
+En esta sección procedemos a cargar los conjuntos de datos descargados del INE. Como la fuente de datos no proporcionaba los datos estrictamente necesarios para el análisis que queremos realizar (buscamos un análisis anual a nivel provincial de ciertas variables socioeconómicas), el primer paso será acondicionar los datos que más se ajustaban a los necesitados para seleccionar los que nos interesan y juntarlos todos en la misma estructura de datos.  
 
 ```{r,include = FALSE}
 #Aún así, en caso de que por algún casual los archivos no se encuentren como tal, incluimos este chunk de código que crea la carpeta e intenta realizar la descarga directamente del INE, para evitar que haya errores antes de cargarlos.
@@ -184,7 +184,103 @@ renta_bruta_media <- leer_base("./data/raw/renta_bruta_media.csv", "\t")
 valor_bruto_sector <- leer_base("./data/raw/valor_bruto_sector.csv", "\t")
 ```
 
-El proceso de preparación de los datos se hace siguiendo la filosofía tidy. Al ser un proceso mecánico y repetitivo, no se explicitarán todos y cada uno de los pasos hechos, aunque se comentarán aquellos que requieran mayor detenimiento. En general, el acondicionamiento de los datos ha requerido los siguientes 
+El proceso de preparación de los datos se hace siguiendo la filosofía tidy. Al ser un proceso mecánico y repetitivo, no se explicitarán todos y cada uno de los pasos hechos en el informe, aunque se pueden consultar en el script que lo genera, y se comentarán aquellos que requieran mayor detenimiento. En general, el acondicionamiento de los datos ha requerido las siguientes acciones:
+
+* 1. Acondicionamiento de nombres de variables para evitar errores de compilación, como `Año` que pasa a ser `Anyo` o `Comunidad Autónoma` a `Comunidad_Autonoma`.
+* 2. Es una práctica común en el INE incluir la variable `Provincias` que tiene la forma `xx Nombre_Provincia`, siendo `XX` el código de provincia oficial (asignados por orden alfabético, del 01 al 50, siendo Ceuta el 51 y Melilla el 52). Nosotros hemos separado esa variable en código provincial `cod_prov` y nombre provincial (`Provincia`).
+* 3. Para el estudio hemos considerado como instancia una provincia en cierto año, por lo que, con el fin de unir instancias de distintas tablas, hemos asignado un identificador único (en el sentido de que cada provincia tiene uno por año) a todos los registros, usando el formato `yyyy_xx`, año (`yyyy`) y código provincial (`xx`). Para ello se ha implementado la siguiente función.
+```{r}
+# Función para generar el ID único
+generar_id_obs <- function(df, col_anyo, col_prov) {
+  df %>%
+    mutate(
+      id = paste0(
+        as.numeric({{ col_anyo }}),
+        "_",
+        str_pad(as.character({{ col_prov }}), width = 2, side = "left", pad = "0")
+      )
+    )
+}
+```
+* 4. El INE ofrecía algunos datasets con los valores disgregados por variables como sexo,nacionalidad,edad, o valores trimestrales en lugar de anuales. Como el uso de estos escapaban del objetivo del análisis, en los casos en los que también se ofrecía el valor total, se ha seleccionado este, y en los que no, usando el identificador único, los hemos agregado usando la medida adecuada (media para obtener el promedio anual de valores trimestrales, y suma para obtener el total por sexos, edades o nacionalidades).
+
+* 5. En el INE los datos aparecen en un dataset construido específicamente para ellos, por lo que la variable que nos interesa suele llevar el nombre `Valor` o `Total`. Lo cambiamos para identificar correctamente el nombre de la variable de interés en nuestro dataset.
+```{r,include = FALSE}
+#Preparación del coste de vivienda
+
+# Normalizamos nombres problemáticos antes de usarlos en expresiones de R.
+# Esto evita errores de codificación con tildes y deja una clave temporal común.
+names(coste_vivienda)[1] <- "Periodo"
+names(coste_vivienda)[4] <- "Regimen"
+names(coste_vivienda)[7] <- "Comunidad_Autonoma"
+```
+* 6. A veces el INE entrega los datos a nivel provincial y regional en el mismo archivo, pero para las regiones uniprovinciales da el valor de la región, por lo que en estos casos se transforma adecuadamente el código y nombre de la región al de la provincia correspondiente para extraer correctamente los datos, y no perder valores por el camino. Para ello el procedimiento suele ser similar al siguiente:
+```{r}
+# En las comunidades uniprovinciales, el fichero incluye filas regionales
+# (CPRO vacio) cuyo valor coincide con el de la provincia. Las incorporamos
+# usando el codigo de comunidad autonoma antes de eliminar CODAUTO.
+coste_uniprov_codes <- c(
+  "03" = "33", # Asturias
+  "04" = "07", # Illes Balears
+  "06" = "39", # Cantabria
+  "13" = "28", # Madrid
+  "14" = "30", # Murcia
+  "15" = "31", # Navarra
+  "17" = "26", # La Rioja
+  "18" = "51", # Ceuta
+  "19" = "52"  # Melilla
+)
+
+coste_vivienda <- coste_vivienda %>%
+  mutate(
+    codigo_ccaa = str_pad(as.character(.data[["CODAUTO"]]), width = 2, side = "left", pad = "0"),
+    codigo_ccaa = case_when(
+      str_detect(str_to_lower(Comunidad_Autonoma), "astur") ~ "03",
+      str_detect(str_to_lower(Comunidad_Autonoma), "balear") ~ "04",
+      str_detect(str_to_lower(Comunidad_Autonoma), "cantabr") ~ "06",
+      str_detect(str_to_lower(Comunidad_Autonoma), "madrid") ~ "13",
+      str_detect(str_to_lower(Comunidad_Autonoma), "murcia") ~ "14",
+      str_detect(str_to_lower(Comunidad_Autonoma), "navarr") ~ "15",
+      str_detect(str_to_lower(Comunidad_Autonoma), "rioja") ~ "17",
+      str_detect(str_to_lower(Comunidad_Autonoma), "ceuta") ~ "18",
+      str_detect(str_to_lower(Comunidad_Autonoma), "melilla") ~ "19",
+      TRUE ~ codigo_ccaa
+    ),
+    CPRO = if_else(
+      is.na(CPRO),
+      unname(coste_uniprov_codes[codigo_ccaa]),
+      as.character(CPRO)
+    )
+  ) %>%
+  select(-codigo_ccaa)
+
+coste_vivienda$CODAUTO <- NULL
+coste_vivienda$Comunidad_Autonoma <- NULL
+
+```
+* 7. De igual manera, en esos casos, para extraer únicamente el valor de las provincias (ni el total nacional ni niveles regionales), hacemos uso de la siguiente función, que identifica las provincias que se encuentran únicamente en la lista oficial del INE.
+```{r}
+filtrar_provincias <- function(df) {
+  df %>%
+    mutate(id_prov = str_pad(as.character(id_prov), width = 2, side = "left", pad = "0")) %>%
+    filter(id_prov %in% ine_provincias$id_prov)
+}
+```
+
+```{r,include = FALSE}
+colnames(coste_vivienda)[5]<- "id_prov"
+coste_vivienda <- filtrar_provincias(coste_vivienda)
+coste_vivienda <- coste_vivienda %>%
+  arrange(id_prov) %>%
+  arrange(Periodo) %>%
+ generar_id_obs(.,col_anyo = .$Periodo, col_prov = .$id_prov) %>%
+ group_by(id) %>%
+  mutate(Precio_m2 = mean(Valor, na.rm = TRUE)) %>%
+  ungroup() %>%
+  select(id,Precio_m2) %>%
+  distinct()
+```
+
 
 ```{r importacion-datos}
 # Los datos no se deberían cargar limpios, si no sucios y tratarlos en este archivo, se cargan limpios para que Pablo y Ruben puedan trabajar con la estructura final que tendrán sin que tenga que estar todo el proceso incluido en el documento

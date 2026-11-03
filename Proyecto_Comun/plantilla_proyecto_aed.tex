@@ -279,9 +279,9 @@ En esta sección procedemos a cargar los conjuntos de datos descargados
 del INE. Como la fuente de datos no proporcionaba los datos
 estrictamente necesarios para el análisis que queremos realizar
 (buscamos un análisis anual a nivel provincial de ciertas variables
-socioeconómicas), el primer paso será acondicionar los datos para
-seleccionar los que nos interesan y juntarlos todos en la misma
-estructura de datos.
+socioeconómicas), el primer paso será acondicionar los datos que más se
+ajustaban a los necesitados para seleccionar los que nos interesan y
+juntarlos todos en la misma estructura de datos.
 
 Para ello, comenzamos cargando los datos, los ficheros originales se
 encuentran almacenados en la carpeta local \texttt{data/raw}. Los datos
@@ -304,6 +304,183 @@ esta función para cargar los distintos conjuntos de datos.
     \AttributeTok{show\_col\_types =} \ConstantTok{FALSE}\NormalTok{,}
     \AttributeTok{progress =} \ConstantTok{FALSE}
 \NormalTok{  )}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+El proceso de preparación de los datos se hace siguiendo la filosofía
+tidy. Al ser un proceso mecánico y repetitivo, no se explicitarán todos
+y cada uno de los pasos hechos en el informe, aunque se pueden consultar
+en el script que lo genera, y se comentarán aquellos que requieran mayor
+detenimiento. En general, el acondicionamiento de los datos ha requerido
+las siguientes acciones:
+
+\begin{itemize}
+\tightlist
+\item
+  \begin{enumerate}
+  \def\labelenumi{\arabic{enumi}.}
+  \tightlist
+  \item
+    Acondicionamiento de nombres de variables para evitar errores de
+    compilación, como \texttt{Año} que pasa a ser \texttt{Anyo} o
+    \texttt{Comunidad\ Autónoma} a \texttt{Comunidad\_Autonoma}.
+  \end{enumerate}
+\item
+  \begin{enumerate}
+  \def\labelenumi{\arabic{enumi}.}
+  \setcounter{enumi}{1}
+  \tightlist
+  \item
+    Es una práctica común en el INE incluir la variable
+    \texttt{Provincias} que tiene la forma
+    \texttt{xx\ Nombre\_Provincia}, siendo \texttt{XX} el código de
+    provincia oficial (asignados por orden alfabético, del 01 al 50,
+    siendo Ceuta el 51 y Melilla el 52). Nosotros hemos separado esa
+    variable en código provincial \texttt{cod\_prov} y nombre provincial
+    (\texttt{Provincia}).
+  \end{enumerate}
+\item
+  \begin{enumerate}
+  \def\labelenumi{\arabic{enumi}.}
+  \setcounter{enumi}{2}
+  \tightlist
+  \item
+    Para el estudio hemos considerado como instancia una provincia en
+    cierto año, por lo que, con el fin de unir instancias de distintas
+    tablas, hemos asignado un identificador único (en el sentido de que
+    cada provincia tiene uno por año) a todos los registros, usando el
+    formato \texttt{yyyy\_xx}, año (\texttt{yyyy}) y código provincial
+    (\texttt{xx}). Para ello se ha implementado la siguiente función.
+  \end{enumerate}
+\end{itemize}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Función para generar el ID único}
+\NormalTok{generar\_id\_obs }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(df, col\_anyo, col\_prov) \{}
+\NormalTok{  df }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{mutate}\NormalTok{(}
+      \AttributeTok{id =} \FunctionTok{paste0}\NormalTok{(}
+        \FunctionTok{as.numeric}\NormalTok{(\{\{ col\_anyo \}\}),}
+        \StringTok{"\_"}\NormalTok{,}
+        \FunctionTok{str\_pad}\NormalTok{(}\FunctionTok{as.character}\NormalTok{(\{\{ col\_prov \}\}), }\AttributeTok{width =} \DecValTok{2}\NormalTok{, }\AttributeTok{side =} \StringTok{"left"}\NormalTok{, }\AttributeTok{pad =} \StringTok{"0"}\NormalTok{)}
+\NormalTok{      )}
+\NormalTok{    )}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{itemize}
+\tightlist
+\item
+  \begin{enumerate}
+  \def\labelenumi{\arabic{enumi}.}
+  \setcounter{enumi}{3}
+  \tightlist
+  \item
+    El INE ofrecía algunos datasets con los valores disgregados por
+    variables como sexo,nacionalidad,edad, o valores trimestrales en
+    lugar de anuales. Como el uso de estos escapaban del objetivo del
+    análisis, en los casos en los que también se ofrecía el valor total,
+    se ha seleccionado este, y en los que no, usando el identificador
+    único, los hemos agregado usando la medida adecuada (media para
+    obtener el promedio anual de valores trimestrales, y suma para
+    obtener el total por sexos, edades o nacionalidades).
+  \end{enumerate}
+\item
+  \begin{enumerate}
+  \def\labelenumi{\arabic{enumi}.}
+  \setcounter{enumi}{4}
+  \tightlist
+  \item
+    En el INE los datos aparecen en un dataset construido
+    específicamente para ellos, por lo que la variable que nos interesa
+    suele llevar el nombre \texttt{Valor} o \texttt{Total}. Lo cambiamos
+    para identificar correctamente el nombre de la variable de interés
+    en nuestro dataset.
+  \end{enumerate}
+\item
+  \begin{enumerate}
+  \def\labelenumi{\arabic{enumi}.}
+  \setcounter{enumi}{5}
+  \tightlist
+  \item
+    A veces el INE entrega los datos a nivel provincial y regional en el
+    mismo archivo, pero para las regiones uniprovinciales da el valor de
+    la región, por lo que en estos casos se transforma adecuadamente el
+    código y nombre de la región al de la provincia correspondiente para
+    extraer correctamente los datos, y no perder valores por el camino.
+    Para ello el procedimiento suele ser similar al siguiente:
+  \end{enumerate}
+\end{itemize}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# En las comunidades uniprovinciales, el fichero incluye filas regionales}
+\CommentTok{\# (CPRO vacio) cuyo valor coincide con el de la provincia. Las incorporamos}
+\CommentTok{\# usando el codigo de comunidad autonoma antes de eliminar CODAUTO.}
+\NormalTok{coste\_uniprov\_codes }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}
+  \StringTok{"03"} \OtherTok{=} \StringTok{"33"}\NormalTok{, }\CommentTok{\# Asturias}
+  \StringTok{"04"} \OtherTok{=} \StringTok{"07"}\NormalTok{, }\CommentTok{\# Illes Balears}
+  \StringTok{"06"} \OtherTok{=} \StringTok{"39"}\NormalTok{, }\CommentTok{\# Cantabria}
+  \StringTok{"13"} \OtherTok{=} \StringTok{"28"}\NormalTok{, }\CommentTok{\# Madrid}
+  \StringTok{"14"} \OtherTok{=} \StringTok{"30"}\NormalTok{, }\CommentTok{\# Murcia}
+  \StringTok{"15"} \OtherTok{=} \StringTok{"31"}\NormalTok{, }\CommentTok{\# Navarra}
+  \StringTok{"17"} \OtherTok{=} \StringTok{"26"}\NormalTok{, }\CommentTok{\# La Rioja}
+  \StringTok{"18"} \OtherTok{=} \StringTok{"51"}\NormalTok{, }\CommentTok{\# Ceuta}
+  \StringTok{"19"} \OtherTok{=} \StringTok{"52"}  \CommentTok{\# Melilla}
+\NormalTok{)}
+
+\NormalTok{coste\_vivienda }\OtherTok{\textless{}{-}}\NormalTok{ coste\_vivienda }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{mutate}\NormalTok{(}
+    \AttributeTok{codigo\_ccaa =} \FunctionTok{str\_pad}\NormalTok{(}\FunctionTok{as.character}\NormalTok{(.data[[}\StringTok{"CODAUTO"}\NormalTok{]]), }\AttributeTok{width =} \DecValTok{2}\NormalTok{, }\AttributeTok{side =} \StringTok{"left"}\NormalTok{, }\AttributeTok{pad =} \StringTok{"0"}\NormalTok{),}
+    \AttributeTok{codigo\_ccaa =} \FunctionTok{case\_when}\NormalTok{(}
+      \FunctionTok{str\_detect}\NormalTok{(}\FunctionTok{str\_to\_lower}\NormalTok{(Comunidad\_Autonoma), }\StringTok{"astur"}\NormalTok{) }\SpecialCharTok{\textasciitilde{}} \StringTok{"03"}\NormalTok{,}
+      \FunctionTok{str\_detect}\NormalTok{(}\FunctionTok{str\_to\_lower}\NormalTok{(Comunidad\_Autonoma), }\StringTok{"balear"}\NormalTok{) }\SpecialCharTok{\textasciitilde{}} \StringTok{"04"}\NormalTok{,}
+      \FunctionTok{str\_detect}\NormalTok{(}\FunctionTok{str\_to\_lower}\NormalTok{(Comunidad\_Autonoma), }\StringTok{"cantabr"}\NormalTok{) }\SpecialCharTok{\textasciitilde{}} \StringTok{"06"}\NormalTok{,}
+      \FunctionTok{str\_detect}\NormalTok{(}\FunctionTok{str\_to\_lower}\NormalTok{(Comunidad\_Autonoma), }\StringTok{"madrid"}\NormalTok{) }\SpecialCharTok{\textasciitilde{}} \StringTok{"13"}\NormalTok{,}
+      \FunctionTok{str\_detect}\NormalTok{(}\FunctionTok{str\_to\_lower}\NormalTok{(Comunidad\_Autonoma), }\StringTok{"murcia"}\NormalTok{) }\SpecialCharTok{\textasciitilde{}} \StringTok{"14"}\NormalTok{,}
+      \FunctionTok{str\_detect}\NormalTok{(}\FunctionTok{str\_to\_lower}\NormalTok{(Comunidad\_Autonoma), }\StringTok{"navarr"}\NormalTok{) }\SpecialCharTok{\textasciitilde{}} \StringTok{"15"}\NormalTok{,}
+      \FunctionTok{str\_detect}\NormalTok{(}\FunctionTok{str\_to\_lower}\NormalTok{(Comunidad\_Autonoma), }\StringTok{"rioja"}\NormalTok{) }\SpecialCharTok{\textasciitilde{}} \StringTok{"17"}\NormalTok{,}
+      \FunctionTok{str\_detect}\NormalTok{(}\FunctionTok{str\_to\_lower}\NormalTok{(Comunidad\_Autonoma), }\StringTok{"ceuta"}\NormalTok{) }\SpecialCharTok{\textasciitilde{}} \StringTok{"18"}\NormalTok{,}
+      \FunctionTok{str\_detect}\NormalTok{(}\FunctionTok{str\_to\_lower}\NormalTok{(Comunidad\_Autonoma), }\StringTok{"melilla"}\NormalTok{) }\SpecialCharTok{\textasciitilde{}} \StringTok{"19"}\NormalTok{,}
+      \ConstantTok{TRUE} \SpecialCharTok{\textasciitilde{}}\NormalTok{ codigo\_ccaa}
+\NormalTok{    ),}
+    \AttributeTok{CPRO =} \FunctionTok{if\_else}\NormalTok{(}
+      \FunctionTok{is.na}\NormalTok{(CPRO),}
+      \FunctionTok{unname}\NormalTok{(coste\_uniprov\_codes[codigo\_ccaa]),}
+      \FunctionTok{as.character}\NormalTok{(CPRO)}
+\NormalTok{    )}
+\NormalTok{  ) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{select}\NormalTok{(}\SpecialCharTok{{-}}\NormalTok{codigo\_ccaa)}
+
+\NormalTok{coste\_vivienda}\SpecialCharTok{$}\NormalTok{CODAUTO }\OtherTok{\textless{}{-}} \ConstantTok{NULL}
+\NormalTok{coste\_vivienda}\SpecialCharTok{$}\NormalTok{Comunidad\_Autonoma }\OtherTok{\textless{}{-}} \ConstantTok{NULL}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{itemize}
+\tightlist
+\item
+  \begin{enumerate}
+  \def\labelenumi{\arabic{enumi}.}
+  \setcounter{enumi}{6}
+  \tightlist
+  \item
+    De igual manera, en esos casos, para extraer únicamente el valor de
+    las provincias (ni el total nacional ni niveles regionales), hacemos
+    uso de la siguiente función, que identifica las provincias que se
+    encuentran únicamente en la lista oficial del INE.
+  \end{enumerate}
+\end{itemize}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{filtrar\_provincias }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(df) \{}
+\NormalTok{  df }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{mutate}\NormalTok{(}\AttributeTok{id\_prov =} \FunctionTok{str\_pad}\NormalTok{(}\FunctionTok{as.character}\NormalTok{(id\_prov), }\AttributeTok{width =} \DecValTok{2}\NormalTok{, }\AttributeTok{side =} \StringTok{"left"}\NormalTok{, }\AttributeTok{pad =} \StringTok{"0"}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{filter}\NormalTok{(id\_prov }\SpecialCharTok{\%in\%}\NormalTok{ ine\_provincias}\SpecialCharTok{$}\NormalTok{id\_prov)}
 \NormalTok{\}}
 \end{Highlighting}
 \end{Shaded}
