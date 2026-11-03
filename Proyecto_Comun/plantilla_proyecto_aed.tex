@@ -308,12 +308,14 @@ esta función para cargar los distintos conjuntos de datos.
 \end{Highlighting}
 \end{Shaded}
 
-El proceso de preparación de los datos se hace siguiendo la filosofía
-tidy. Al ser un proceso mecánico y repetitivo, no se explicitarán todos
-y cada uno de los pasos hechos en el informe, aunque se pueden consultar
-en el script que lo genera, y se comentarán aquellos que requieran mayor
-detenimiento. En general, el acondicionamiento de los datos ha requerido
-las siguientes acciones:
+\emph{Explicación detallada de los pasos seguidos para homogeneizar los
+nombres de las columnas, filtrar los años de estudio (ej. 2015-2022) y
+el cruce de las tablas.} El proceso de preparación de los datos se hace
+siguiendo la filosofía tidy. Al ser un proceso mecánico y repetitivo, no
+se explicitarán todos y cada uno de los pasos hechos en el informe,
+aunque se pueden consultar en el script que lo genera, y se comentarán
+aquellos que requieran mayor detenimiento. En general, el
+acondicionamiento de los datos ha requerido las siguientes acciones:
 
 \begin{itemize}
 \tightlist
@@ -323,7 +325,7 @@ las siguientes acciones:
   \tightlist
   \item
     Acondicionamiento de nombres de variables para evitar errores de
-    compilación, como \texttt{Año} que pasa a ser \texttt{Anyo} o
+    compilación, como \texttt{Año} que pasa a ser \texttt{Periodo} o
     \texttt{Comunidad\ Autónoma} a \texttt{Comunidad\_Autonoma}.
   \end{enumerate}
 \item
@@ -485,38 +487,34 @@ las siguientes acciones:
 \end{Highlighting}
 \end{Shaded}
 
+Una vez tenemos los datos tratados, los juntamos haciendo uso del
+identificador único. Para evitar que se generen muchos valores perdidos,
+para la unión solamente tomaremos las instancias comunes a todos.
+
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# Los datos no se deberían cargar limpios, si no sucios y tratarlos en este archivo, se cargan limpios para que Pablo y Ruben puedan trabajar con la estructura final que tendrán sin que tenga que estar todo el proceso incluido en el documento}
-\CommentTok{\#load("./data/Datos\_SocioEcon.Rdata")}
-\CommentTok{\#load("./data/Datos\_Laborales.Rdata")}
-
 \CommentTok{\# Juntamos los datos en formato tidy. Para lo cual separamos los datos laborales en las columnas correspondientes, los unimos y deshacemos la variable id en provincia y año.}
 
-\CommentTok{\#laborales\_tidy \textless{}{-} datos\_laborales\_ESP \%\textgreater{}\%}
-\CommentTok{\#  pivot\_wider(}
-\CommentTok{\#    names\_from = Sector,}
-\CommentTok{\#    values\_from = c(Personas\_Ocupadas, VAB),}
-    \CommentTok{\# Modificamos el nombre para que quede claro, ej: "Personas\_Ocupadas\_Primario"}
-\CommentTok{\#    names\_glue = "\{.value\}\_\{Sector\}" }
-\CommentTok{\#  ) }
+\NormalTok{laborales\_tidy }\OtherTok{\textless{}{-}}\NormalTok{ datos\_laborales\_ESP }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{pivot\_wider}\NormalTok{(}
+    \AttributeTok{names\_from =}\NormalTok{ Sector,}
+    \AttributeTok{values\_from =} \FunctionTok{c}\NormalTok{(Personas\_Ocupadas, VAB),}
+     \CommentTok{\#Modificamos el nombre para que quede claro el valor, ej: "Personas\_Ocupadas\_Primario"}
+    \AttributeTok{names\_glue =} \StringTok{"\{.value\}\_\{Sector\}"} 
+\NormalTok{  ) }
 
-\CommentTok{\#df\_completo \textless{}{-} datos\_socioecon\_ESP \%\textgreater{}\%}
-\CommentTok{\#  full\_join(laborales\_tidy,by = "id") \%\textgreater{}\%}
-\CommentTok{\#  separate(id, into = c("Periodo", "Cod\_Provincia"), sep = "\_", convert = FALSE) \%\textgreater{}\%}
-\CommentTok{\#  mutate(Periodo = as.integer(Periodo)) \%\textgreater{}\% }
-\CommentTok{\#  left\_join(ine\_provincias,by = "Cod\_Provincia") \%\textgreater{}\%}
-\CommentTok{\#  rename(Provincia = Nom\_Provincia) \%\textgreater{}\%}
-\CommentTok{\#  select({-}Cod\_Provincia)}
+\NormalTok{df\_completo }\OtherTok{\textless{}{-}}\NormalTok{ datos\_socioecon\_ESP }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{full\_join}\NormalTok{(laborales\_tidy,}\AttributeTok{by =} \StringTok{"id"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{separate}\NormalTok{(id, }\AttributeTok{into =} \FunctionTok{c}\NormalTok{(}\StringTok{"Periodo"}\NormalTok{, }\StringTok{"id\_prov"}\NormalTok{), }\AttributeTok{sep =} \StringTok{"\_"}\NormalTok{, }\AttributeTok{convert =} \ConstantTok{FALSE}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{Periodo =} \FunctionTok{as.integer}\NormalTok{(Periodo)) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{left\_join}\NormalTok{(ine\_provincias,}\AttributeTok{by =} \StringTok{"id\_prov"}\NormalTok{)}\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{rename}\NormalTok{(}\AttributeTok{Provincia =}\NormalTok{ Provincia\_clean) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{select}\NormalTok{(}\SpecialCharTok{{-}}\NormalTok{id\_prov)}
 
 \CommentTok{\# Aquí se realizará el proceso de limpieza inicial y el \textquotesingle{}left\_join\textquotesingle{} }
 \CommentTok{\# por el código de provincia para unificar todo en un único dataset \textquotesingle{}df\_final\textquotesingle{}.}
 \end{Highlighting}
 \end{Shaded}
-
-\emph{Explicación detallada de los pasos seguidos para homogeneizar los
-nombres de las columnas, filtrar los años de estudio (ej. 2015-2022) y
-el cruce de las tablas.}
 
 \section{3. Análisis de Datos Perdidos (NAs) e
 Imputación}\label{anuxe1lisis-de-datos-perdidos-nas-e-imputaciuxf3n}

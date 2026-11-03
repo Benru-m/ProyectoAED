@@ -36,7 +36,7 @@ knitr::opts_chunk$set(
 # Carga/Descarga de paquetes necesarios
 
 #AVISO: Es normal que la librería MapSpain tarde cierto tiempo en descargarse, por lo que se recomienda hacerlo antes de querer compilar el archivo.
-paquetes <- c("knitr","dplyr", "tidyr", "stringr", "readr", "tibble","ggplot2","mapSpain","sf","corrplot","scales","ggrepel","tidyverse")
+paquetes <- c("rticles","knitr","dplyr", "tidyr", "stringr", "readr", "tibble","ggplot2","mapSpain","sf","corrplot","scales","ggrepel","tidyverse")
 
 paquetes_faltantes <- paquetes[!paquetes %in% rownames(installed.packages())]
 
@@ -104,13 +104,7 @@ ine_provincias <- tibble::tribble(
   "52", "Melilla"
 )
 
-
-# Carga de librerías necesarias
-library(rticles)
-library(tidyverse)
-library(ggplot2)
-library(corrplot)
-# Añadir más librerías según sea necesario (ej. mice, dplyr, etc.)
+remove(list=c("paquetes","paquetes_faltantes"))
 ```
 
 # 1. Introducción y Planteamiento de Preguntas
@@ -155,6 +149,7 @@ for (nombre_archivo in names(enlaces_datos)) {
   }
 }
 
+remove(list=c("ruta_archivo","nombre_archivo","enlaces_datos"))
 ``` 
 
 Para ello, comenzamos cargando los datos, los ficheros originales se encuentran almacenados en la carpeta local `data/raw`. Los datos han sido tomados y guardados en español, por lo que hemos de tener cuidado con el indicador de millares y decimales en los datos numéricos. Como el proceso es común para todos los ficheros a cargar, hemos implementado una función basada en `read_delim` de `readr` para tratar adecuadamente las variables numéricas. Usamos esta función para cargar los distintos conjuntos de datos.
@@ -182,11 +177,13 @@ ocupacion_sector <- leer_base("./data/raw/Ocupados_Sector_Provincia.csv", "\t")
 pib_per_capita <- leer_base("./data/raw/pib_per_capita.csv", ";")
 renta_bruta_media <- leer_base("./data/raw/renta_bruta_media.csv", "\t")
 valor_bruto_sector <- leer_base("./data/raw/valor_bruto_sector.csv", "\t")
-```
 
+remove(list = c("leer_base"))
+```
+*Explicación detallada de los pasos seguidos para homogeneizar los nombres de las columnas, filtrar los años de estudio (ej. 2015-2022) y el cruce de las tablas.*
 El proceso de preparación de los datos se hace siguiendo la filosofía tidy. Al ser un proceso mecánico y repetitivo, no se explicitarán todos y cada uno de los pasos hechos en el informe, aunque se pueden consultar en el script que lo genera, y se comentarán aquellos que requieran mayor detenimiento. En general, el acondicionamiento de los datos ha requerido las siguientes acciones:
 
-* 1. Acondicionamiento de nombres de variables para evitar errores de compilación, como `Año` que pasa a ser `Anyo` o `Comunidad Autónoma` a `Comunidad_Autonoma`.
+* 1. Acondicionamiento de nombres de variables para evitar errores de compilación, como `Año` que pasa a ser `Periodo` o `Comunidad Autónoma` a `Comunidad_Autonoma`.
 * 2. Es una práctica común en el INE incluir la variable `Provincias` que tiene la forma `xx Nombre_Provincia`, siendo `XX` el código de provincia oficial (asignados por orden alfabético, del 01 al 50, siendo Ceuta el 51 y Melilla el 52). Nosotros hemos separado esa variable en código provincial `cod_prov` y nombre provincial (`Provincia`).
 * 3. Para el estudio hemos considerado como instancia una provincia en cierto año, por lo que, con el fin de unir instancias de distintas tablas, hemos asignado un identificador único (en el sentido de que cada provincia tiene uno por año) a todos los registros, usando el formato `yyyy_xx`, año (`yyyy`) y código provincial (`xx`). Para ello se ha implementado la siguiente función.
 ```{r}
@@ -281,35 +278,262 @@ coste_vivienda <- coste_vivienda %>%
   distinct()
 ```
 
+```{r,include=FALSE}
+# Tratamiento de distribución de la población
+distr_pobl <- distr_pobl %>%
+  separate(
+    col = Provincias,                   
+    into = c("id_prov", "Provincia"), 
+    sep = " ",                             
+    extra = "merge"                        
+  ) %>%
+  filtrar_provincias() %>%
+  arrange(id_prov,Periodo) %>%
+  filter(Sexo=="Total") %>%
+  select(-Sexo) %>%
+  rename(Habitantes = Total) %>%
+ generar_id_obs(.,col_anyo = .$Periodo, col_prov = .$id_prov) %>%
+  arrange(id_prov, Periodo) %>%
+  select(id,Habitantes)
+```
+
+```{r,include = FALSE}
+# Tratamiento de edad media de maternidad
+colnames(edad_maternidad)[2] <- "Orden_de_nacimiento" 
+edad_maternidad <- edad_maternidad %>% filter(Orden_de_nacimiento=="Todos")%>%
+  separate(
+    col = Provincias,                   
+    into = c("id_prov", "Provincia"), 
+    sep = " ",                             
+    extra = "merge"                        
+  ) %>%
+  filtrar_provincias() %>%
+  arrange(id_prov,Periodo) %>%
+  select(-Orden_de_nacimiento) %>%
+  mutate(
+    Total = if (is.numeric(Total)) {
+      as.numeric(Total)
+    } else {
+      parse_number(
+        as.character(Total),
+        na = c("", "NA", "null", ".."),
+        locale = locale(decimal_mark = ",", grouping_mark = ".")
+      )
+    }
+  ) %>%
+  rename(Edad_Media_Maternidad = Total) %>%
+ generar_id_obs(.,col_anyo =.$Periodo, col_prov = .$id_prov) %>%
+  arrange(id_prov, Periodo) %>%
+  select(id,Edad_Media_Maternidad)
+```
+
+```{r,include =FALSE}
+# Tratamiento de migración interior
+migracion_interior <- migracion_interior %>%
+  filter(Sexo=="Ambos sexos")%>%
+  separate(
+    col = Provincias,                   
+    into = c("id_prov", "Provincia"), 
+    sep = " ",                             
+    extra = "merge"                        
+  )   %>%
+  filtrar_provincias() %>%
+  select(-Sexo) %>%
+  mutate(Edad = parse_number(Edad))  %>%
+  filter(Edad >= 19 & Edad <= 35) %>%
+  select(-Edad) %>%
+  generar_id_obs(.,col_anyo =.$Periodo, col_prov =.$id_prov) %>%
+  group_by(id)%>%  
+  mutate(Total = sum(Total, na.rm = TRUE)) %>% #COgemos el total de la migración de las edades seleccionadas
+  ungroup()%>%
+  distinct()%>%
+  rename(Migracion_Interior=Total)%>%
+  select(id,Migracion_Interior)
+``` 
+
+```{r,include=FALSE}
+# Tratamiento de ocupacion_sector
+colnames(ocupacion_sector)[2]<-"sector_econ"
+ocupacion_sector <- ocupacion_sector %>%
+  mutate(sector_econ = ifelse(
+    stringr::str_detect(stringr::str_to_lower(sector_econ), "^constru"),
+    "Construccion",
+    sector_econ
+  ))%>%
+  pivot_wider(names_from=sector_econ,values_from=Total)%>%
+mutate(Secundario = Industria + Construccion) %>% select(-c(Construccion,Industria))%>%
+  distinct()%>%
+  separate(
+    col = Provincias,                   
+    into = c("id_prov", "Provincia"), 
+    sep = " ",                             
+    extra = "merge"                        
+  )   %>%
+  filtrar_provincias() %>%
+  mutate(Periodo = readr::parse_number(Periodo))%>%
+generar_id_obs(.,col_anyo =.$Periodo, col_prov = .$id_prov) %>%
+ group_by(id)%>%  
+  mutate(across(.cols=c(Total=Total,Primario=Agricultura,Secundario,Terciario=Servicios),mean,na.rm = T)) %>%
+  ungroup()%>%
+  distinct()%>%
+  select(-c(Agricultura,Servicios)) %>%
+   pivot_longer(cols=c(Total,Primario,Secundario,Terciario),
+               names_to ="Sector",
+               values_to ="Personas_Ocupadas" )%>%
+  select(id,Sector,Personas_Ocupadas) %>%
+  distinct()
+``` 
+
+
+```{r,include = FALSE}
+# Preparamos PIB_per_capita
+
+colnames(pib_per_capita)[1] <- "Provincias"
+pib_per_capita <- pib_per_capita %>%
+  pivot_wider(names_from=Magnitud,values_from = Total) %>%
+  select(-4,-5) %>%
+  separate(
+    col = Provincias,                   
+    into = c("id_prov", "Provincia"), 
+    sep = " ",                             
+    extra = "merge"                        
+  ) %>%
+  filter(id_prov!="Total")
+
+# El fichero de PIB mezcla comunidades autónomas y provincias. Para las
+# comunidades uniprovinciales, el valor regional coincide con el de su única
+# provincia.
+pib_uniprov_codes <- c(
+  "03" = "33", # Asturias
+  "04" = "07", # Illes Balears
+  "06" = "39", # Cantabria
+  "13" = "28", # Madrid
+  "14" = "30", # Murcia
+  "15" = "31", # Navarra
+  "17" = "26", # La Rioja
+  "18" = "51", # Ceuta
+  "19" = "52"  # Melilla
+)
+
+pib_per_capita <- pib_per_capita %>%
+  mutate(
+    es_provincia = str_detect(Provincia, "[[:lower:]]"),
+    id_prov = if_else(
+      es_provincia,
+      id_prov,
+      unname(pib_uniprov_codes[id_prov])
+    )
+  ) %>%
+ generar_id_obs(.,col_anyo =.$Periodo, col_prov = .$id_prov) %>%
+ rename(PIB_per_capita = Valor) %>%
+  select(id,PIB_per_capita) %>%
+  distinct()
+``` 
+
+```{r,include=FALSE}
+# Preparación de la renta bruta
+colnames(renta_bruta_media)[1] <- "Total_Nacional"
+colnames(renta_bruta_media)[5] <- "Indicadores"
+renta_bruta_media <- renta_bruta_media %>%
+  filter(Indicadores == "Renta bruta media por persona") %>%
+  select(-Indicadores,-2,-1,-Islas) %>% rename(RentaBrutaMedia=Total) %>% filter(!is.na(Provincias), Provincias != "NA") %>% 
+  inner_join(ine_provincias, by = c("Provincias" = "Provincia_clean"))%>%
+ generar_id_obs(.,col_anyo =.$Periodo, col_prov = .$id_prov) %>%
+ group_by(id) %>%
+    mutate(RentaBrutaMedia = mean(RentaBrutaMedia, na.rm = TRUE)) %>%
+ ungroup() %>%
+  distinct() %>%
+  arrange(id_prov, Periodo) %>%
+  select(id,RentaBrutaMedia) %>%
+  distinct()
+```
+
+```{r,include=FALSE}
+# Preparando el VAB
+colnames(valor_bruto_sector)[2] <- "Rama_Actividad"
+sectores <- unique(valor_bruto_sector[[2]])
+
+sector_primario <- c(sectores[[1]])
+sector_secundario <- c(sectores[2:4])
+sector_terciario <- c(sectores[5:7])
+
+valor_bruto_sector <- valor_bruto_sector %>%
+  separate(
+    col = Provincias,                   
+    into = c("id_prov", "Provincia"), 
+    sep = " ",                             
+    extra = "merge"                        
+  )   %>%
+  filtrar_provincias() %>%
+  filter(Rama_Actividad != "Impuestos netos sobre los productos") %>%
+  filter(Rama_Actividad != "PRODUCTO INTERIOR BRUTO A PRECIOS DE MERCADO") %>%
+  pivot_wider(names_from = Rama_Actividad,values_from = Total) %>%
+  rename(Total= c("Valor añadido bruto total")) %>%
+  mutate(Periodo = readr::parse_number(Periodo)) %>%
+generar_id_obs(.,col_anyo =.$Periodo,col_prov = .$id_prov) %>%
+  mutate(Secundario= rowSums(pick(all_of(sector_secundario)), na.rm = TRUE)) %>%
+  select(-all_of(sector_secundario)) %>%
+  mutate(Terciario= rowSums(pick(all_of(sector_terciario)), na.rm = TRUE)) %>%
+  select(-all_of(sector_terciario)) %>%
+  rename(Primario=sector_primario)%>%
+  arrange(id_prov, Periodo) %>%
+  pivot_longer(c(Total,Primario,Secundario,Terciario),
+               names_to = "Sector",
+               values_to = "VAB") %>%
+  select(id,Sector,VAB) %>% distinct()
+```
+
+Una vez tenemos los datos tratados, los juntamos haciendo uso del identificador único. Para evitar que se generen muchos valores perdidos, para la unión solamente tomaremos las instancias comunes a todos.
+```{r,include=FALSE}
+datos_socioecon_ESP <- coste_vivienda %>% inner_join(distr_pobl,by="id") %>% inner_join(edad_maternidad,by="id")%>% inner_join(migracion_interior,by="id") %>% inner_join(pib_per_capita,by="id")%>% inner_join(renta_bruta_media,by="id")
+
+datos_laborales_ESP <- ocupacion_sector %>%
+  inner_join(valor_bruto_sector,by=c("id","Sector"))
+# Los guardamos por si acaso
+save(datos_socioecon_ESP,file = "./data/Datos_SocioEcon.Rdata")
+write_delim(datos_socioecon_ESP,file = "./data/Datos_SocioEcon.csv",delim = ";")
+
+save(datos_laborales_ESP,file = "./data/Datos_Laborales.Rdata")
+write_delim(datos_laborales_ESP,file = "./data/Datos_Laborales.csv",delim = ";")
+```
 
 ```{r importacion-datos}
-# Los datos no se deberían cargar limpios, si no sucios y tratarlos en este archivo, se cargan limpios para que Pablo y Ruben puedan trabajar con la estructura final que tendrán sin que tenga que estar todo el proceso incluido en el documento
-#load("./data/Datos_SocioEcon.Rdata")
-#load("./data/Datos_Laborales.Rdata")
 
 # Juntamos los datos en formato tidy. Para lo cual separamos los datos laborales en las columnas correspondientes, los unimos y deshacemos la variable id en provincia y año.
 
-#laborales_tidy <- datos_laborales_ESP %>%
-#  pivot_wider(
-#    names_from = Sector,
-#    values_from = c(Personas_Ocupadas, VAB),
-    # Modificamos el nombre para que quede claro, ej: "Personas_Ocupadas_Primario"
-#    names_glue = "{.value}_{Sector}" 
-#  ) 
+laborales_tidy <- datos_laborales_ESP %>%
+  pivot_wider(
+    names_from = Sector,
+    values_from = c(Personas_Ocupadas, VAB),
+     #Modificamos el nombre para que quede claro el valor, ej: "Personas_Ocupadas_Primario"
+    names_glue = "{.value}_{Sector}" 
+  ) 
 
-#df_completo <- datos_socioecon_ESP %>%
-#  full_join(laborales_tidy,by = "id") %>%
-#  separate(id, into = c("Periodo", "Cod_Provincia"), sep = "_", convert = FALSE) %>%
-#  mutate(Periodo = as.integer(Periodo)) %>% 
-#  left_join(ine_provincias,by = "Cod_Provincia") %>%
-#  rename(Provincia = Nom_Provincia) %>%
-#  select(-Cod_Provincia)
+df_completo <- datos_socioecon_ESP %>%
+  full_join(laborales_tidy,by = "id") %>%
+  separate(id, into = c("Periodo", "id_prov"), sep = "_", convert = FALSE) %>%
+  mutate(Periodo = as.integer(Periodo)) %>% 
+  left_join(ine_provincias,by = "id_prov")%>%
+  rename(Provincia = Provincia_clean) %>%
+  select(-id_prov)
 
 # Aquí se realizará el proceso de limpieza inicial y el 'left_join' 
 # por el código de provincia para unificar todo en un único dataset 'df_final'.
 ```
 
-*Explicación detallada de los pasos seguidos para homogeneizar los nombres de las columnas, filtrar los años de estudio (ej. 2015-2022) y el cruce de las tablas.*
+```{r,include = FALSE}
+# Eliminamos algunas variables que no usaremos para liberar espacio
+remove(list = c("datos_laborales_ESP",
+                "datos_socioecon_ESP",
+                "coste_uniprov_codes",
+                "pib_uniprov_codes",
+                "sector_primario",
+                "sector_secundario",
+                "sector_terciario",
+                "sectores",
+                "filtrar_provincias",
+                "generar_id_obs"))
+```
 
 # 3. Análisis de Datos Perdidos (NAs) e Imputación
 
