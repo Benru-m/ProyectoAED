@@ -33,6 +33,19 @@ knitr::opts_chunk$set(
   fig.align = "center",
   fig.pos = "H"
 )
+# Carga/Descarga de paquetes necesarios
+
+#AVISO: Es normal que la librería MapSpain tarde cierto tiempo en descargarse, por lo que se recomienda hacerlo antes de querer compilar el archivo.
+paquetes <- c("knitr","dplyr", "tidyr", "stringr", "readr", "tibble","ggplot2","mapSpain","sf","corrplot","scales","ggrepel","tidyverse")
+
+paquetes_faltantes <- paquetes[!paquetes %in% rownames(installed.packages())]
+
+if (length(paquetes_faltantes) > 0) {
+  install.packages(paquetes_faltantes, repos = "https://cloud.r-project.org")
+}
+
+invisible(lapply(paquetes, library, character.only = TRUE))
+
 
 # Mapeo entre nombre de provincias y códigos, todos los oficiales y usados por el INE
 ine_provincias <- tibble::tribble(
@@ -112,36 +125,89 @@ A partir del cruce de datos, nos planteamos responder a las siguientes preguntas
 
 # 2. Importación y Acondicionamiento de Datos
 
-En esta sección procedemos a cargar los conjuntos de datos descargados del INE. Los ficheros originales se encuentran almacenados en la carpeta local `data/raw`.
+En esta sección procedemos a cargar los conjuntos de datos descargados del INE. Como la fuente de datos no proporcionaba los datos estrictamente necesarios para el análisis que queremos realizar (buscamos un análisis anual a nivel provincial de ciertas variables socioeconómicas), el primer paso será acondicionar los datos para seleccionar los que nos interesan y juntarlos todos en la misma estructura de datos.  
+
+```{r,include = FALSE}
+#Aún así, en caso de que por algún casual los archivos no se encuentren como tal, incluimos este chunk de código que crea la carpeta e intenta realizar la descarga directamente del INE, para evitar que haya errores antes de cargarlos.
+dir.create("raw", showWarnings = FALSE, recursive = TRUE)
+
+enlaces_datos <- c(
+  "coste_vivienda.csv" = "https://cdn.mivau.gob.es/portal-web-mivau/Datos_MIVAU/CSV/VDP006_01.csv",
+  "distribucion_poblacional.csv" = "https://www.ine.es/jaxi/files/t/es/csv_bd/2852.csv?nocab=1",
+  "edad_maternidad.csv" = "https://www.ine.es/jaxiT3/files/t/es/csv_bd/1581.csv?nocab=1",
+  "migracion_interior.csv" = "https://www.ine.es/jaxiT3/files/t/es/csv_bd/24380.csv?nocab=1",
+  "Ocupados_Sector_Provincia.csv" = "https://www.ine.es/jaxiT3/files/t/es/csv_bd/65354.csv?nocab=1",
+  "pib_per_capita.csv" = "https://www.ine.es/jaxiT3/files/t/es/csv_bdsc/80110.csv",
+  "renta_bruta_media.csv" = "https://www.ine.es/jaxiT3/files/t/es/csv_bd/53689.csv?nocab=1",
+  "valor_bruto_sector.csv" = "https://www.ine.es/jaxi/files/tpx/es/csv_bd/76926.csv?nocab=1"
+)
+
+for (nombre_archivo in names(enlaces_datos)) {
+  ruta_archivo <- file.path("./data/raw", nombre_archivo)
+
+  if (!file.exists(ruta_archivo)) {
+    download.file(
+      url = enlaces_datos[[nombre_archivo]],
+      destfile = ruta_archivo,
+      mode = "wb",
+      quiet = FALSE
+    )
+  }
+}
+
+``` 
+
+Para ello, comenzamos cargando los datos, los ficheros originales se encuentran almacenados en la carpeta local `data/raw`. Los datos han sido tomados y guardados en español, por lo que hemos de tener cuidado con el indicador de millares y decimales en los datos numéricos. Como el proceso es común para todos los ficheros a cargar, hemos implementado una función basada en `read_delim` de `readr` para tratar adecuadamente las variables numéricas. Usamos esta función para cargar los distintos conjuntos de datos.
+
+```{r}
+leer_base <- function(fichero, separador) {
+  readr::read_delim(
+    file = fichero,
+    delim = separador,
+    locale = readr::locale(decimal_mark = ",", grouping_mark = "."),
+    na = c("", "NA", "null",".."),
+    name_repair = "minimal",
+    show_col_types = FALSE,
+    progress = FALSE
+  )
+}
+``` 
+
+```{r,include = FALSE}
+coste_vivienda <- leer_base("./data/raw/coste_vivienda.csv", ";")
+distr_pobl <- leer_base("./data/raw/distribucion_poblacional.csv", "\t")
+edad_maternidad <- leer_base("./data/raw/edad_maternidad.csv", "\t")
+migracion_interior <- leer_base("./data/raw/migracion_interior.csv", "\t")
+ocupacion_sector <- leer_base("./data/raw/Ocupados_Sector_Provincia.csv", "\t")
+pib_per_capita <- leer_base("./data/raw/pib_per_capita.csv", ";")
+renta_bruta_media <- leer_base("./data/raw/renta_bruta_media.csv", "\t")
+valor_bruto_sector <- leer_base("./data/raw/valor_bruto_sector.csv", "\t")
+```
+
+El proceso de preparación de los datos se hace siguiendo la filosofía tidy. Al ser un proceso mecánico y repetitivo, no se explicitarán todos y cada uno de los pasos hechos, aunque se comentarán aquellos que requieran mayor detenimiento. En general, el acondicionamiento de los datos ha requerido los siguientes 
 
 ```{r importacion-datos}
 # Los datos no se deberían cargar limpios, si no sucios y tratarlos en este archivo, se cargan limpios para que Pablo y Ruben puedan trabajar con la estructura final que tendrán sin que tenga que estar todo el proceso incluido en el documento
-load("./data/Datos_SocioEcon.Rdata")
-load("./data/Datos_Laborales.Rdata")
+#load("./data/Datos_SocioEcon.Rdata")
+#load("./data/Datos_Laborales.Rdata")
 
 # Juntamos los datos en formato tidy. Para lo cual separamos los datos laborales en las columnas correspondientes, los unimos y deshacemos la variable id en provincia y año.
 
-laborales_tidy <- datos_laborales_ESP %>%
-  pivot_wider(
-    names_from = Sector,
-    values_from = c(Personas_Ocupadas, VAB),
+#laborales_tidy <- datos_laborales_ESP %>%
+#  pivot_wider(
+#    names_from = Sector,
+#    values_from = c(Personas_Ocupadas, VAB),
     # Modificamos el nombre para que quede claro, ej: "Personas_Ocupadas_Primario"
-    names_glue = "{.value}_{Sector}" 
-  ) 
+#    names_glue = "{.value}_{Sector}" 
+#  ) 
 
-df_completo <- datos_socioecon_ESP %>%
-  full_join(laborales_tidy,by = "id") %>%
-  separate(id, into = c("Periodo", "Cod_Provincia"), sep = "_", convert = FALSE) %>%
-  mutate(Periodo = as.integer(Periodo)) %>% 
-  left_join(ine_provincias,by = "Cod_Provincia") %>%
-  rename(Provincia = Nom_Provincia) %>%
-  select(-Cod_Provincia)
-
-
-
-# Ejemplo de carga de datos (Sustituir por nombres reales de ficheros)
-# df_economia <- read_csv("data/datos_economia_ine.csv")
-# df_demografia <- read_csv("data/datos_demografia_ine.csv")
+#df_completo <- datos_socioecon_ESP %>%
+#  full_join(laborales_tidy,by = "id") %>%
+#  separate(id, into = c("Periodo", "Cod_Provincia"), sep = "_", convert = FALSE) %>%
+#  mutate(Periodo = as.integer(Periodo)) %>% 
+#  left_join(ine_provincias,by = "Cod_Provincia") %>%
+#  rename(Provincia = Nom_Provincia) %>%
+#  select(-Cod_Provincia)
 
 # Aquí se realizará el proceso de limpieza inicial y el 'left_join' 
 # por el código de provincia para unificar todo en un único dataset 'df_final'.
