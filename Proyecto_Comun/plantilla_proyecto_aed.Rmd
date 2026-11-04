@@ -31,8 +31,12 @@ knitr::opts_chunk$set(
   warning = FALSE,   # Ocultar advertencias en el PDF final
   message = FALSE,   # Ocultar mensajes de carga de librerías
   fig.align = "center",
-  fig.pos = "H"
+  fig.pos = "H",
+  fig.width = 6,        # tamaño de dibujo (pulgadas)
+  fig.height = 4,
+  out.width = "100%"    # tamaño final: nunca supera el ancho del texto
 )
+
 # Carga/Descarga de paquetes necesarios
 
 #AVISO: Es normal que la librería MapSpain tarde cierto tiempo en descargarse, por lo que se recomienda hacerlo antes de querer compilar el archivo.
