@@ -573,7 +573,7 @@ Exploración de la distribución individual de las principales variables de estu
 
 En esta sección cruzamos las variables para dar respuesta a las preguntas planteadas en la introducción, para lo cual fijamos un año concreto.
 
-Cabe destacar que por limitaciones en los datos, aproximaremos el salario medio mediante la renta bruta media y los datos respectivos a hostlería y turismo quedan englobadas en el sector terciario. Además, para contabilizar la migración, normalizaremos por el número de habitantes de la provincia para que no dominen las provincias de mayor población y obtendremos la migración por 1000 habitantes. Por otra parte, calculamos el peso de cada sector en la economía, la densidad poblacional y el esfuerzo para adquirir una vivienda.
+Cabe destacar que por limitaciones en los datos, aproximaremos el salario medio mediante la renta bruta media y los datos respectivos a hostelería y turismo quedan englobadas en el sector terciario. Además, para contabilizar la migración, normalizaremos por el número de habitantes de la provincia para que no dominen las provincias de mayor población y obtendremos la migración por 1000 habitantes. Por otra parte, calculamos el peso de cada sector en la economía, la densidad poblacional y el esfuerzo para adquirir una vivienda.
 
 
 ```{r bivariante}
@@ -612,7 +612,6 @@ df_anio <- df_completo %>% filter(Periodo == Anyo)
 ```
 
 ### Relación entre PIB per cápita y salario medio
-Con el siguiente scatter plot valoraremos la relación ente PIB per cápita y la renta bruta media, así como la influencia del sector terciario sobre dicha relación.
 
 ```{r}
 df_anio %>% ggplot(aes(x=PIB_per_capita,y = RentaBrutaMedia)) + geom_point(aes(colour = peso_terciario)) + geom_smooth(method = "lm", col = "black") + geom_text_repel(aes(label = Provincia),size = 3, max.overlaps = 10) + labs(
@@ -621,8 +620,25 @@ df_anio %>% ggplot(aes(x=PIB_per_capita,y = RentaBrutaMedia)) + geom_point(aes(c
     x = "PIB per cápita (€)",
     y = "Renta bruta media anual (€)",
     color = "Peso servicios"
-  )
+  ) + theme_minimal()
 ```
+
+Con este scatter plot observamos una posible relación lineal entre el PIB per cápita y la renta bruta media, así como la influencia del sector terciario sobre dicha relación.
+
+Con la variable `brecha_pib_renta` medimos la proporción entre el PIB y la renta normalizados por sus medias nacionales, siendo que un valor mayor que 1 significa que esa provincia genera más riqueza de la que se refleja en lo que perciben sus residentes, en comparación con cómo se reparte esa relación en el conjunto del país.
+
+```{r}
+# Ranking: 10 provincias con mayor brecha
+media_brecha_pib_renta <- mean(df_anio$brecha_pib_renta, na.rm=TRUE)
+df_anio %>%
+  slice_max(brecha_pib_renta, n = 10) %>%
+  ggplot(aes(reorder(Provincia, brecha_pib_renta), brecha_pib_renta)) +
+  geom_col(aes(fill = peso_terciario)) +
+  geom_hline(yintercept = media_brecha_pib_renta, linetype = "dashed") +
+  coord_flip() +
+  labs(x = NULL, y = paste0("Brecha PIB per cápita / renta bruta (media nacional =",media_brecha_pib_renta,")")) + theme_minimal()
+```
+Comprobando las provincias con mayor brecha, notamos que son provincias con una brecha mayor que 1, mientras la media nacional queda por debajo de 1. Además, a excepción de Madrid en la que el sector terciario tiene un peso elevado, en el resto del ranking tiene un peso relativamente bajo.
 
 *Explicación detallada de los gráficos mostrados. "Contar la historia" que revelan los datos. ¿Se confirman las hipótesis iniciales?*
 

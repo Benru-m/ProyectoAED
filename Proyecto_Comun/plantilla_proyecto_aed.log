@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.1.27)  4 NOV 2026 00:20
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.1.27)  4 NOV 2026 10:28
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1406,7 +1406,7 @@ Package epstopdf Info: Source file: <Definitions/logo-mdpi.eps>
 i-eps-converted-to.pdf Definitions/logo-mdpi.eps>
 (epstopdf)             \includegraphics on input line 239.
 Package epstopdf Info: Output file is already uptodate.
-<Definitions/logo-mdpi-eps-converted-to.pdf, id=49, 88.33pt x 58.2175pt>
+<Definitions/logo-mdpi-eps-converted-to.pdf, id=53, 88.33pt x 58.2175pt>
 File: Definitions/logo-mdpi-eps-converted-to.pdf Graphic file (type pdf)
 <use Definitions/logo-mdpi-eps-converted-to.pdf>
 Package pdftex.def Info: Definitions/logo-mdpi-eps-converted-to.pdf  used on in
@@ -1478,6 +1478,32 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-4.18796pt}.
 
 [5]
+<plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-18-1.pdf, id=98, 469.7
+55pt x 325.215pt>
+File: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-18-1.pdf Graphic 
+file (type pdf)
+<use plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-18-1.pdf>
+Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/unnamed-chun
+k-18-1.pdf  used on input line 638.
+(pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
+
+Overfull \hbox (75.39864pt too wide) in paragraph at lines 638--638
+ [] 
+ []
+
+<plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-19-1.pdf, id=99, 469.7
+55pt x 325.215pt>
+File: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-19-1.pdf Graphic 
+file (type pdf)
+<use plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-19-1.pdf>
+Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/unnamed-chun
+k-19-1.pdf  used on input line 664.
+(pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
+
+Overfull \hbox (75.39864pt too wide) in paragraph at lines 664--664
+ [] 
+ []
+
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 16.18796pt, for example:
@@ -1485,7 +1511,23 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-4.18796pt}.
 
-[6] 
+[6 <./plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-18-1.pdf>]
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 16.18796pt, for example:
+(fancyhdr)                \setlength{\headheight}{16.18796pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-4.18796pt}.
+
+[7 <./plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-19-1.pdf>]
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 16.18796pt, for example:
+(fancyhdr)                \setlength{\headheight}{16.18796pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-4.18796pt}.
+
+[8] 
 enddocument/afterlastpage (AED): lastpage setting LastPage.
 (plantilla_proyecto_aed.aux)
  ***********
@@ -1494,27 +1536,28 @@ L3 programming layer <2025-12-24>
  ***********
 Package rerunfilecheck Info: File `plantilla_proyecto_aed.out' has not changed.
 
-(rerunfilecheck)             Checksum: AC6B8D185BAB4298B63B7FBFADB60A1B;2121.
+(rerunfilecheck)             Checksum: D63BE265CA76E4221271DD394164BFED;2440.
  ) 
 Here is how much of TeX's memory you used:
- 33872 strings out of 467871
- 637586 string characters out of 5417408
- 1139159 words of memory out of 5000000
- 61862 multiletter control sequences out of 15000+600000
- 681600 words of font info for 289 fonts, out of 8000000 for 9000
+ 33914 strings out of 467871
+ 639310 string characters out of 5417408
+ 1139161 words of memory out of 5000000
+ 61891 multiletter control sequences out of 15000+600000
+ 682374 words of font info for 296 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  123i,12n,121p,1021b,782s stack positions out of 10000i,1000n,20000p,200000b,200000s
  <C:\Users\USUARIO\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\tc
-it1000.pk> <C:\Users\USUARIO\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/d
-pi600\ecit1000.pk> <C:\Users\USUARIO\AppData\Local\MiKTeX\fonts/pk/ljfour/jknap
-pen/ec/dpi600\ectt1000.pk> <C:\Users\USUARIO\AppData\Local\MiKTeX\fonts/pk/ljfo
-ur/jknappen/ec/dpi375\ecss0800.pk><C:/Users/USUARIO/AppData/Local/Programs/MiKT
-eX/fonts/type1/urw/palatino/uplb8a.pfb><C:/Users/USUARIO/AppData/Local/Programs
-/MiKTeX/fonts/type1/urw/palatino/uplr8a.pfb><C:/Users/USUARIO/AppData/Local/Pro
-grams/MiKTeX/fonts/type1/urw/palatino/uplri8a.pfb>
-Output written on plantilla_proyecto_aed.pdf (6 pages, 187586 bytes).
+tt1000.pk> <C:\Users\USUARIO\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/d
+pi600\tcit1000.pk> <C:\Users\USUARIO\AppData\Local\MiKTeX\fonts/pk/ljfour/jknap
+pen/ec/dpi600\ecit1000.pk> <C:\Users\USUARIO\AppData\Local\MiKTeX\fonts/pk/ljfo
+ur/jknappen/ec/dpi600\ectt1000.pk> <C:\Users\USUARIO\AppData\Local\MiKTeX\fonts
+/pk/ljfour/jknappen/ec/dpi375\ecss0800.pk><C:/Users/USUARIO/AppData/Local/Progr
+ams/MiKTeX/fonts/type1/urw/palatino/uplb8a.pfb><C:/Users/USUARIO/AppData/Local/
+Programs/MiKTeX/fonts/type1/urw/palatino/uplr8a.pfb><C:/Users/USUARIO/AppData/L
+ocal/Programs/MiKTeX/fonts/type1/urw/palatino/uplri8a.pfb>
+Output written on plantilla_proyecto_aed.pdf (8 pages, 217190 bytes).
 PDF statistics:
- 270 PDF objects out of 1000 (max. 8388607)
- 23 named destinations out of 1000 (max. 500000)
- 89690 words of extra memory for PDF output out of 106986 (max. 10000000)
+ 324 PDF objects out of 1000 (max. 8388607)
+ 26 named destinations out of 1000 (max. 500000)
+ 90220 words of extra memory for PDF output out of 106986 (max. 10000000)
 

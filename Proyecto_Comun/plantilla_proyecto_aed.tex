@@ -572,13 +572,102 @@ concentración de datos).}
 Multivariante}\label{anuxe1lisis-bivariante-y-multivariante}
 
 En esta sección cruzamos las variables para dar respuesta a las
-preguntas planteadas en la introducción.
+preguntas planteadas en la introducción, para lo cual fijamos un año
+concreto.
+
+Cabe destacar que por limitaciones en los datos, aproximaremos el
+salario medio mediante la renta bruta media y los datos respectivos a
+hostelería y turismo quedan englobadas en el sector terciario. Además,
+para contabilizar la migración, normalizaremos por el número de
+habitantes de la provincia para que no dominen las provincias de mayor
+población y obtendremos la migración por 1000 habitantes. Por otra
+parte, calculamos el peso de cada sector en la economía, la densidad
+poblacional y el esfuerzo para adquirir una vivienda.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{Año }\OtherTok{\textless{}{-}} \DecValTok{2018}   \CommentTok{\#Fijamos un año para el análisis}
+\NormalTok{Anyo }\OtherTok{\textless{}{-}} \DecValTok{2018}   \CommentTok{\#Fijamos un año para el análisis}
+
+\CommentTok{\# Superficie provincial a partir de mapSpain (para la densidad)}
+\NormalTok{areas\_prov }\OtherTok{\textless{}{-}} \FunctionTok{esp\_get\_prov}\NormalTok{() }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{area\_km2 =} \FunctionTok{as.numeric}\NormalTok{(}\FunctionTok{st\_area}\NormalTok{(geometry)) }\SpecialCharTok{/} \FloatTok{1e6}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{st\_drop\_geometry}\NormalTok{() }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{select}\NormalTok{(}\AttributeTok{id\_prov =}\NormalTok{ cpro, area\_km2)}
+
+\NormalTok{df\_completo }\OtherTok{\textless{}{-}}\NormalTok{ df\_completo }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{left\_join}\NormalTok{(ine\_provincias, }\AttributeTok{by =} \FunctionTok{c}\NormalTok{(}\StringTok{"Provincia"} \OtherTok{=} \StringTok{"Provincia\_clean"}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%}  \CommentTok{\# recupera id\_prov}
+  \FunctionTok{left\_join}\NormalTok{(areas\_prov, }\AttributeTok{by =} \StringTok{"id\_prov"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{mutate}\NormalTok{(}
+    \AttributeTok{peso\_primario     =}\NormalTok{ VAB\_Primario   }\SpecialCharTok{/}\NormalTok{ VAB\_Total,}
+    \AttributeTok{peso\_secundario   =}\NormalTok{ VAB\_Secundario }\SpecialCharTok{/}\NormalTok{ VAB\_Total,}
+    \AttributeTok{peso\_terciario    =}\NormalTok{ VAB\_Terciario  }\SpecialCharTok{/}\NormalTok{ VAB\_Total,}
+    \AttributeTok{emp\_terciario     =}\NormalTok{ Personas\_Ocupadas\_Terciario }\SpecialCharTok{/}\NormalTok{ Personas\_Ocupadas\_Total,}
+    \CommentTok{\# años de renta bruta media necesarios para una vivienda de 80 m2}
+    \CommentTok{\# (es la inversa de la ratio Salario/Vivienda de la pregunta 3)}
+    \AttributeTok{esfuerzo\_vivienda =}\NormalTok{ Precio\_m2 }\SpecialCharTok{*} \DecValTok{80} \SpecialCharTok{/}\NormalTok{ RentaBrutaMedia,}
+    \AttributeTok{mig\_joven\_1000    =}\NormalTok{ Migracion\_Interior }\SpecialCharTok{/}\NormalTok{ Habitantes }\SpecialCharTok{*} \DecValTok{1000}\NormalTok{,}
+    \AttributeTok{log\_densidad      =} \FunctionTok{log10}\NormalTok{(Habitantes }\SpecialCharTok{/}\NormalTok{ area\_km2)}
+\NormalTok{  ) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{group\_by}\NormalTok{(Periodo) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{mutate}\NormalTok{(}
+    \CommentTok{\# \textgreater{}1: la provincia genera más PIB que renta percibe, respecto a la media nacional del año}
+    \AttributeTok{brecha\_pib\_renta =}\NormalTok{ (PIB\_per\_capita }\SpecialCharTok{/} \FunctionTok{mean}\NormalTok{(PIB\_per\_capita, }\AttributeTok{na.rm =} \ConstantTok{TRUE}\NormalTok{)) }\SpecialCharTok{/}
+\NormalTok{                       (RentaBrutaMedia }\SpecialCharTok{/} \FunctionTok{mean}\NormalTok{(RentaBrutaMedia, }\AttributeTok{na.rm =} \ConstantTok{TRUE}\NormalTok{))}
+\NormalTok{  ) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{ungroup}\NormalTok{()}
+
+\NormalTok{df\_anio }\OtherTok{\textless{}{-}}\NormalTok{ df\_completo }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{filter}\NormalTok{(Periodo }\SpecialCharTok{==}\NormalTok{ Anyo)}
 \end{Highlighting}
 \end{Shaded}
+
+\subsubsection{Relación entre PIB per cápita y salario
+medio}\label{relaciuxf3n-entre-pib-per-cuxe1pita-y-salario-medio}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{df\_anio }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{ggplot}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{x=}\NormalTok{PIB\_per\_capita,}\AttributeTok{y =}\NormalTok{ RentaBrutaMedia)) }\SpecialCharTok{+} \FunctionTok{geom\_point}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{colour =}\NormalTok{ peso\_terciario)) }\SpecialCharTok{+} \FunctionTok{geom\_smooth}\NormalTok{(}\AttributeTok{method =} \StringTok{"lm"}\NormalTok{, }\AttributeTok{col =} \StringTok{"black"}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{geom\_text\_repel}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{label =}\NormalTok{ Provincia),}\AttributeTok{size =} \DecValTok{3}\NormalTok{, }\AttributeTok{max.overlaps =} \DecValTok{10}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{labs}\NormalTok{(}
+    \AttributeTok{title =} \StringTok{"PIB per cápita y renta bruta media por provincia"}\NormalTok{,}
+    \AttributeTok{subtitle =} \StringTok{"El color representa el peso del sector servicios"}\NormalTok{,}
+    \AttributeTok{x =} \StringTok{"PIB per cápita (€)"}\NormalTok{,}
+    \AttributeTok{y =} \StringTok{"Renta bruta media anual (€)"}\NormalTok{,}
+    \AttributeTok{color =} \StringTok{"Peso servicios"}
+\NormalTok{  ) }\SpecialCharTok{+} \FunctionTok{theme\_minimal}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{center}\includegraphics{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-18-1} \end{center}
+
+Con este scatter plot observamos una posible relación lineal entre el
+PIB per cápita y la renta bruta media, así como la influencia del sector
+terciario sobre dicha relación.
+
+Con la variable \texttt{brecha\_pib\_renta} medimos la proporción entre
+el PIB y la renta normalizados por sus medias nacionales, siendo que un
+valor mayor que 1 significa que esa provincia genera más riqueza de la
+que se refleja en lo que perciben sus residentes, en comparación con
+cómo se reparte esa relación en el conjunto del país.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Ranking: 10 provincias con mayor brecha}
+\NormalTok{media\_brecha\_pib\_renta }\OtherTok{\textless{}{-}} \FunctionTok{mean}\NormalTok{(df\_anio}\SpecialCharTok{$}\NormalTok{brecha\_pib\_renta, }\AttributeTok{na.rm=}\ConstantTok{TRUE}\NormalTok{)}
+\NormalTok{df\_anio }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{slice\_max}\NormalTok{(brecha\_pib\_renta, }\AttributeTok{n =} \DecValTok{10}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{ggplot}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\FunctionTok{reorder}\NormalTok{(Provincia, brecha\_pib\_renta), brecha\_pib\_renta)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_col}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{fill =}\NormalTok{ peso\_terciario)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_hline}\NormalTok{(}\AttributeTok{yintercept =}\NormalTok{ media\_brecha\_pib\_renta, }\AttributeTok{linetype =} \StringTok{"dashed"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{coord\_flip}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{x =} \ConstantTok{NULL}\NormalTok{, }\AttributeTok{y =} \FunctionTok{paste0}\NormalTok{(}\StringTok{"Brecha PIB per cápita / renta bruta (media nacional ="}\NormalTok{,media\_brecha\_pib\_renta,}\StringTok{")"}\NormalTok{)) }\SpecialCharTok{+} \FunctionTok{theme\_minimal}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{center}\includegraphics{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-19-1} \end{center}
+
+Comprobando las provincias con mayor brecha, notamos que son provincias
+con una brecha mayor que 1, mientras la media nacional queda por debajo
+de 1. Además, a excepción de Madrid en la que el sector terciario tiene
+un peso elevado, en el resto del ranking tiene un peso relativamente
+bajo.
 
 \emph{Explicación detallada de los gráficos mostrados. ``Contar la
 historia'' que revelan los datos. ¿Se confirman las hipótesis
