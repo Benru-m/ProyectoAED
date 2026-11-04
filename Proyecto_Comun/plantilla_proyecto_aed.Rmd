@@ -617,7 +617,22 @@ df_completo <- df_completo %>%
     )
   )
 
-df_anio <- df_completo %>% filter(Periodo == Anyo)
+df_anio <- df_completo %>% 
+  filter(Periodo == Anyo) %>%
+  mutate(
+    # Filtramos el top 5 por arriba y por abajo para la Brecha PIB/Renta
+    label_pib = ifelse(
+      rank(brecha_pib_renta, ties.method = "first") <= 5 | rank(desc(brecha_pib_renta), ties.method = "first") <= 5,
+      as.character(Provincia), 
+      NA
+    ),
+    # Filtramos el top 5 por arriba y por abajo para el Esfuerzo Inmobiliario
+    label_trampa = ifelse(
+      rank(esfuerzo_vivienda, ties.method = "first") <= 5 | rank(desc(esfuerzo_vivienda), ties.method = "first") <= 5,
+      as.character(Provincia), 
+      NA
+    )
+  )
 ```
 ### El espejismo del PIB
 
@@ -627,7 +642,7 @@ Analizamos la relación entre la riqueza generada (PIB per cápita) y la percibi
 ggplot(df_anio, aes(x = PIB_per_capita, y = RentaBrutaMedia)) + 
   geom_point(aes(colour = peso_terciario), size = 3, alpha = 0.8) + 
   geom_smooth(method = "lm", col = "black", linetype = "dashed") + 
-  geom_text_repel(aes(label = Provincia), size = 3, max.overlaps = 10) + 
+  geom_text_repel(aes(label = label_pib), size = 3, max.overlaps = Inf, na.rm = TRUE, box.padding = 0.5) + 
   labs(
     title = "Relación entre PIB per cápita y Renta Bruta Media",
     x = "PIB per cápita (€)",
@@ -640,8 +655,9 @@ ggplot(df_anio, aes(x = PIB_per_capita, y = RentaBrutaMedia)) +
 cor.test(df_anio$brecha_pib_renta, df_anio$peso_terciario)
 
 df_anio %>% ggplot(aes(x = brecha_pib_renta, y = peso_terciario)) + 
-  geom_point(colour = "steelblue") + geom_smooth(method = "lm", col = "black", linetype = "dashed") +
-  geom_text_repel(aes(label = Provincia), size = 3, max.overlaps = 10) +
+  geom_point(colour = "steelblue") + 
+  geom_smooth(method = "lm", col = "black", linetype = "dashed") +
+  geom_text_repel(aes(label = label_pib), size = 3, max.overlaps = Inf, na.rm = TRUE, box.padding = 0.5) +
   labs(
     title = "Relación entre la brecha PIB/Renta y el peso del sector terciario",
     x = "Brecha PIB/Renta",
@@ -682,7 +698,7 @@ Evaluamos cómo la dependencia del sector terciario presiona el coste de la vivi
 ggplot(df_anio, aes(x = emp_terciario, y = esfuerzo_vivienda)) +
   geom_point(alpha = 0.7, color = "darkred", size = 3) +
   geom_smooth(method = "lm", se = TRUE, color = "black") +
-  geom_text_repel(aes(label = Provincia), size = 3) +
+  geom_text_repel(aes(label = label_trampa), size = 3, max.overlaps = Inf, na.rm = TRUE, box.padding = 0.5) +
   scale_x_continuous(labels = scales::percent) +
   labs(
     title = "Empleo en el Sector Terciario vs Esfuerzo Inmobiliario",
@@ -696,6 +712,7 @@ cor.test(df_anio$emp_terciario, df_anio$esfuerzo_vivienda)
 
 # Contraste: Empleo terciario y migración joven (expulsión)
 cor.test(df_anio$emp_terciario, df_anio$mig_joven_1000)
+
 ```
 
 Para contrastar de forma más robusta si el modelo productivo discrimina el acceso a la vivienda, agrupamos las provincias por su sector económico predominante mediante un boxplot.
@@ -829,12 +846,22 @@ df_heat <- df_anio %>%
   mutate(Valor_Escalado = scale(Valor)) %>%
   ungroup()
 
+# Extraemos el orden exacto ordenando por el esfuerzo inmobiliario
+orden_provincias <- df_heat %>%
+  filter(Variable == "Esfuerzo Inmobiliario") %>%
+  arrange(Valor_Escalado) %>%
+  pull(Provincia)
+
+# Aplicamos el orden convirtiendo Provincia a un factor
+df_heat <- df_heat %>%
+  mutate(Provincia = factor(Provincia, levels = orden_provincias))
+
 ggplot(df_heat, aes(x = Variable, y = Provincia, fill = Valor_Escalado)) +
   geom_tile(color = "white", size = 0.5) +
   scale_fill_gradient2(low = "royalblue", mid = "white", high = "darkred", midpoint = 0) +
   labs(
     title = "Perfil Sociodemográfico de las 15 Provincias Más Pobladas",
-    subtitle = "Valores estandarizados (Z-scores). Rojo indica valores por encima de la media del top 15",
+    subtitle = "Valores estandarizados (Z-scores). Provincias ordenadas por Esfuerzo Inmobiliario.",
     x = NULL,
     y = NULL,
     fill = "Desviación\nEstándar"
