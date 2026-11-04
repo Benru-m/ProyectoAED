@@ -1,11 +1,11 @@
 ---
 title: "Estructura Productiva, Presión Inmobiliaria y su Impacto en el Ciclo Vital y Migratorio en España"
 author:
-  - name: "Nombre Apellido 1"
+  - name: "Luis Molina Villar"
     affil: 1
-  - name: "Nombre Apellido 2"
+  - name: "Rubén Sánchez Munuera"
     affil: 1
-  - name: "Nombre Apellido 3"
+  - name: "Pablo Gallart Carbonell"
     affil: 1
 affiliation:
   - num: 1
@@ -152,9 +152,9 @@ for (nombre_archivo in names(enlaces_datos)) {
 remove(list=c("ruta_archivo","nombre_archivo","enlaces_datos"))
 ``` 
 
-Para ello, comenzamos cargando los datos, los ficheros originales se encuentran almacenados en la carpeta local `data/raw`. Los datos han sido tomados y guardados en español, por lo que hemos de tener cuidado con el indicador de millares y decimales en los datos numéricos. Como el proceso es común para todos los ficheros a cargar, hemos implementado una función basada en `read_delim` de `readr` para tratar adecuadamente las variables numéricas. Usamos esta función para cargar los distintos conjuntos de datos.
+Para ello, comenzamos cargando los datos, los ficheros originales se encuentran almacenados en la carpeta local `data/raw`. Los datos han sido tomados y guardados en español, por lo que hemos de tener cuidado con el indicador de millares y decimales en los datos numéricos. Como el proceso es común para todos los ficheros a cargar, hemos implementado una función basada en `read_delim` de `readr` para tratar adecuadamente las variables numéricas, usando la función `locale`.
 
-```{r}
+```{r,include = FALSE}
 leer_base <- function(fichero, separador) {
   readr::read_delim(
     file = fichero,
@@ -185,8 +185,8 @@ El proceso de preparación de los datos se hace siguiendo la filosofía tidy. Al
 
 * 1. Acondicionamiento de nombres de variables para evitar errores de compilación, como `Año` que pasa a ser `Periodo` o `Comunidad Autónoma` a `Comunidad_Autonoma`.
 * 2. Es una práctica común en el INE incluir la variable `Provincias` que tiene la forma `xx Nombre_Provincia`, siendo `XX` el código de provincia oficial (asignados por orden alfabético, del 01 al 50, siendo Ceuta el 51 y Melilla el 52). Nosotros hemos separado esa variable en código provincial `cod_prov` y nombre provincial (`Provincia`).
-* 3. Para el estudio hemos considerado como instancia una provincia en cierto año, por lo que, con el fin de unir instancias de distintas tablas, hemos asignado un identificador único (en el sentido de que cada provincia tiene uno por año) a todos los registros, usando el formato `yyyy_xx`, año (`yyyy`) y código provincial (`xx`). Para ello se ha implementado la siguiente función.
-```{r}
+* 3. Para el estudio hemos considerado como instancia una provincia en cierto año, por lo que, con el fin de unir instancias de distintas tablas, hemos asignado un identificador único (en el sentido de que cada provincia tiene uno por año) a todos los registros, usando el formato `yyyy_xx`, año (`yyyy`) y código provincial (`xx`).
+```{r,include = FALSE}
 # Función para generar el ID único
 generar_id_obs <- function(df, col_anyo, col_prov) {
   df %>%
@@ -211,8 +211,8 @@ names(coste_vivienda)[1] <- "Periodo"
 names(coste_vivienda)[4] <- "Regimen"
 names(coste_vivienda)[7] <- "Comunidad_Autonoma"
 ```
-* 6. A veces el INE entrega los datos a nivel provincial y regional en el mismo archivo, pero para las regiones uniprovinciales da el valor de la región, por lo que en estos casos se transforma adecuadamente el código y nombre de la región al de la provincia correspondiente para extraer correctamente los datos, y no perder valores por el camino. Para ello el procedimiento suele ser similar al siguiente:
-```{r}
+* 6. A veces el INE entrega los datos a nivel provincial y regional en el mismo archivo, pero para las regiones uniprovinciales da el valor de la región, por lo que en estos casos se transforma adecuadamente el código y nombre de la región al de la provincia correspondiente para extraer correctamente los datos, y no perder valores por el camino.
+```{r,include=FALSE}
 # En las comunidades uniprovinciales, el fichero incluye filas regionales
 # (CPRO vacio) cuyo valor coincide con el de la provincia. Las incorporamos
 # usando el codigo de comunidad autonoma antes de eliminar CODAUTO.
@@ -255,8 +255,8 @@ coste_vivienda$CODAUTO <- NULL
 coste_vivienda$Comunidad_Autonoma <- NULL
 
 ```
-* 7. De igual manera, en esos casos, para extraer únicamente el valor de las provincias (ni el total nacional ni niveles regionales), hacemos uso de la siguiente función, que identifica las provincias que se encuentran únicamente en la lista oficial del INE.
-```{r}
+* 7. De igual manera, en esos casos, para extraer únicamente el valor de las provincias (ni el total nacional ni niveles regionales), filtramos usando la lista oficial de provincias del INE.
+```{r,include=FALSE}
 filtrar_provincias <- function(df) {
   df %>%
     mutate(id_prov = str_pad(as.character(id_prov), width = 2, side = "left", pad = "0")) %>%
