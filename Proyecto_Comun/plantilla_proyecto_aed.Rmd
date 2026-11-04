@@ -561,10 +561,82 @@ Algunas provincias (como Madrid, Barcelona o regiones insulares) pueden presenta
 
 ## 5.1 Análisis Univariante
 
-Exploración de la distribución individual de las principales variables de estudio (Salario, Precio Vivienda, Edad Maternidad).
+En esta sección procedemos a examinar la distribución individual de las principales variables socioeconómicas, demográficas y de estructura productiva obtenidas tras el acondicionamiento del conjunto de datos. El objetivo central de este análisis univariante es caracterizar el comportamiento estadístico de cada magnitud —evaluando su tendencia central, grado de dispersión, presencia de asimetrías y colas pesadas— antes de abordar las relaciones bivariantes.
 
-```{r univariante}
-# Código para histogramas, densidades y estadísticos descriptivos básicos.
+A partir del dataset unificado `df_completo` (resultante del cruce de las tablas de datos socioeconómicos y laborales), seleccionamos y derivamos las variables cuantitativas continuas organizadas en cuatro dimensiones:
+
+* **Dimensión de Renta y Riqueza Macro vs. Micro:**
+  * `PIB_per_capita`: Producto Interior Bruto provincial por habitante (€/hab). Mide la producción agregada regional.
+  * `RentaBrutaMedia`: Renta bruta media disponible por persona (€/hab). Funciona como *proxy* del poder adquisitivo real percibido.
+
+* **Dimensión del Mercado Inmobiliario:**
+  * `Precio_m2`: Precio medio del metro cuadrado o coste de transacción de la vivienda libre (€/m²).
+
+* **Dimensión Demográfica y Ciclo Vital:**
+  * `Edad_Media_Maternidad`: Edad media de las madres al nacimiento del primer hijo (años).
+  * `Migracion_Interior`: Saldo migratorio neto interprovincial en la cohorte joven de 19 a 35 años (número neto de personas).
+  * `Habitantes`: Población provincial total residente (personas).
+
+* **Dimensión de Estructura Productiva (Métricas Derivadas):**
+  * `% Ocupados (Primario, Secundario, Terciario)`: Porcentaje de personas ocupadas en cada sector sobre el total provincial (\%).
+  * `% VAB (Primario, Secundario, Terciario)`: Porcentaje del Valor Añadido Bruto aportado por cada sector sobre el VAB total (\%).
+  
+Para caracterizar formalmente la distribución de cada variable $X$, evaluamos la media muestral ($\bar{x}$), la mediana ($\tilde{x}$), la desviación típica muestral ($s$), los valores extremos ($\min(X)$, $\max(X)$) y el coeficiente de asimetría de Fisher ($\gamma_1$)[cite: 11]:
+
+$$\bar{x} = \frac{1}{n} \sum_{i=1}^{n} x_i, \quad s = \sqrt{\frac{1}{n-1} \sum_{i=1}^{n} (x_i - \bar{x})^2}, \quad \gamma_1 = \frac{\frac{1}{n} \sum_{i=1}^{n} (x_i - \bar{x})^3}{\left(\frac{1}{n} \sum_{i=1}^{n} (x_i - \bar{x})^2\right)^{3/2}}$$
+
+Donde $n = 364$ representa el volumen total de observaciones del panel.
+
+```{r univariante-tabla, echo=TRUE, message=FALSE, warning=FALSE}
+# Función analítica para la asimetría de Fisher (momento de orden 3 estandarizado)
+calc_asimetria <- function(x) {
+  x <- na.omit(x)
+  n <- length(x)
+  m3 <- sum((x - mean(x))^3) / n
+  s2 <- sum((x - mean(x))^2) / n
+  return(m3 / (s2^(3/2)))
+}
+
+# Construcción de variables derivadas de estructura productiva (porcentajes)
+df_analisis <- df_completo %>%
+  mutate(
+    pct_Ocupados_Primario   = (Personas_Ocupadas_Primario / Personas_Ocupadas_Total) * 100,
+    pct_Ocupados_Secundario = (Personas_Ocupadas_Secundario / Personas_Ocupadas_Total) * 100,
+    pct_Ocupados_Terciario  = (Personas_Ocupadas_Terciario / Personas_Ocupadas_Total) * 100,
+    pct_VAB_Primario        = (VAB_Primario / VAB_Total) * 100,
+    pct_VAB_Secundario      = (VAB_Secundario / VAB_Total) * 100,
+    pct_VAB_Terciario       = (VAB_Terciario / VAB_Total) * 100
+  )
+
+# Selección de variables para el resumen cuantitativo
+vars_univariante <- c(
+  "PIB_per_capita", "RentaBrutaMedia", "Precio_m2",
+  "Edad_Media_Maternidad", "Migracion_Interior", "Habitantes",
+  "pct_Ocupados_Primario", "pct_Ocupados_Secundario", "pct_Ocupados_Terciario",
+  "pct_VAB_Primario", "pct_VAB_Secundario", "pct_VAB_Terciario"
+)
+
+# Cálculo de la tabla de estadísticos descriptivos
+tabla_univariante <- df_analisis %>%
+  select(all_of(vars_univariante)) %>%
+  pivot_longer(cols = everything(), names_to = "Variable", values_to = "Valor") %>%
+  group_by(Variable) %>%
+  summarise(
+    N         = sum(!is.na(Valor)),
+    Media     = mean(Valor, na.rm = TRUE),
+    Mediana   = median(Valor, na.rm = TRUE),
+    DT        = sd(Valor, na.rm = TRUE),
+    Min       = min(Valor, na.rm = TRUE),
+    Max       = max(Valor, na.rm = TRUE),
+    Asimetria = calc_asimetria(Valor)
+  ) %>%
+  mutate(across(c(Media, Mediana, DT, Min, Max, Asimetria), ~ round(., 2)))
+
+knitr::kable(
+  tabla_univariante,
+  caption = "Tabla 3: Estadísticos descriptivos del panel provincial (2015–2021).",
+  col.names = c("Variable", "N", "Media", "Mediana", "Desv. Típ.", "Mínimo", "Máximo", "Asimetría")
+)
 ```
 
 *Comentarios sobre las distribuciones obtenidas (simetría, sesgos, concentración de datos).*
