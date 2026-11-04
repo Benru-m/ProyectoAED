@@ -616,58 +616,293 @@ poblacional y el esfuerzo para adquirir una vivienda.
 \NormalTok{  ) }\SpecialCharTok{\%\textgreater{}\%}
   \FunctionTok{ungroup}\NormalTok{()}
 
-\NormalTok{df\_anio }\OtherTok{\textless{}{-}}\NormalTok{ df\_completo }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{filter}\NormalTok{(Periodo }\SpecialCharTok{==}\NormalTok{ Anyo)}
+\NormalTok{df\_anio }\OtherTok{\textless{}{-}}\NormalTok{ df\_completo }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{filter}\NormalTok{(Periodo }\SpecialCharTok{==}\NormalTok{ Anyo) }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{select}\NormalTok{(}\SpecialCharTok{{-}}\NormalTok{id\_prov)}
 \end{Highlighting}
 \end{Shaded}
 
-\subsubsection{Relación entre PIB per cápita y salario
-medio}\label{relaciuxf3n-entre-pib-per-cuxe1pita-y-salario-medio}
+\subsubsection{El espejismo del PIB}\label{el-espejismo-del-pib}
+
+Analizamos la relación entre la riqueza generada (PIB per cápita) y la
+percibida (Renta Bruta Media), así como la influencia del sector
+terciario en la brecha entre ambas.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{df\_anio }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{ggplot}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{x=}\NormalTok{PIB\_per\_capita,}\AttributeTok{y =}\NormalTok{ RentaBrutaMedia)) }\SpecialCharTok{+} \FunctionTok{geom\_point}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{colour =}\NormalTok{ peso\_terciario)) }\SpecialCharTok{+} \FunctionTok{geom\_smooth}\NormalTok{(}\AttributeTok{method =} \StringTok{"lm"}\NormalTok{, }\AttributeTok{col =} \StringTok{"black"}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{geom\_text\_repel}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{label =}\NormalTok{ Provincia),}\AttributeTok{size =} \DecValTok{3}\NormalTok{, }\AttributeTok{max.overlaps =} \DecValTok{10}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{labs}\NormalTok{(}
-    \AttributeTok{title =} \StringTok{"PIB per cápita y renta bruta media por provincia"}\NormalTok{,}
-    \AttributeTok{subtitle =} \StringTok{"El color representa el peso del sector servicios"}\NormalTok{,}
+\FunctionTok{ggplot}\NormalTok{(df\_anio, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ PIB\_per\_capita, }\AttributeTok{y =}\NormalTok{ RentaBrutaMedia)) }\SpecialCharTok{+} 
+  \FunctionTok{geom\_point}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{colour =}\NormalTok{ peso\_terciario), }\AttributeTok{size =} \DecValTok{3}\NormalTok{, }\AttributeTok{alpha =} \FloatTok{0.8}\NormalTok{) }\SpecialCharTok{+} 
+  \FunctionTok{geom\_smooth}\NormalTok{(}\AttributeTok{method =} \StringTok{"lm"}\NormalTok{, }\AttributeTok{col =} \StringTok{"black"}\NormalTok{, }\AttributeTok{linetype =} \StringTok{"dashed"}\NormalTok{) }\SpecialCharTok{+} 
+  \FunctionTok{geom\_text\_repel}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{label =}\NormalTok{ Provincia), }\AttributeTok{size =} \DecValTok{3}\NormalTok{, }\AttributeTok{max.overlaps =} \DecValTok{10}\NormalTok{) }\SpecialCharTok{+} 
+  \FunctionTok{labs}\NormalTok{(}
+    \AttributeTok{title =} \StringTok{"Relación entre PIB per cápita y Renta Bruta Media"}\NormalTok{,}
     \AttributeTok{x =} \StringTok{"PIB per cápita (€)"}\NormalTok{,}
     \AttributeTok{y =} \StringTok{"Renta bruta media anual (€)"}\NormalTok{,}
-    \AttributeTok{color =} \StringTok{"Peso servicios"}
-\NormalTok{  ) }\SpecialCharTok{+} \FunctionTok{theme\_minimal}\NormalTok{()}
+    \AttributeTok{color =} \StringTok{"Peso del}\SpecialCharTok{\textbackslash{}n}\StringTok{Sector Terciario"}
+\NormalTok{  ) }\SpecialCharTok{+} 
+  \FunctionTok{theme\_minimal}\NormalTok{()}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-18-1} \end{center}
 
-Con este scatter plot observamos una posible relación lineal entre el
-PIB per cápita y la renta bruta media, así como la influencia del sector
-terciario sobre dicha relación.
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Contraste de correlación: Brecha PIB/Renta vs Peso del sector terciario}
+\FunctionTok{cor.test}\NormalTok{(df\_anio}\SpecialCharTok{$}\NormalTok{brecha\_pib\_renta, df\_anio}\SpecialCharTok{$}\NormalTok{peso\_terciario)}
+\end{Highlighting}
+\end{Shaded}
 
-Con la variable \texttt{brecha\_pib\_renta} medimos la proporción entre
-el PIB y la renta normalizados por sus medias nacionales, siendo que un
-valor mayor que 1 significa que esa provincia genera más riqueza de la
-que se refleja en lo que perciben sus residentes, en comparación con
-cómo se reparte esa relación en el conjunto del país.
+\begin{verbatim}
+## 
+##  Pearson's product-moment correlation
+## 
+## data:  df_anio$brecha_pib_renta and df_anio$peso_terciario
+## t = -3.1463, df = 48, p-value = 0.002839
+## alternative hypothesis: true correlation is not equal to 0
+## 95 percent confidence interval:
+##  -0.6204302 -0.1527197
+## sample estimates:
+##        cor 
+## -0.4134903
+\end{verbatim}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# Ranking: 10 provincias con mayor brecha}
-\NormalTok{media\_brecha\_pib\_renta }\OtherTok{\textless{}{-}} \FunctionTok{mean}\NormalTok{(df\_anio}\SpecialCharTok{$}\NormalTok{brecha\_pib\_renta, }\AttributeTok{na.rm=}\ConstantTok{TRUE}\NormalTok{)}
-\NormalTok{df\_anio }\SpecialCharTok{\%\textgreater{}\%}
-  \FunctionTok{slice\_max}\NormalTok{(brecha\_pib\_renta, }\AttributeTok{n =} \DecValTok{10}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
-  \FunctionTok{ggplot}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\FunctionTok{reorder}\NormalTok{(Provincia, brecha\_pib\_renta), brecha\_pib\_renta)) }\SpecialCharTok{+}
-  \FunctionTok{geom\_col}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{fill =}\NormalTok{ peso\_terciario)) }\SpecialCharTok{+}
-  \FunctionTok{geom\_hline}\NormalTok{(}\AttributeTok{yintercept =}\NormalTok{ media\_brecha\_pib\_renta, }\AttributeTok{linetype =} \StringTok{"dashed"}\NormalTok{) }\SpecialCharTok{+}
-  \FunctionTok{coord\_flip}\NormalTok{() }\SpecialCharTok{+}
-  \FunctionTok{labs}\NormalTok{(}\AttributeTok{x =} \ConstantTok{NULL}\NormalTok{, }\AttributeTok{y =} \FunctionTok{paste0}\NormalTok{(}\StringTok{"Brecha PIB per cápita / renta bruta (media nacional ="}\NormalTok{,media\_brecha\_pib\_renta,}\StringTok{")"}\NormalTok{)) }\SpecialCharTok{+} \FunctionTok{theme\_minimal}\NormalTok{()}
+\NormalTok{df\_anio }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{ggplot}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ brecha\_pib\_renta, }\AttributeTok{y =}\NormalTok{ peso\_terciario)) }\SpecialCharTok{+} 
+  \FunctionTok{geom\_point}\NormalTok{(}\AttributeTok{colour =} \StringTok{"steelblue"}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{geom\_smooth}\NormalTok{(}\AttributeTok{method =} \StringTok{"lm"}\NormalTok{, }\AttributeTok{col =} \StringTok{"black"}\NormalTok{, }\AttributeTok{linetype =} \StringTok{"dashed"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{geom\_text\_repel}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{label =}\NormalTok{ Provincia), }\AttributeTok{size =} \DecValTok{3}\NormalTok{, }\AttributeTok{max.overlaps =} \DecValTok{10}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}
+    \AttributeTok{title =} \StringTok{"Relación entre la brecha PIB/Renta y el peso del sector terciario"}\NormalTok{,}
+    \AttributeTok{x =} \StringTok{"Brecha PIB/Renta"}\NormalTok{,}
+    \AttributeTok{y =} \StringTok{"Peso del sector terciario"}\NormalTok{,}
+    \AttributeTok{color =} \StringTok{"Peso del}\SpecialCharTok{\textbackslash{}n}\StringTok{Sector Terciario"}
+\NormalTok{  ) }\SpecialCharTok{+} 
+  \FunctionTok{theme\_minimal}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-18-2} \end{center}
+
+Interpretación: Observamos si las provincias que quedan por debajo de la
+línea de tendencia (mayor brecha, perciben menos renta de la que
+producen) coinciden con altos porcentajes del sector terciario. El
+contraste de hipótesis evalúa la significancia estadística de esta
+correlación.
+
+\subsubsection{La trampa del sector
+servicios}\label{la-trampa-del-sector-servicios}
+
+Evaluamos cómo la dependencia del sector terciario presiona el coste de
+la vivienda y cómo afecta a la expulsión de población joven.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{ggplot}\NormalTok{(df\_anio, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ emp\_terciario, }\AttributeTok{y =}\NormalTok{ esfuerzo\_vivienda)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_point}\NormalTok{(}\AttributeTok{alpha =} \FloatTok{0.7}\NormalTok{, }\AttributeTok{color =} \StringTok{"darkred"}\NormalTok{, }\AttributeTok{size =} \DecValTok{3}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{geom\_smooth}\NormalTok{(}\AttributeTok{method =} \StringTok{"lm"}\NormalTok{, }\AttributeTok{se =} \ConstantTok{TRUE}\NormalTok{, }\AttributeTok{color =} \StringTok{"black"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{geom\_text\_repel}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{label =}\NormalTok{ Provincia), }\AttributeTok{size =} \DecValTok{3}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{scale\_x\_continuous}\NormalTok{(}\AttributeTok{labels =}\NormalTok{ scales}\SpecialCharTok{::}\NormalTok{percent) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}
+    \AttributeTok{title =} \StringTok{"Empleo en el Sector Terciario vs Esfuerzo Inmobiliario"}\NormalTok{,}
+    \AttributeTok{x =} \StringTok{"Proporción de empleo en el sector terciario"}\NormalTok{,}
+    \AttributeTok{y =} \StringTok{"Años de renta para vivienda de 80m²"}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \FunctionTok{theme\_minimal}\NormalTok{()}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-19-1} \end{center}
 
-Comprobando las provincias con mayor brecha, notamos que son provincias
-con una brecha mayor que 1, mientras la media nacional queda por debajo
-de 1. Además, a excepción de Madrid en la que el sector terciario tiene
-un peso elevado, en el resto del ranking tiene un peso relativamente
-bajo.
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Contraste: Empleo terciario y esfuerzo inmobiliario}
+\FunctionTok{cor.test}\NormalTok{(df\_anio}\SpecialCharTok{$}\NormalTok{emp\_terciario, df\_anio}\SpecialCharTok{$}\NormalTok{esfuerzo\_vivienda)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+##  Pearson's product-moment correlation
+## 
+## data:  df_anio$emp_terciario and df_anio$esfuerzo_vivienda
+## t = 5.0334, df = 48, p-value = 7.195e-06
+## alternative hypothesis: true correlation is not equal to 0
+## 95 percent confidence interval:
+##  0.3699420 0.7443376
+## sample estimates:
+##      cor 
+## 0.587766
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Contraste: Empleo terciario y migración joven (expulsión)}
+\FunctionTok{cor.test}\NormalTok{(df\_anio}\SpecialCharTok{$}\NormalTok{emp\_terciario, df\_anio}\SpecialCharTok{$}\NormalTok{mig\_joven\_1000)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+##  Pearson's product-moment correlation
+## 
+## data:  df_anio$emp_terciario and df_anio$mig_joven_1000
+## t = 2.0101, df = 50, p-value = 0.04983
+## alternative hypothesis: true correlation is not equal to 0
+## 95 percent confidence interval:
+##  0.0005761889 0.5083971859
+## sample estimates:
+##       cor 
+## 0.2734335
+\end{verbatim}
+
+\subsubsection{El coste de la
+maternidad}\label{el-coste-de-la-maternidad}
+
+Buscamos evidenciar si el endurecimiento del mercado inmobiliario
+(esfuerzo para acceder a una vivienda) retrasa la edad media a la
+maternidad.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{ggplot}\NormalTok{(df\_anio, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ esfuerzo\_vivienda, }\AttributeTok{y =}\NormalTok{ Edad\_Media\_Maternidad)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_point}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{size =}\NormalTok{ Habitantes), }\AttributeTok{alpha =} \FloatTok{0.6}\NormalTok{, }\AttributeTok{color =} \StringTok{"steelblue"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{geom\_smooth}\NormalTok{(}\AttributeTok{method =} \StringTok{"loess"}\NormalTok{, }\AttributeTok{color =} \StringTok{"darkorange"}\NormalTok{, }\AttributeTok{fill =} \StringTok{"lightgray"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}
+    \AttributeTok{title =} \StringTok{"Esfuerzo Inmobiliario vs Edad de Maternidad"}\NormalTok{,}
+    \AttributeTok{x =} \StringTok{"Años de renta necesarios para comprar una vivienda de 80m²"}\NormalTok{,}
+    \AttributeTok{y =} \StringTok{"Edad Media a la Maternidad"}\NormalTok{,}
+    \AttributeTok{size =} \StringTok{"Población"}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \FunctionTok{theme\_minimal}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-20-1} \end{center}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Contraste de correlación lineal}
+\FunctionTok{cor.test}\NormalTok{(df\_anio}\SpecialCharTok{$}\NormalTok{esfuerzo\_vivienda, df\_anio}\SpecialCharTok{$}\NormalTok{Edad\_Media\_Maternidad)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+##  Pearson's product-moment correlation
+## 
+## data:  df_anio$esfuerzo_vivienda and df_anio$Edad_Media_Maternidad
+## t = -4.5873, df = 48, p-value = 3.236e-05
+## alternative hypothesis: true correlation is not equal to 0
+## 95 percent confidence interval:
+##  -0.7198068 -0.3234215
+## sample estimates:
+##        cor 
+## -0.5520699
+\end{verbatim}
+
+Interpretación: La curva de ajuste local (LOESS) permite observar si
+existe un crecimiento no lineal o un umbral crítico de esfuerzo
+inmobiliario a partir del cual la edad de maternidad se dispara.
+
+\subsubsection{El refugio industrial}\label{el-refugio-industrial}
+
+Comprobamos si el tejido industrial funciona como fijador de población
+joven y si se correlaciona con una densidad demográfica más equilibrada.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{ggplot}\NormalTok{(df\_anio, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ peso\_secundario, }\AttributeTok{y =}\NormalTok{ mig\_joven\_1000)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_point}\NormalTok{(}\AttributeTok{color =} \StringTok{"forestgreen"}\NormalTok{, }\AttributeTok{size =} \DecValTok{3}\NormalTok{, }\AttributeTok{alpha =} \FloatTok{0.7}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{geom\_hline}\NormalTok{(}\AttributeTok{yintercept =} \DecValTok{0}\NormalTok{, }\AttributeTok{linetype =} \StringTok{"dashed"}\NormalTok{, }\AttributeTok{color =} \StringTok{"red"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{geom\_smooth}\NormalTok{(}\AttributeTok{method =} \StringTok{"lm"}\NormalTok{, }\AttributeTok{color =} \StringTok{"black"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{scale\_x\_continuous}\NormalTok{(}\AttributeTok{labels =}\NormalTok{ scales}\SpecialCharTok{::}\NormalTok{percent) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}
+    \AttributeTok{title =} \StringTok{"Peso del Sector Industrial vs Saldo Migratorio Joven"}\NormalTok{,}
+    \AttributeTok{x =} \StringTok{"Peso del sector secundario en el VAB"}\NormalTok{,}
+    \AttributeTok{y =} \StringTok{"Saldo migratorio interior (20{-}35 años) por mil hab."}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \FunctionTok{theme\_minimal}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-21-1} \end{center}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Contraste: Industrialización vs retención de jóvenes}
+\FunctionTok{cor.test}\NormalTok{(df\_anio}\SpecialCharTok{$}\NormalTok{peso\_secundario, df\_anio}\SpecialCharTok{$}\NormalTok{mig\_joven\_1000)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+##  Pearson's product-moment correlation
+## 
+## data:  df_anio$peso_secundario and df_anio$mig_joven_1000
+## t = 0.98037, df = 50, p-value = 0.3316
+## alternative hypothesis: true correlation is not equal to 0
+## 95 percent confidence interval:
+##  -0.1408473  0.3954127
+## sample estimates:
+##       cor 
+## 0.1373316
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Contraste: Industrialización vs Densidad poblacional}
+\FunctionTok{cor.test}\NormalTok{(df\_anio}\SpecialCharTok{$}\NormalTok{peso\_secundario, df\_anio}\SpecialCharTok{$}\NormalTok{log\_densidad)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+##  Pearson's product-moment correlation
+## 
+## data:  df_anio$peso_secundario and df_anio$log_densidad
+## t = -2.2209, df = 50, p-value = 0.03092
+## alternative hypothesis: true correlation is not equal to 0
+## 95 percent confidence interval:
+##  -0.5292693 -0.0291316
+## sample estimates:
+##        cor 
+## -0.2996497
+\end{verbatim}
+
+\subsubsection{Visión multivariante
+global}\label{visiuxf3n-multivariante-global}
+
+Para resumir las dinámicas entre el modelo productivo, la economía
+familiar y la demografía, construimos una matriz de correlación con las
+variables numéricas clave.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Seleccionamos las variables continuas de interés}
+\NormalTok{var\_corr }\OtherTok{\textless{}{-}}\NormalTok{ df\_anio }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{select}\NormalTok{(}
+\NormalTok{    PIB\_per\_capita, RentaBrutaMedia, brecha\_pib\_renta, }
+\NormalTok{    peso\_primario, peso\_secundario, peso\_terciario,}
+\NormalTok{    esfuerzo\_vivienda, Edad\_Media\_Maternidad, mig\_joven\_1000, log\_densidad}
+\NormalTok{  ) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{drop\_na}\NormalTok{()}
+
+\CommentTok{\# Calculamos matriz de correlación}
+\NormalTok{matriz\_cor }\OtherTok{\textless{}{-}} \FunctionTok{cor}\NormalTok{(var\_corr)}
+
+\CommentTok{\# Visualización}
+\FunctionTok{corrplot}\NormalTok{(matriz\_cor, }
+         \AttributeTok{method =} \StringTok{"color"}\NormalTok{, }
+         \AttributeTok{type =} \StringTok{"upper"}\NormalTok{, }
+         \AttributeTok{order =} \StringTok{"hclust"}\NormalTok{,}
+         \AttributeTok{tl.col =} \StringTok{"black"}\NormalTok{, }
+         \AttributeTok{tl.srt =} \DecValTok{45}\NormalTok{, }
+         \AttributeTok{addCoef.col =} \StringTok{"black"}\NormalTok{, }
+         \AttributeTok{number.cex =} \FloatTok{0.7}\NormalTok{,}
+         \AttributeTok{diag =} \ConstantTok{FALSE}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-22-1} \end{center}
 
 \emph{Explicación detallada de los gráficos mostrados. ``Contar la
 historia'' que revelan los datos. ¿Se confirman las hipótesis

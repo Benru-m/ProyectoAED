@@ -611,38 +611,142 @@ df_completo <- df_completo %>%
   ) %>%
   ungroup()
 
-df_anio <- df_completo %>% filter(Periodo == Anyo)
+df_anio <- df_completo %>% filter(Periodo == Anyo) %>% select(-id_prov)
 
 ```
 
-### Relación entre PIB per cápita y salario medio
+### El espejismo del PIB
+
+Analizamos la relación entre la riqueza generada (PIB per cápita) y la percibida (Renta Bruta Media), así como la influencia del sector terciario en la brecha entre ambas.
 
 ```{r}
-df_anio %>% ggplot(aes(x=PIB_per_capita,y = RentaBrutaMedia)) + geom_point(aes(colour = peso_terciario)) + geom_smooth(method = "lm", col = "black") + geom_text_repel(aes(label = Provincia),size = 3, max.overlaps = 10) + labs(
-    title = "PIB per cápita y renta bruta media por provincia",
-    subtitle = "El color representa el peso del sector servicios",
+ggplot(df_anio, aes(x = PIB_per_capita, y = RentaBrutaMedia)) + 
+  geom_point(aes(colour = peso_terciario), size = 3, alpha = 0.8) + 
+  geom_smooth(method = "lm", col = "black", linetype = "dashed") + 
+  geom_text_repel(aes(label = Provincia), size = 3, max.overlaps = 10) + 
+  labs(
+    title = "Relación entre PIB per cápita y Renta Bruta Media",
     x = "PIB per cápita (€)",
     y = "Renta bruta media anual (€)",
-    color = "Peso servicios"
-  ) + theme_minimal()
+    color = "Peso del\nSector Terciario"
+  ) + 
+  theme_minimal()
+
+# Contraste de correlación: Brecha PIB/Renta vs Peso del sector terciario
+cor.test(df_anio$brecha_pib_renta, df_anio$peso_terciario)
+
+df_anio %>% ggplot(aes(x = brecha_pib_renta, y = peso_terciario)) + 
+  geom_point(colour = "steelblue") + geom_smooth(method = "lm", col = "black", linetype = "dashed") +
+  geom_text_repel(aes(label = Provincia), size = 3, max.overlaps = 10) +
+  labs(
+    title = "Relación entre la brecha PIB/Renta y el peso del sector terciario",
+    x = "Brecha PIB/Renta",
+    y = "Peso del sector terciario",
+    color = "Peso del\nSector Terciario"
+  ) + 
+  theme_minimal()
 ```
 
-Con este scatter plot observamos una posible relación lineal entre el PIB per cápita y la renta bruta media, así como la influencia del sector terciario sobre dicha relación.
+Interpretación: Observamos si las provincias que quedan por debajo de la línea de tendencia (mayor brecha, perciben menos renta de la que producen) coinciden con altos porcentajes del sector terciario. El contraste de hipótesis evalúa la significancia estadística de esta correlación.
 
-Con la variable `brecha_pib_renta` medimos la proporción entre el PIB y la renta normalizados por sus medias nacionales, siendo que un valor mayor que 1 significa que esa provincia genera más riqueza de la que se refleja en lo que perciben sus residentes, en comparación con cómo se reparte esa relación en el conjunto del país.
+### La trampa del sector servicios
+
+Evaluamos cómo la dependencia del sector terciario presiona el coste de la vivienda y cómo afecta a la expulsión de población joven.
 
 ```{r}
-# Ranking: 10 provincias con mayor brecha
-media_brecha_pib_renta <- mean(df_anio$brecha_pib_renta, na.rm=TRUE)
-df_anio %>%
-  slice_max(brecha_pib_renta, n = 10) %>%
-  ggplot(aes(reorder(Provincia, brecha_pib_renta), brecha_pib_renta)) +
-  geom_col(aes(fill = peso_terciario)) +
-  geom_hline(yintercept = media_brecha_pib_renta, linetype = "dashed") +
-  coord_flip() +
-  labs(x = NULL, y = paste0("Brecha PIB per cápita / renta bruta (media nacional =",media_brecha_pib_renta,")")) + theme_minimal()
+ggplot(df_anio, aes(x = emp_terciario, y = esfuerzo_vivienda)) +
+  geom_point(alpha = 0.7, color = "darkred", size = 3) +
+  geom_smooth(method = "lm", se = TRUE, color = "black") +
+  geom_text_repel(aes(label = Provincia), size = 3) +
+  scale_x_continuous(labels = scales::percent) +
+  labs(
+    title = "Empleo en el Sector Terciario vs Esfuerzo Inmobiliario",
+    x = "Proporción de empleo en el sector terciario",
+    y = "Años de renta para vivienda de 80m²"
+  ) +
+  theme_minimal()
+
+# Contraste: Empleo terciario y esfuerzo inmobiliario
+cor.test(df_anio$emp_terciario, df_anio$esfuerzo_vivienda)
+
+# Contraste: Empleo terciario y migración joven (expulsión)
+cor.test(df_anio$emp_terciario, df_anio$mig_joven_1000)
 ```
-Comprobando las provincias con mayor brecha, notamos que son provincias con una brecha mayor que 1, mientras la media nacional queda por debajo de 1. Además, a excepción de Madrid en la que el sector terciario tiene un peso elevado, en el resto del ranking tiene un peso relativamente bajo.
+
+### El coste de la maternidad
+
+Buscamos evidenciar si el endurecimiento del mercado inmobiliario (esfuerzo para acceder a una vivienda) retrasa la edad media a la maternidad.
+
+```{r}
+ggplot(df_anio, aes(x = esfuerzo_vivienda, y = Edad_Media_Maternidad)) +
+  geom_point(aes(size = Habitantes), alpha = 0.6, color = "steelblue") +
+  geom_smooth(method = "loess", color = "darkorange", fill = "lightgray") +
+  labs(
+    title = "Esfuerzo Inmobiliario vs Edad de Maternidad",
+    x = "Años de renta necesarios para comprar una vivienda de 80m²",
+    y = "Edad Media a la Maternidad",
+    size = "Población"
+  ) +
+  theme_minimal()
+
+# Contraste de correlación lineal
+cor.test(df_anio$esfuerzo_vivienda, df_anio$Edad_Media_Maternidad)
+```
+
+Interpretación: La curva de ajuste local (LOESS) permite observar si existe un crecimiento no lineal o un umbral crítico de esfuerzo inmobiliario a partir del cual la edad de maternidad se dispara.
+
+### El refugio industrial
+
+Comprobamos si el tejido industrial funciona como fijador de población joven y si se correlaciona con una densidad demográfica más equilibrada.
+
+```{r}
+ggplot(df_anio, aes(x = peso_secundario, y = mig_joven_1000)) +
+  geom_point(color = "forestgreen", size = 3, alpha = 0.7) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  geom_smooth(method = "lm", color = "black") +
+  scale_x_continuous(labels = scales::percent) +
+  labs(
+    title = "Peso del Sector Industrial vs Saldo Migratorio Joven",
+    x = "Peso del sector secundario en el VAB",
+    y = "Saldo migratorio interior (20-35 años) por mil hab."
+  ) +
+  theme_minimal()
+
+# Contraste: Industrialización vs retención de jóvenes
+cor.test(df_anio$peso_secundario, df_anio$mig_joven_1000)
+
+# Contraste: Industrialización vs Densidad poblacional
+cor.test(df_anio$peso_secundario, df_anio$log_densidad)
+```
+
+### Visión multivariante global
+
+Para resumir las dinámicas entre el modelo productivo, la economía familiar y la demografía, construimos una matriz de correlación con las variables numéricas clave.
+
+```{r}
+# Seleccionamos las variables continuas de interés
+var_corr <- df_anio %>%
+  select(
+    PIB_per_capita, RentaBrutaMedia, brecha_pib_renta, 
+    peso_primario, peso_secundario, peso_terciario,
+    esfuerzo_vivienda, Edad_Media_Maternidad, mig_joven_1000, log_densidad
+  ) %>%
+  drop_na()
+
+# Calculamos matriz de correlación
+matriz_cor <- cor(var_corr)
+
+# Visualización
+corrplot(matriz_cor, 
+         method = "color", 
+         type = "upper", 
+         order = "hclust",
+         tl.col = "black", 
+         tl.srt = 45, 
+         addCoef.col = "black", 
+         number.cex = 0.7,
+         diag = FALSE)
+```
 
 *Explicación detallada de los gráficos mostrados. "Contar la historia" que revelan los datos. ¿Se confirman las hipótesis iniciales?*
 
