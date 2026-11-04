@@ -26,17 +26,23 @@ output: rticles::mdpi_article
 
 ```{r setup, include=FALSE}
 # Configuración global de los chunks de código
+options(tinytex.verbose = TRUE)
+
 knitr::opts_chunk$set(
   echo = TRUE,       # Mostrar el código
   warning = FALSE,   # Ocultar advertencias en el PDF final
   message = FALSE,   # Ocultar mensajes de carga de librerías
   fig.align = "center",
-  fig.pos = "H"
+  fig.pos = "H",
+  fig.width = 6,        # tamaño de dibujo (pulgadas)
+  fig.height = 4,
+  out.width = "100%"    # tamaño final: nunca supera el ancho del texto
 )
+
 # Carga/Descarga de paquetes necesarios
 
 #AVISO: Es normal que la librería MapSpain tarde cierto tiempo en descargarse, por lo que se recomienda hacerlo antes de querer compilar el archivo.
-paquetes <- c("rticles","knitr","dplyr", "tidyr", "stringr", "readr", "tibble","ggplot2","mapSpain","sf","corrplot","scales","ggrepel","tidyverse")
+paquetes <- c("rmarkdown","rticles","knitr","dplyr", "tidyr", "stringr", "readr", "tibble","ggplot2","mapSpain","sf","corrplot","scales","ggrepel","tidyverse")
 
 paquetes_faltantes <- paquetes[!paquetes %in% rownames(installed.packages())]
 
@@ -109,17 +115,21 @@ remove(list=c("paquetes","paquetes_faltantes"))
 
 # 1. Introducción y Planteamiento de Preguntas
 
-El objetivo de este proyecto es analizar cómo el modelo productivo de las diferentes provincias españolas condiciona sus mercados laborales e inmobiliarios y, consecuentemente, altera el ciclo vital y demográfico de sus habitantes.
+El objetivo de este proyecto es realizar un análisis exploratorio de distintos indicadores socioeconómicos a nivel provincial en España, y sus posibles relaciones. En particular, los indicadores estudiados corresponden a el modelo productivo de las diferentes provincias, sus mercados laborales e inmobiliarios, y el ciclo vital y demográfico de sus habitantes.
 
 A partir del cruce de datos, nos planteamos responder a las siguientes preguntas de investigación:
-1. **El espejismo del PIB:** ¿En qué provincias es mayor la brecha entre la riqueza generada (PIB per cápita) y la riqueza percibida por los trabajadores (salario medio)? ¿Correlaciona esta desigualdad de manera directa con un peso excesivo del sector servicios?
-2. **La trampa del sector servicios:** ¿Existe una correlación entre el porcentaje de empleo en hostelería/turismo y el encarecimiento de la vivienda respecto al salario medio?¿Existe una brecha salarial más acentuada en aquellas provincias cuyo PIB depende mayoritariamente del sector agrícola frente a las centradas en servicios?¿Genera la hiperdependencia del sector turismo una expulsión de la población joven nativa (saldo migratorio interior negativo para la franja de 20-35 años)?
+
+1. **El espejismo del PIB:** ¿En qué provincias es mayor la brecha entre la riqueza generada (PIB per cápita) y la riqueza percibida por los trabajadores (salario medio)?
+
+2. **La trampa del sector servicios:** ¿Existe una correlación entre el porcentaje de empleo en hostelería/turismo y el encarecimiento de la vivienda respecto al salario medio?¿Genera la hiperdependencia del sector turismo una expulsión de la población joven nativa (saldo migratorio interior negativo para la franja de 20-35 años)?
+
 3. **El coste de la maternidad:** ¿Hay un umbral crítico en la ratio Salario/Vivienda a partir del cual la edad media a la maternidad aumenta significativamente?
-4. **El refugio industrial:** ¿Logran las provincias con un tejido industrial fuerte retener mejor a la población joven (saldo migratorio positivo) frente a aquellas con modelos primarios?¿Se constata una relación entre el nivel de industrialización de una provincia y una distribución poblacional más homogénea (evitando la macrocefalia poblacional concentrada solo en la capital)?
+
+4. **El refugio industrial:** ¿Logran las provincias con un tejido industrial fuerte retener mejor a la población joven (saldo migratorio positivo) frente a aquellas con modelos primarios?
 
 # 2. Importación y Acondicionamiento de Datos
 
-En esta sección procedemos a cargar los conjuntos de datos descargados del INE. Como la fuente de datos no proporcionaba los datos estrictamente necesarios para el análisis que queremos realizar (buscamos un análisis anual a nivel provincial de ciertas variables socioeconómicas), el primer paso será acondicionar los datos que más se ajustaban a los necesitados para seleccionar los que nos interesan y juntarlos todos en la misma estructura de datos.  
+El primer paso para el análisis es cargar los conjuntos de datos obtenidos del [INE](https://ine.es/dyngs/INEbase/listaoperaciones.htm). Los ficheros originales se encuentran almacenados en la carpeta local `data/raw`.
 
 ```{r,include = FALSE}
 #Aún así, en caso de que por algún casual los archivos no se encuentren como tal, incluimos este chunk de código que crea la carpeta e intenta realizar la descarga directamente del INE, para evitar que haya errores antes de cargarlos.
@@ -152,14 +162,15 @@ for (nombre_archivo in names(enlaces_datos)) {
 remove(list=c("ruta_archivo","nombre_archivo","enlaces_datos"))
 ``` 
 
-Para ello, comenzamos cargando los datos, los ficheros originales se encuentran almacenados en la carpeta local `data/raw`. Los datos han sido tomados y guardados en español, por lo que hemos de tener cuidado con el indicador de millares y decimales en los datos numéricos. Como el proceso es común para todos los ficheros a cargar, hemos implementado una función basada en `read_delim` de `readr` para tratar adecuadamente las variables numéricas, usando la función `locale`.
+
+La fuente de datos no proporciona los datos estrictamente adecuados para el análisis que queremos realizar (buscamos un análisis anual a nivel provincial de ciertas variables socioeconómicas). Por lo tanto, el primer paso será acondicionar los datos que más se ajustaban a los necesitados para seleccionar los que nos interesan y juntarlos todos en la misma estructura de datos. Uno de los factores principales a tener en cuenta es que los datos han sido tomados y guardados en español, por lo que hemos de tener cuidado con el indicador de millares y decimales en los datos numéricos.  Los datos han sido importados a `R` usando una función basada en `read_delim` de `readr` para tratar adecuadamente las variables numéricas, usando la función `locale`.
 
 ```{r,include = FALSE}
-leer_base <- function(fichero, separador) {
+leer_base <- function(fichero, separador,decimal=",",grouping=".") {
   readr::read_delim(
     file = fichero,
     delim = separador,
-    locale = readr::locale(decimal_mark = ",", grouping_mark = "."),
+    locale = readr::locale(decimal_mark=decimal ,grouping_mark= grouping),
     na = c("", "NA", "null",".."),
     name_repair = "minimal",
     show_col_types = FALSE,
@@ -169,7 +180,7 @@ leer_base <- function(fichero, separador) {
 ``` 
 
 ```{r,include = FALSE}
-coste_vivienda <- leer_base("./data/raw/coste_vivienda.csv", ";")
+coste_vivienda <- leer_base("./data/raw/coste_vivienda.csv", ";",decimal = ".",grouping = "")
 distr_pobl <- leer_base("./data/raw/distribucion_poblacional.csv", "\t")
 edad_maternidad <- leer_base("./data/raw/edad_maternidad.csv", "\t")
 migracion_interior <- leer_base("./data/raw/migracion_interior.csv", "\t")
@@ -180,12 +191,16 @@ valor_bruto_sector <- leer_base("./data/raw/valor_bruto_sector.csv", "\t")
 
 remove(list = c("leer_base"))
 ```
-*Explicación detallada de los pasos seguidos para homogeneizar los nombres de las columnas, filtrar los años de estudio (ej. 2015-2022) y el cruce de las tablas.*
-El proceso de preparación de los datos se hace siguiendo la filosofía tidy. Al ser un proceso mecánico y repetitivo, no se explicitarán todos y cada uno de los pasos hechos en el informe, aunque se pueden consultar en el script que lo genera, y se comentarán aquellos que requieran mayor detenimiento. En general, el acondicionamiento de los datos ha requerido las siguientes acciones:
 
-* 1. Acondicionamiento de nombres de variables para evitar errores de compilación, como `Año` que pasa a ser `Periodo` o `Comunidad Autónoma` a `Comunidad_Autonoma`.
-* 2. Es una práctica común en el INE incluir la variable `Provincias` que tiene la forma `xx Nombre_Provincia`, siendo `XX` el código de provincia oficial (asignados por orden alfabético, del 01 al 50, siendo Ceuta el 51 y Melilla el 52). Nosotros hemos separado esa variable en código provincial `cod_prov` y nombre provincial (`Provincia`).
-* 3. Para el estudio hemos considerado como instancia una provincia en cierto año, por lo que, con el fin de unir instancias de distintas tablas, hemos asignado un identificador único (en el sentido de que cada provincia tiene uno por año) a todos los registros, usando el formato `yyyy_xx`, año (`yyyy`) y código provincial (`xx`).
+*Explicación de los pasos seguidos para homogeneizar los nombres de las columnas, filtrar los años de estudio (ej. 2015-2021 y el cruce de las tablas.*
+
+El proceso de preparación de los datos se hace siguiendo la filosofía tidy. Al ser un proceso mecánico y repetitivo, no se explicitarán todos y cada uno de los pasos hechos en el informe, aunque se pueden consultar en el script que lo genera. Los principales pasos que han sido necesarios para el acondicionamiento de los datos ha requerido han sido:
+
++ Acondicionamiento de nombres de variables para evitar errores de compilación, como `Año` que pasa a ser `Periodo` o `Comunidad Autónoma` a `Comunidad_Autonoma`.
+
++  Es una práctica común en el INE incluir la variable `Provincias` que tiene la forma `xx Nombre_Provincia`, siendo `XX` el código de provincia oficial (asignados por orden alfabético, del 01 al 50, siendo Ceuta el 51 y Melilla el 52). Nosotros hemos separado esa variable en código provincial `cod_prov` y nombre provincial (`Provincia`).
+
++ En el conjunto de datos que queremos estudiar cada instancia es una provincia en cierto año. Con el fin de unir instancias de distintas tablas, hemos asignado un identificador único (en el sentido de que cada provincia tiene uno por año) a todos los registros de los datos originales, usando el formato `yyyy_xx`, año (`yyyy`) y código provincial (`xx`).
 ```{r,include = FALSE}
 # Función para generar el ID único
 generar_id_obs <- function(df, col_anyo, col_prov) {
@@ -199,9 +214,9 @@ generar_id_obs <- function(df, col_anyo, col_prov) {
     )
 }
 ```
-* 4. El INE ofrecía algunos datasets con los valores disgregados por variables como sexo,nacionalidad,edad, o valores trimestrales en lugar de anuales. Como el uso de estos escapaban del objetivo del análisis, en los casos en los que también se ofrecía el valor total, se ha seleccionado este, y en los que no, usando el identificador único, los hemos agregado usando la medida adecuada (media para obtener el promedio anual de valores trimestrales, y suma para obtener el total por sexos, edades o nacionalidades).
++ El INE ofrece algunos datasets con los valores disgregados por variables como sexo,nacionalidad,edad, o valores trimestrales en lugar de anuales. Como estas variables escapan del objetivo del análisis, en los casos en los que también se ofrecía el valor total, se ha seleccionado este, y en los que no, usando el identificador único, se han agregado los datos, usando la medida adecuada (media para obtener el promedio anual de valores trimestrales, y suma para obtener el total por sexos, edades o nacionalidades).
 
-* 5. En el INE los datos aparecen en un dataset construido específicamente para ellos, por lo que la variable que nos interesa suele llevar el nombre `Valor` o `Total`. Lo cambiamos para identificar correctamente el nombre de la variable de interés en nuestro dataset.
++ En el INE los datos aparecen en un dataset construido específicamente para ellos, por lo que la variable que nos interesa suele llevar el nombre `Valor` o `Total`. Lo cambiamos para identificar correctamente el nombre de la variable de interés en nuestro dataset.
 ```{r,include = FALSE}
 #Preparación del coste de vivienda
 
@@ -211,7 +226,7 @@ names(coste_vivienda)[1] <- "Periodo"
 names(coste_vivienda)[4] <- "Regimen"
 names(coste_vivienda)[7] <- "Comunidad_Autonoma"
 ```
-* 6. A veces el INE entrega los datos a nivel provincial y regional en el mismo archivo, pero para las regiones uniprovinciales da el valor de la región, por lo que en estos casos se transforma adecuadamente el código y nombre de la región al de la provincia correspondiente para extraer correctamente los datos, y no perder valores por el camino.
++ A veces el INE entrega los datos a nivel provincial y regional en el mismo archivo, pero para las regiones uniprovinciales da el valor de la región, por lo que en estos casos se transforma adecuadamente el código y nombre de la región al de la provincia correspondiente para extraer correctamente los datos, y no perder valores por el camino.
 ```{r,include=FALSE}
 # En las comunidades uniprovinciales, el fichero incluye filas regionales
 # (CPRO vacio) cuyo valor coincide con el de la provincia. Las incorporamos
@@ -255,7 +270,7 @@ coste_vivienda$CODAUTO <- NULL
 coste_vivienda$Comunidad_Autonoma <- NULL
 
 ```
-* 7. De igual manera, en esos casos, para extraer únicamente el valor de las provincias (ni el total nacional ni niveles regionales), filtramos usando la lista oficial de provincias del INE.
++ Para extraer únicamente el valor de las provincias (ni el total nacional ni niveles regionales), filtramos usando la lista oficial de provincias del INE.
 ```{r,include=FALSE}
 filtrar_provincias <- function(df) {
   df %>%
@@ -469,6 +484,7 @@ valor_bruto_sector <- valor_bruto_sector %>%
   filter(Rama_Actividad != "PRODUCTO INTERIOR BRUTO A PRECIOS DE MERCADO") %>%
   pivot_wider(names_from = Rama_Actividad,values_from = Total) %>%
   rename(Total= c("Valor añadido bruto total")) %>%
+  select(-Total) %>%
   mutate(Periodo = readr::parse_number(Periodo)) %>%
 generar_id_obs(.,col_anyo =.$Periodo,col_prov = .$id_prov) %>%
   mutate(Secundario= rowSums(pick(all_of(sector_secundario)), na.rm = TRUE)) %>%
@@ -477,7 +493,7 @@ generar_id_obs(.,col_anyo =.$Periodo,col_prov = .$id_prov) %>%
   select(-all_of(sector_terciario)) %>%
   rename(Primario=sector_primario)%>%
   arrange(id_prov, Periodo) %>%
-  pivot_longer(c(Total,Primario,Secundario,Terciario),
+  pivot_longer(c(Primario,Secundario,Terciario),
                names_to = "Sector",
                values_to = "VAB") %>%
   select(id,Sector,VAB) %>% distinct()
@@ -497,8 +513,7 @@ save(datos_laborales_ESP,file = "./data/Datos_Laborales.Rdata")
 write_delim(datos_laborales_ESP,file = "./data/Datos_Laborales.csv",delim = ";")
 ```
 
-```{r importacion-datos}
-
+```{r importacion-datos,include=FALSE}
 # Juntamos los datos en formato tidy. Para lo cual separamos los datos laborales en las columnas correspondientes, los unimos y deshacemos la variable id en provincia y año.
 
 laborales_tidy <- datos_laborales_ESP %>%
@@ -510,7 +525,7 @@ laborales_tidy <- datos_laborales_ESP %>%
   ) 
 
 df_completo <- datos_socioecon_ESP %>%
-  full_join(laborales_tidy,by = "id") %>%
+  inner_join(laborales_tidy,by = "id") %>%
   separate(id, into = c("Periodo", "id_prov"), sep = "_", convert = FALSE) %>%
   mutate(Periodo = as.integer(Periodo)) %>% 
   left_join(ine_provincias,by = "id_prov")%>%
@@ -537,11 +552,51 @@ remove(list = c("datos_laborales_ESP",
 
 # 3. Análisis de Datos Perdidos (NAs) e Imputación
 
-Durante la integración de diferentes fuentes oficiales, es habitual encontrar valores perdidos. A continuación, cuantificamos y analizamos la naturaleza de estos *missing values*.
+Ahora que tenemos un conjunto de datos con todas las variables de interés, y las instancias adecuadamente identificadas, podemos proceder al análisis exploratorio propiamente dicho. Para empezar observamos la presencia de valores faltantes.
 
-```{r analisis-nas}
-# Código para identificar y visualizar NAs
-# Aplicación de métodos de imputación si procede (ej. media, interpolación) o eliminación de filas.
+```{r analisis-nas,echo=FALSE}
+kable(x= apply(is.na(df_completo),MARGIN =2,FUN=sum),col.names="Valores Perdidos",caption="Valores perdidos por variable")
+```
+Por suerte, hay pocos valores perdidos, por lo que podemos visualizar sus instancias correspondientes para decidir que realizar con ellos.
+```{r,echo=FALSE}
+instancias_faltantes <- !complete.cases(df_completo)
+columnas_faltantes <- apply(apply(df_completo[instancias_faltantes,],MARGIN=1,FUN=is.na),MARGIN=1,FUN=sum)
+columnas_faltantes <- names(columnas_faltantes[columnas_faltantes>0])
+df_faltantes <- df_completo[instancias_faltantes,c("Provincia","Periodo",columnas_faltantes)] %>%
+  arrange(Provincia,Periodo)
+kable(df_faltantes,caption="Instancias con valores faltantes")
+remove(list=c("df_faltantes"))
+```
+Observamos que los valores faltantes afectan solamente a 5 provincias, además, las variables afectadas son series temporales de valores numéricos (valores anuales de 2015 a 2021), y en todos los casos tenemos al menos un registro de toda la serie, por lo que la decisión sobre los valores faltantes es imputarlos siguiendo la siguiente norma. Se imputan los valores faltantes con la media del primer valor anterior no faltante, y el primer valor posterior no faltante. En caso de no haber valores anteriores o posteriores faltantes, se imputará el dato usando el primer dato posterior o respectivamente anterior no faltante.
+```{r,include=FALSE}
+imputation_value <- function(x){
+  # Si el vector está completamente vacío (solo NAs) o no tiene faltantes, se devuelve igual
+  if (all(is.na(x)) || !any(is.na(x))) {
+    return(x)
+  }
+  
+  n <- length(x)
+  valid_idx <- which(!is.na(x))
+  
+  # 1. Obtener el valor válido ANTES de cada posición (NA si no existe)
+  idx_before_pos <- findInterval(1:n, valid_idx)
+  val_before <- ifelse(idx_before_pos == 0, NA_real_, x[valid_idx[pmax(1, idx_before_pos)]])
+  
+  # 2. Obtener el valor válido DESPUÉS de cada posición (NA si no existe)
+  idx_after_pos <- findInterval((1:n) - 0.0001, valid_idx) + 1
+  val_after <- ifelse(idx_after_pos > length(valid_idx), NA_real_, x[valid_idx[pmin(length(valid_idx), idx_after_pos)]])
+  
+  # 3. Media entre ambos vecinos
+  # rowMeans con na.rm = TRUE asigna el único valor disponible en los extremos inicial/final
+  res <- rowMeans(cbind(val_before, val_after), na.rm = TRUE)
+  
+  return(res)
+}
+
+df_completo <- df_completo %>%
+  mutate(across(.cols = c(RentaBrutaMedia,Personas_Ocupadas_Primario),imputation_value))
+
+remove(list=c("imputation_value"))
 ```
 
 *Justificación de la decisión tomada: por qué se ha elegido un método de imputación concreto o por qué se ha descartado una variable con demasiados valores nulos.*
@@ -561,23 +616,166 @@ Algunas provincias (como Madrid, Barcelona o regiones insulares) pueden presenta
 
 ## 5.1 Análisis Univariante
 
-Exploración de la distribución individual de las principales variables de estudio (Salario, Precio Vivienda, Edad Maternidad).
+En esta sección procedemos a examinar la distribución individual de las principales variables socioeconómicas, demográficas y de estructura productiva obtenidas tras el acondicionamiento del conjunto de datos. El objetivo central de este análisis univariante es caracterizar el comportamiento estadístico de cada magnitud —evaluando su tendencia central, grado de dispersión, presencia de asimetrías y colas pesadas— antes de abordar las relaciones bivariantes.
 
-```{r univariante}
-# Código para histogramas, densidades y estadísticos descriptivos básicos.
+A partir del dataset unificado `df_completo` (resultante del cruce de las tablas de datos socioeconómicos y laborales), seleccionamos y derivamos las variables cuantitativas continuas organizadas en cuatro dimensiones:
+
+* **Dimensión de Renta y Riqueza Macro vs. Micro:**
+  * `PIB_per_capita`: Producto Interior Bruto provincial por habitante (€/hab). Mide la producción agregada regional.
+  * `RentaBrutaMedia`: Renta bruta media disponible por persona (€/hab). Funciona como *proxy* del poder adquisitivo real percibido.
+
+* **Dimensión del Mercado Inmobiliario:**
+  * `Precio_m2_libre`: valor medio del m² de vivienda libre (€/m²), media anual de los cuatro trimestres.
+  * `Precio_m2_libre`: lo mismo para vivienda protegida.
+
+* **Dimensión Demográfica y Ciclo Vital:**
+  * `Edad_Media_Maternidad`: Edad media de las madres al nacimiento del primer hijo (años).
+  * `Migracion_Interior`: Saldo migratorio neto interprovincial en la cohorte joven de 19 a 35 años (número neto de personas).
+  * `Habitantes`: Población provincial total residente (personas).
+
+* **Dimensión de Estructura Productiva (Métricas Derivadas):**
+  * `% Ocupados (Primario, Secundario, Terciario)`: Porcentaje de personas ocupadas en cada sector sobre el total provincial (\%).
+  * `% VAB (Primario, Secundario, Terciario)`: Porcentaje del Valor Añadido Bruto aportado por cada sector sobre el VAB total (\%).
+  
+Para caracterizar formalmente la distribución de cada variable $X$, evaluamos la media muestral ($\bar{x}$), la mediana ($\tilde{x}$), la desviación típica muestral ($s$), los valores extremos ($\min(X)$, $\max(X)$) y el coeficiente de asimetría de Fisher ($\gamma_1$)[cite: 11]:
+
+$$\bar{x} = \frac{1}{n} \sum_{i=1}^{n} x_i, \quad s = \sqrt{\frac{1}{n-1} \sum_{i=1}^{n} (x_i - \bar{x})^2}, \quad \gamma_1 = \frac{\frac{1}{n} \sum_{i=1}^{n} (x_i - \bar{x})^3}{\left(\frac{1}{n} \sum_{i=1}^{n} (x_i - \bar{x})^2\right)^{3/2}}$$
+
+Donde $n = 364$ representa el volumen total de observaciones del panel.
+
+```{r univariante-tabla, echo=FALSE, message=FALSE, warning=FALSE}
+# ---- Funciones de apoyo ------------------------------------------------------
+calc_asimetria <- function(x) {            # coeficiente de asimetría de Fisher (g1)
+  x <- x[!is.na(x)]; m <- mean(x)
+  (sum((x - m)^3) / length(x)) / (sum((x - m)^2) / length(x))^(3/2)
+}
+calc_curtosis <- function(x) {             # exceso de curtosis (0 = normal)
+  x <- x[!is.na(x)]; m <- mean(x)
+  (sum((x - m)^4) / length(x)) / (sum((x - m)^2) / length(x))^2 - 3
+}
+calc_cv <- function(x) {
+  x <- x[!is.na(x)]
+  if (length(x) == 0 || min(x) < 0 || mean(x) <= 0) {
+    NA_real_
+  } else {
+    sd(x) / mean(x) * 100
+  }
+}
+pct_var_entre <- function(df, var) {       # % de varianza debido a diferencias entre provincias
+  d <- df %>% select(Provincia, x = all_of(var)) %>% filter(!is.na(x))
+  m <- mean(d$x)
+  sce <- d %>% group_by(Provincia) %>%
+    summarise(n = n(), mi = mean(x), .groups = "drop") %>%
+    summarise(s = sum(n * (mi - m)^2)) %>% pull(s)
+  100 * sce / sum((d$x - m)^2)
+}
+fmt_es <- function(x, d = 2){             # formato español; NA -> "–"
+  purrr::map2_chr(x, d, ~ {if(is.na(.x)){"–"}else{ formatC(round(.x, .y) + 0, format = "f", digits = .y,big.mark = ".", decimal.mark = ",")}})
+}
+
+# ---- Variables, etiquetas y decimales a mostrar -----------------------------------
+etiquetas <- tibble::tribble(
+  ~Variable,                  ~Etiqueta,                              ~dec,
+  "PIB_per_capita",           "PIB per cápita (€)",                    0,
+  "RentaBrutaMedia",          "Renta bruta media (€)",                 0,
+  "Precio_m2",          "Precio m² vivienda (€)",          1,
+  "Edad_Media_Maternidad",    "Edad media maternidad (años)",          2,
+  "Migracion_Interior",       "Saldo migratorio 19-35 años (pers.)",   0,
+  "Habitantes",               "Habitantes",                            0,
+  "pct_Ocupados_Primario",    "Ocupados primario (%)",                 1,
+  "pct_Ocupados_Secundario",  "Ocupados secundario (%)",               1,
+  "pct_Ocupados_Terciario",   "Ocupados terciario (%)",                1,
+  "pct_VAB_Primario",         "VAB primario (%)",                      1,
+  "pct_VAB_Secundario",       "VAB secundario (%)",                    1,
+  "pct_VAB_Terciario",        "VAB terciario (%)",                     1
+)
+vars_univariante <- etiquetas$Variable
+
+# ---- Base de análisis: porcentajes sobre la suma de los tres sectores ------------------
+df_analisis <- df_completo %>%
+  filter(Periodo >= 2015, Periodo <= 2021) %>%
+  mutate(
+    Ocupados_Suma = Personas_Ocupadas_Primario + Personas_Ocupadas_Secundario + Personas_Ocupadas_Terciario,
+    VAB_Suma      = VAB_Primario + VAB_Secundario + VAB_Terciario,
+    pct_Ocupados_Primario   = Personas_Ocupadas_Primario   / Ocupados_Suma * 100,
+    pct_Ocupados_Secundario = Personas_Ocupadas_Secundario / Ocupados_Suma * 100,
+    pct_Ocupados_Terciario  = Personas_Ocupadas_Terciario  / Ocupados_Suma * 100,
+    pct_VAB_Primario        = VAB_Primario   / VAB_Suma * 100,
+    pct_VAB_Secundario      = VAB_Secundario / VAB_Suma * 100,
+    pct_VAB_Terciario       = VAB_Terciario  / VAB_Suma * 100
+  )
+
+tabla_univariante <- df_analisis %>%
+  select(all_of(vars_univariante)) %>%
+  pivot_longer(everything(), names_to = "Variable", values_to = "Valor") %>%
+  group_by(Variable) %>%
+  summarise(
+    N         = sum(!is.na(Valor)),
+    Media     = mean(Valor, na.rm = TRUE),
+    Mediana   = median(Valor, na.rm = TRUE),
+    DT        = sd(Valor, na.rm = TRUE),
+    CV        = calc_cv(Valor),
+    Min       = min(Valor, na.rm = TRUE),
+    Q1        = unname(quantile(Valor, 0.25, na.rm = TRUE)),
+    Q3        = unname(quantile(Valor, 0.75, na.rm = TRUE)),
+    Max       = max(Valor, na.rm = TRUE),
+    RIC       = IQR(Valor, na.rm = TRUE),
+    Asimetria = calc_asimetria(Valor),
+    Curtosis  = calc_curtosis(Valor),
+    .groups = "drop"
+  ) %>%
+  mutate(Var_entre = purrr::map_dbl(Variable, ~ pct_var_entre(df_analisis, .x))) %>%
+  left_join(etiquetas, by = "Variable") %>%
+  arrange(match(Variable, etiquetas$Variable))
+
+# Tabla 3: posición y dispersión
+tabla3 <- tabla_univariante %>%
+  transmute(Variable = Etiqueta, N,
+            Media = fmt_es(Media, dec), Mediana = fmt_es(Mediana, dec),
+            `Desv. típ.` = fmt_es(DT, dec), `CV (%)` = fmt_es(CV, 1),
+            `Mín.` = fmt_es(Min, dec), `Máx.` = fmt_es(Max, dec))
+knitr::kable(tabla3, align = c("l", rep("r", 7)),
+  caption = "Estadísticos de posición y dispersión del panel provincial (52 provincias, 2015–2021).")
+
+# Tabla 4: cuartiles, forma de la distribución y estructura del panel
+tabla4 <- tabla_univariante %>%
+  transmute(Variable = Etiqueta,
+            Q1 = fmt_es(Q1, dec), Q3 = fmt_es(Q3, dec), RIC = fmt_es(RIC, dec),
+            Asimetría = fmt_es(Asimetria, 2), Curtosis = fmt_es(Curtosis, 2),
+            `% var. entre prov.` = fmt_es(Var_entre, 1))
+knitr::kable(tabla4, align = c("l", rep("r", 6)),
+  caption = "Cuartiles, forma de la distribución (asimetría y exceso de curtosis de Fisher) y porcentaje de la varianza total debido a diferencias entre provincias.")
+
+resumen_anual <- function(fun, d_fija = NULL) {
+  df_analisis %>%
+    select(Periodo, all_of(vars_univariante)) %>%
+    pivot_longer(-Periodo, names_to = "Variable", values_to = "Valor") %>%
+    group_by(Variable, Periodo) %>%
+    summarise(Valor = fun(Valor), .groups = "drop") %>%
+    left_join(etiquetas, by = "Variable") %>%
+    mutate(ord = match(Variable, etiquetas$Variable),
+           Valor = fmt_es(Valor, if (is.null(d_fija)) dec else d_fija)) %>%
+    pivot_wider(id_cols = c(ord, Etiqueta), names_from = Periodo, values_from = Valor) %>%
+    arrange(ord) %>% select(Variable = Etiqueta, everything(), -ord)
+}
+
+knitr::kable(resumen_anual(function(x) median(x, na.rm = TRUE)), align = c("l", rep("r", 7)),
+  caption = "Mediana provincial de cada variable por año.")
+knitr::kable(resumen_anual(calc_cv, d_fija = 1), align = c("l", rep("r", 7)),
+  caption = "Coeficiente de variación (%) entre provincias por año (no definido para el saldo migratorio, que toma valores negativos).")
 ```
+
 
 *Comentarios sobre las distribuciones obtenidas (simetría, sesgos, concentración de datos).*
 
 ## 5.2 Análisis Bivariante y Multivariante
 
-En esta sección cruzamos las variables para dar respuesta a las preguntas planteadas en la introducción, para lo cual fijamos un año concreto.
+En esta sección cruzamos las variables para dar respuesta a las preguntas planteadas en la introducción. Para ello, fijamos el análisis en el año 2018. 
 
-Cabe destacar que por limitaciones en los datos, aproximaremos el salario medio mediante la renta bruta media y los datos respectivos a hostlería y turismo quedan englobadas en el sector terciario. Además, para contabilizar la migración, normalizaremos por el número de habitantes de la provincia para que no dominen las provincias de mayor población y obtendremos la migración por 1000 habitantes. Por otra parte, calculamos el peso de cada sector en la economía, la densidad poblacional y el esfuerzo para adquirir una vivienda.
+Aproximamos el salario medio mediante la renta bruta media y englobamos los datos de hostelería y turismo en el sector terciario. Calculamos el esfuerzo inmobiliario, el peso de cada sector, la densidad poblacional y normalizamos la migración joven (20-35 años) por cada 1.000 habitantes.
 
-
-```{r bivariante}
-Anyo <- 2018   #Fijamos un año para el análisis
+```{r preparacion-bivariante}
+Anyo <- 2018
 
 # Superficie provincial a partir de mapSpain (para la densidad)
 areas_prov <- esp_get_prov() %>%
@@ -586,43 +784,288 @@ areas_prov <- esp_get_prov() %>%
   select(id_prov = cpro, area_km2)
 
 df_completo <- df_completo %>%
-  left_join(ine_provincias, by = c("Provincia" = "Provincia_clean")) %>%  # recupera id_prov
+  left_join(ine_provincias, by = c("Provincia" = "Provincia_clean")) %>% 
   left_join(areas_prov, by = "id_prov") %>%
   mutate(
-    peso_primario     = VAB_Primario   / VAB_Total,
-    peso_secundario   = VAB_Secundario / VAB_Total,
-    peso_terciario    = VAB_Terciario  / VAB_Total,
-    emp_terciario     = Personas_Ocupadas_Terciario / Personas_Ocupadas_Total,
-    # años de renta bruta media necesarios para una vivienda de 80 m2
-    # (es la inversa de la ratio Salario/Vivienda de la pregunta 3)
-    esfuerzo_vivienda = Precio_m2 * 80 / RentaBrutaMedia,
-    mig_joven_1000    = Migracion_Interior / Habitantes * 1000,
+    peso_primario     = VAB_Primario   / (VAB_Primario+VAB_Secundario+VAB_Terciario),
+    peso_secundario   = VAB_Secundario / (VAB_Primario+VAB_Secundario+VAB_Terciario),
+    peso_terciario    = VAB_Terciario  / (VAB_Primario+VAB_Secundario+VAB_Terciario),
+    emp_terciario     = Personas_Ocupadas_Terciario /(Personas_Ocupadas_Primario+Personas_Ocupadas_Secundario+Personas_Ocupadas_Terciario),
+    # Años de renta bruta media necesarios para una vivienda de 80 m2
+    esfuerzo_vivienda = (Precio_m2 * 80) / RentaBrutaMedia,
+    mig_joven_1000    = (Migracion_Interior / Habitantes) * 1000,
     log_densidad      = log10(Habitantes / area_km2)
   ) %>%
   group_by(Periodo) %>%
   mutate(
-    # >1: la provincia genera más PIB que renta percibe, respecto a la media nacional del año
+    # Brecha: si es >1, la provincia genera más PIB que renta percibe vs la media nacional
     brecha_pib_renta = (PIB_per_capita / mean(PIB_per_capita, na.rm = TRUE)) /
                        (RentaBrutaMedia / mean(RentaBrutaMedia, na.rm = TRUE))
   ) %>%
-  ungroup()
+  ungroup() %>%
+  mutate(
+    nivel_terciarizacion = case_when(
+      peso_terciario < 0.65 ~ "Baja (<65%)",
+      peso_terciario >= 0.65 & peso_terciario <= 0.75 ~ "Media (65-75%)",
+      peso_terciario > 0.75 ~ "Alta (>75%)"
+    ),
+    nivel_terciarizacion = factor(nivel_terciarizacion, 
+                                  levels = c("Baja (<65%)", "Media (65-75%)", "Alta (>75%)"))
+  )
 
-df_anio <- df_completo %>% filter(Periodo == Anyo)
-
-```
-
-### Relación entre PIB per cápita y salario medio
-Con el siguiente scatter plot valoraremos la relación ente PIB per cápita y la renta bruta media, así como la influencia del sector terciario sobre dicha relación.
-
-```{r}
-df_anio %>% ggplot(aes(x=PIB_per_capita,y = RentaBrutaMedia)) + geom_point(aes(colour = peso_terciario)) + geom_smooth(method = "lm", col = "black") + geom_text_repel(aes(label = Provincia),size = 3, max.overlaps = 10) + labs(
-    title = "PIB per cápita y renta bruta media por provincia",
-    subtitle = "El color representa el peso del sector servicios",
-    x = "PIB per cápita (€)",
-    y = "Renta bruta media anual (€)",
-    color = "Peso servicios"
+df_anio <- df_completo %>% 
+  filter(Periodo == Anyo) %>%
+  mutate(
+    # Filtramos el top 5 por arriba y por abajo para la Brecha PIB/Renta
+    label_pib = ifelse(
+      rank(brecha_pib_renta, ties.method = "first") <= 5 | rank(desc(brecha_pib_renta), ties.method = "first") <= 5,
+      as.character(Provincia), 
+      NA
+    ),
+    # Filtramos el top 5 por arriba y por abajo para el Esfuerzo Inmobiliario
+    label_trampa = ifelse(
+      rank(esfuerzo_vivienda, ties.method = "first") <= 5 | rank(desc(esfuerzo_vivienda), ties.method = "first") <= 5,
+      as.character(Provincia), 
+      NA
+    )
   )
 ```
+### El espejismo del PIB
+
+Analizamos la relación entre la riqueza generada (PIB per cápita) y la percibida (Renta Bruta Media), así como la influencia del sector terciario en la brecha entre ambas.
+
+```{r,echo=FALSE}
+ggplot(df_anio, aes(x = PIB_per_capita, y = RentaBrutaMedia)) + 
+  geom_point(aes(colour = peso_terciario), size = 3, alpha = 0.8) + 
+  geom_smooth(method = "lm", col = "black", linetype = "dashed") + 
+  geom_text_repel(aes(label = label_pib), size = 3, max.overlaps = Inf, na.rm = TRUE, box.padding = 0.5) + 
+  labs(
+    title = "Relación entre PIB per cápita y Renta Bruta Media",
+    x = "PIB per cápita (€)",
+    y = "Renta bruta media anual (€)",
+    color = "Peso del\nSector Terciario"
+  ) + 
+  theme_minimal()
+
+# Contraste de correlación: Brecha PIB/Renta vs Peso del sector terciario
+cor.test(df_anio$brecha_pib_renta, df_anio$peso_terciario)
+
+df_anio %>% ggplot(aes(x = brecha_pib_renta, y = peso_terciario)) + 
+  geom_point(colour = "steelblue") + 
+  geom_smooth(method = "lm", col = "black", linetype = "dashed") +
+  geom_text_repel(aes(label = label_pib), size = 3, max.overlaps = Inf, na.rm = TRUE, box.padding = 0.5) +
+  labs(
+    title = "Relación entre la brecha PIB/Renta y el peso del sector terciario",
+    x = "Brecha PIB/Renta",
+    y = "Peso del sector terciario",
+    color = "Peso del\nSector Terciario"
+  ) + 
+  theme_minimal()
+```
+
+Interpretación: Observamos si las provincias que quedan por debajo de la línea de tendencia (mayor brecha, perciben menos renta de la que producen) coinciden con altos porcentajes del sector terciario. El contraste de hipótesis evalúa la significancia estadística de esta correlación.
+
+Para visualizar geográficamente dónde se concentra esta brecha (dónde se produce más de lo que repercute en el salario de los trabajadores), representamos los datos en un mapa a nivel provincial.
+
+```{r,echo=FALSE}
+# Unimos los datos espaciales con nuestro dataframe
+mapa_sf <- esp_get_prov() %>%
+  inner_join(df_anio, by = c("cpro" = "id_prov"))
+
+ggplot(mapa_sf) +
+  geom_sf(aes(fill = brecha_pib_renta), color = "white", size = 0.1) +
+  scale_fill_gradient2(
+    low = "steelblue", mid = "white", high = "darkred", 
+    midpoint = 1, name = "Brecha\n(>1 peor)"
+  ) +
+  labs(
+    title = "Mapa de la Brecha entre PIB y Renta Bruta",
+    subtitle = "Zonas en rojo indican mayor desconexión entre la riqueza generada y la renta percibida"
+  ) +
+  theme_void()
+```
+
+
+### La trampa del sector servicios
+
+Evaluamos cómo la dependencia del sector terciario presiona el coste de la vivienda y cómo afecta a la expulsión de población joven.
+
+```{r,echo=FALSE}
+ggplot(df_anio, aes(x = emp_terciario, y = esfuerzo_vivienda)) +
+  geom_point(alpha = 0.7, color = "darkred", size = 3) +
+  geom_smooth(method = "lm", se = TRUE, color = "black") +
+  geom_text_repel(aes(label = label_trampa), size = 3, max.overlaps = Inf, na.rm = TRUE, box.padding = 0.5) +
+  scale_x_continuous(labels = scales::percent) +
+  labs(
+    title = "Empleo en el Sector Terciario vs Esfuerzo Inmobiliario",
+    x = "Proporción de empleo en el sector terciario",
+    y = "Años de renta para vivienda de 80m²"
+  ) +
+  theme_minimal()
+
+# Contraste: Empleo terciario y esfuerzo inmobiliario
+cor.test(df_anio$emp_terciario, df_anio$esfuerzo_vivienda)
+
+# Contraste: Empleo terciario y migración joven (expulsión)
+cor.test(df_anio$emp_terciario, df_anio$mig_joven_1000)
+
+```
+
+Para contrastar de forma más robusta si el modelo productivo discrimina el acceso a la vivienda, agrupamos las provincias por su sector económico predominante mediante un boxplot.
+
+```{r,echo=FALSE}
+ggplot(df_anio, aes(x = nivel_terciarizacion, y = esfuerzo_vivienda, fill = nivel_terciarizacion)) +
+  geom_boxplot(alpha = 0.7, outlier.color = "red", outlier.size = 2) +
+  geom_jitter(width = 0.15, alpha = 0.5, color = "darkslategrey") +
+  scale_fill_brewer(palette = "Oranges") +
+  labs(
+    title = "Distribución del Esfuerzo Inmobiliario según Grado de Terciarización",
+    x = "Peso del Sector Terciario en el VAB",
+    y = "Años de renta para vivienda (80m²)",
+    fill = "Terciarización"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+Interpretación: Este diagrama de cajas nos permite evaluar si las provincias fuertemente terciarizadas tienen una mediana de esfuerzo inmobiliario significativamente superior frente a aquellas sostenidas por el sector primario o secundario, así como detectar provincias atípicas (outliers).
+
+### El coste de la maternidad
+
+Buscamos evidenciar si el endurecimiento del mercado inmobiliario (esfuerzo para acceder a una vivienda) retrasa la edad media a la maternidad.
+
+```{r,echo=FALSE}
+ggplot(df_anio, aes(x = esfuerzo_vivienda, y = Edad_Media_Maternidad)) +
+  geom_point(aes(size = Habitantes), alpha = 0.6, color = "steelblue") +
+  geom_smooth(method = "loess", color = "darkorange", fill = "lightgray") +
+  labs(
+    title = "Esfuerzo Inmobiliario vs Edad de Maternidad",
+    x = "Años de renta necesarios para comprar una vivienda de 80m²",
+    y = "Edad Media a la Maternidad",
+    size = "Población"
+  ) + scale_size_continuous(labels = scales::comma) +
+  theme_minimal()
+
+# Contraste de correlación lineal
+cor.test(df_anio$esfuerzo_vivienda, df_anio$Edad_Media_Maternidad)
+```
+
+Interpretación: La curva de ajuste local (LOESS) permite observar si existe un crecimiento no lineal o un umbral crítico de esfuerzo inmobiliario a partir del cual la edad de maternidad se dispara.
+
+### El refugio industrial
+
+Comprobamos si el tejido industrial funciona como fijador de población joven y si se correlaciona con una densidad demográfica más equilibrada.
+
+```{r,echo=FALSE}
+ggplot(df_anio, aes(x = peso_secundario, y = mig_joven_1000)) +
+  geom_point(color = "forestgreen", size = 3, alpha = 0.7) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  geom_smooth(method = "lm", color = "black") +
+  scale_x_continuous(labels = scales::percent) +
+  labs(
+    title = "Peso del Sector Industrial vs Saldo Migratorio Joven",
+    x = "Peso del sector secundario en el VAB",
+    y = "Saldo migratorio interior (20-35 años) por mil hab."
+  ) +
+  theme_minimal()
+
+# Contraste: Industrialización vs retención de jóvenes
+cor.test(df_anio$peso_secundario, df_anio$mig_joven_1000)
+
+# Contraste: Industrialización vs Densidad poblacional
+cor.test(df_anio$peso_secundario, df_anio$log_densidad)
+```
+
+Para observar con claridad cuáles son las provincias que lideran la atracción y expulsión de jóvenes, generamos un barplot divergente aislando el top 10 y bottom 10.
+
+```{r,echo=FALSE}
+df_anio %>%
+  arrange(desc(mig_joven_1000)) %>%
+  # Seleccionamos las 10 con mayor saldo positivo y las 10 con mayor saldo negativo
+  filter(row_number() <= 10 | row_number() >= (n() - 9)) %>%
+  mutate(Provincia = fct_reorder(Provincia, mig_joven_1000)) %>%
+  ggplot(aes(x = mig_joven_1000, y = Provincia, fill = mig_joven_1000 > 0)) +
+  geom_col() +
+  scale_fill_manual(values = c("TRUE" = "forestgreen", "FALSE" = "firebrick")) +
+  labs(
+    title = "Top 10 Atracción vs Top 10 Expulsión \nde Jóvenes (20-35 años)",
+    subtitle = "Saldo migratorio interno normalizado por mil habitantes",
+    x = "Migración Neta (Jóvenes / 1000 hab.)",
+    y = NULL
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+
+### Visión multivariante global
+
+Para resumir las dinámicas conjuntas, comenzamos con una matriz de correlación.
+
+```{r,echo=FALSE}
+# Seleccionamos las variables continuas de interés
+var_corr <- df_anio %>%
+  select(
+    PIB_per_capita, RentaBrutaMedia, brecha_pib_renta, 
+    peso_primario, peso_secundario, peso_terciario,
+    esfuerzo_vivienda, Edad_Media_Maternidad, mig_joven_1000, log_densidad
+  ) %>%
+  drop_na()
+
+# Calculamos matriz de correlación
+matriz_cor <- cor(var_corr)
+
+# Visualización
+corrplot(matriz_cor, 
+         method = "color", 
+         type = "upper", 
+         order = "hclust",
+         tl.col = "black", 
+         tl.srt = 45, 
+         addCoef.col = "black", 
+         number.cex = 0.7,
+         diag = FALSE)
+```
+
+Finalmente, para crear un perfil multidimensional sintético de las tensiones sociodemográficas, generamos un heatmap estandarizado (`geom_tile`) de las 15 provincias más pobladas de España. Esto nos muestra de un vistazo qué retos afronta cada polo demográfico.
+
+```{r,echo=FALSE}
+# Estandarizamos (Z-score) las variables para poder compararlas visualmente en la misma escala
+df_heat <- df_anio %>%
+  slice_max(Habitantes, n = 15) %>%
+  select(Provincia, 
+         `PIB per cápita` = PIB_per_capita, 
+         `Renta Media` = RentaBrutaMedia, 
+         `Esfuerzo Inmobiliario` = esfuerzo_vivienda, 
+         `Migración Joven` = mig_joven_1000, 
+         `Edad Maternidad` = Edad_Media_Maternidad) %>%
+  pivot_longer(cols = -Provincia, names_to = "Variable", values_to = "Valor") %>%
+  group_by(Variable) %>%
+  mutate(Valor_Escalado = scale(Valor)) %>%
+  ungroup()
+
+# Extraemos el orden exacto ordenando por el esfuerzo inmobiliario
+orden_provincias <- df_heat %>%
+  filter(Variable == "Esfuerzo Inmobiliario") %>%
+  arrange(Valor_Escalado) %>%
+  pull(Provincia)
+
+# Aplicamos el orden convirtiendo Provincia a un factor
+df_heat <- df_heat %>%
+  mutate(Provincia = factor(Provincia, levels = orden_provincias))
+
+ggplot(df_heat, aes(x = Variable, y = Provincia, fill = Valor_Escalado)) +
+  geom_tile(color = "white", size = 0.5) +
+  scale_fill_gradient2(low = "royalblue", mid = "white", high = "darkred", midpoint = 0) +
+  labs(
+    title = "Perfil Sociodemográfico de las 15 Provincias \nMás Pobladas",
+    subtitle = "Valores estandarizados (Z-scores).\nProvincias ordenadas por Esfuerzo Inmobiliario.",
+    x = NULL,
+    y = NULL,
+    fill = "Desviación\nEstándar"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
 
 *Explicación detallada de los gráficos mostrados. "Contar la historia" que revelan los datos. ¿Se confirman las hipótesis iniciales?*
 

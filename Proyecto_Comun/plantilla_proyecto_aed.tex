@@ -234,6 +234,17 @@ Inmobiliario; R}
 \providecommand{\tightlist}{%
   \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
 
+% From pandoc table feature
+\usepackage{longtable,booktabs,array}
+\usepackage{calc} % for calculating minipage widths
+% Correct order of tables after \paragraph or \subparagraph
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+\makeatother
+% Allow footnotes in longtable head/foot
+\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
+\makesavenoteenv{longtable}
 
 
 
@@ -246,193 +257,200 @@ Inmobiliario; R}
 \section{1. Introducción y Planteamiento de
 Preguntas}\label{introducciuxf3n-y-planteamiento-de-preguntas}
 
-El objetivo de este proyecto es analizar cómo el modelo productivo de
-las diferentes provincias españolas condiciona sus mercados laborales e
-inmobiliarios y, consecuentemente, altera el ciclo vital y demográfico
-de sus habitantes.
+El objetivo de este proyecto es realizar un análisis exploratorio de
+distintos indicadores socioeconómicos a nivel provincial en España, y
+sus posibles relaciones. En particular, los indicadores estudiados
+corresponden a el modelo productivo de las diferentes provincias, sus
+mercados laborales e inmobiliarios, y el ciclo vital y demográfico de
+sus habitantes.
 
 A partir del cruce de datos, nos planteamos responder a las siguientes
-preguntas de investigación: 1. \textbf{El espejismo del PIB:} ¿En qué
-provincias es mayor la brecha entre la riqueza generada (PIB per cápita)
-y la riqueza percibida por los trabajadores (salario medio)?
-¿Correlaciona esta desigualdad de manera directa con un peso excesivo
-del sector servicios? 2. \textbf{La trampa del sector servicios:}
-¿Existe una correlación entre el porcentaje de empleo en
-hostelería/turismo y el encarecimiento de la vivienda respecto al
-salario medio?¿Existe una brecha salarial más acentuada en aquellas
-provincias cuyo PIB depende mayoritariamente del sector agrícola frente
-a las centradas en servicios?¿Genera la hiperdependencia del sector
-turismo una expulsión de la población joven nativa (saldo migratorio
-interior negativo para la franja de 20-35 años)? 3. \textbf{El coste de
-la maternidad:} ¿Hay un umbral crítico en la ratio Salario/Vivienda a
-partir del cual la edad media a la maternidad aumenta
-significativamente? 4. \textbf{El refugio industrial:} ¿Logran las
-provincias con un tejido industrial fuerte retener mejor a la población
-joven (saldo migratorio positivo) frente a aquellas con modelos
-primarios?¿Se constata una relación entre el nivel de industrialización
-de una provincia y una distribución poblacional más homogénea (evitando
-la macrocefalia poblacional concentrada solo en la capital)?
+preguntas de investigación:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  \textbf{El espejismo del PIB:} ¿En qué provincias es mayor la brecha
+  entre la riqueza generada (PIB per cápita) y la riqueza percibida por
+  los trabajadores (salario medio)?
+\item
+  \textbf{La trampa del sector servicios:} ¿Existe una correlación entre
+  el porcentaje de empleo en hostelería/turismo y el encarecimiento de
+  la vivienda respecto al salario medio?¿Genera la hiperdependencia del
+  sector turismo una expulsión de la población joven nativa (saldo
+  migratorio interior negativo para la franja de 20-35 años)?
+\item
+  \textbf{El coste de la maternidad:} ¿Hay un umbral crítico en la ratio
+  Salario/Vivienda a partir del cual la edad media a la maternidad
+  aumenta significativamente?
+\item
+  \textbf{El refugio industrial:} ¿Logran las provincias con un tejido
+  industrial fuerte retener mejor a la población joven (saldo migratorio
+  positivo) frente a aquellas con modelos primarios?
+\end{enumerate}
 
 \section{2. Importación y Acondicionamiento de
 Datos}\label{importaciuxf3n-y-acondicionamiento-de-datos}
 
-En esta sección procedemos a cargar los conjuntos de datos descargados
-del INE. Como la fuente de datos no proporcionaba los datos
-estrictamente necesarios para el análisis que queremos realizar
-(buscamos un análisis anual a nivel provincial de ciertas variables
-socioeconómicas), el primer paso será acondicionar los datos que más se
-ajustaban a los necesitados para seleccionar los que nos interesan y
-juntarlos todos en la misma estructura de datos.
+El primer paso para el análisis es cargar los conjuntos de datos
+obtenidos del
+\href{https://ine.es/dyngs/INEbase/listaoperaciones.htm}{INE}. Los
+ficheros originales se encuentran almacenados en la carpeta local
+\texttt{data/raw}.
 
-Para ello, comenzamos cargando los datos, los ficheros originales se
-encuentran almacenados en la carpeta local \texttt{data/raw}. Los datos
-han sido tomados y guardados en español, por lo que hemos de tener
-cuidado con el indicador de millares y decimales en los datos numéricos.
-Como el proceso es común para todos los ficheros a cargar, hemos
-implementado una función basada en \texttt{read\_delim} de
-\texttt{readr} para tratar adecuadamente las variables numéricas, usando
-la función \texttt{locale}.
+La fuente de datos no proporciona los datos estrictamente adecuados para
+el análisis que queremos realizar (buscamos un análisis anual a nivel
+provincial de ciertas variables socioeconómicas). Por lo tanto, el
+primer paso será acondicionar los datos que más se ajustaban a los
+necesitados para seleccionar los que nos interesan y juntarlos todos en
+la misma estructura de datos. Uno de los factores principales a tener en
+cuenta es que los datos han sido tomados y guardados en español, por lo
+que hemos de tener cuidado con el indicador de millares y decimales en
+los datos numéricos. Los datos han sido importados a \texttt{R} usando
+una función basada en \texttt{read\_delim} de \texttt{readr} para tratar
+adecuadamente las variables numéricas, usando la función
+\texttt{locale}.
 
-\emph{Explicación detallada de los pasos seguidos para homogeneizar los
-nombres de las columnas, filtrar los años de estudio (ej. 2015-2022) y
-el cruce de las tablas.} El proceso de preparación de los datos se hace
-siguiendo la filosofía tidy. Al ser un proceso mecánico y repetitivo, no
-se explicitarán todos y cada uno de los pasos hechos en el informe,
-aunque se pueden consultar en el script que lo genera, y se comentarán
-aquellos que requieran mayor detenimiento. En general, el
-acondicionamiento de los datos ha requerido las siguientes acciones:
+\emph{Explicación de los pasos seguidos para homogeneizar los nombres de
+las columnas, filtrar los años de estudio (ej. 2015-2021 y el cruce de
+las tablas.}
+
+El proceso de preparación de los datos se hace siguiendo la filosofía
+tidy. Al ser un proceso mecánico y repetitivo, no se explicitarán todos
+y cada uno de los pasos hechos en el informe, aunque se pueden consultar
+en el script que lo genera. Los principales pasos que han sido
+necesarios para el acondicionamiento de los datos ha requerido han sido:
 
 \begin{itemize}
-\tightlist
 \item
-  \begin{enumerate}
-  \def\labelenumi{\arabic{enumi}.}
-  \tightlist
-  \item
-    Acondicionamiento de nombres de variables para evitar errores de
-    compilación, como \texttt{Año} que pasa a ser \texttt{Periodo} o
-    \texttt{Comunidad\ Autónoma} a \texttt{Comunidad\_Autonoma}.
-  \end{enumerate}
+  Acondicionamiento de nombres de variables para evitar errores de
+  compilación, como \texttt{Año} que pasa a ser \texttt{Periodo} o
+  \texttt{Comunidad\ Autónoma} a \texttt{Comunidad\_Autonoma}.
 \item
-  \begin{enumerate}
-  \def\labelenumi{\arabic{enumi}.}
-  \setcounter{enumi}{1}
-  \tightlist
-  \item
-    Es una práctica común en el INE incluir la variable
-    \texttt{Provincias} que tiene la forma
-    \texttt{xx\ Nombre\_Provincia}, siendo \texttt{XX} el código de
-    provincia oficial (asignados por orden alfabético, del 01 al 50,
-    siendo Ceuta el 51 y Melilla el 52). Nosotros hemos separado esa
-    variable en código provincial \texttt{cod\_prov} y nombre provincial
-    (\texttt{Provincia}).
-  \end{enumerate}
+  Es una práctica común en el INE incluir la variable
+  \texttt{Provincias} que tiene la forma \texttt{xx\ Nombre\_Provincia},
+  siendo \texttt{XX} el código de provincia oficial (asignados por orden
+  alfabético, del 01 al 50, siendo Ceuta el 51 y Melilla el 52).
+  Nosotros hemos separado esa variable en código provincial
+  \texttt{cod\_prov} y nombre provincial (\texttt{Provincia}).
 \item
-  \begin{enumerate}
-  \def\labelenumi{\arabic{enumi}.}
-  \setcounter{enumi}{2}
-  \tightlist
-  \item
-    Para el estudio hemos considerado como instancia una provincia en
-    cierto año, por lo que, con el fin de unir instancias de distintas
-    tablas, hemos asignado un identificador único (en el sentido de que
-    cada provincia tiene uno por año) a todos los registros, usando el
-    formato \texttt{yyyy\_xx}, año (\texttt{yyyy}) y código provincial
-    (\texttt{xx}).
-  \end{enumerate}
+  En el conjunto de datos que queremos estudiar cada instancia es una
+  provincia en cierto año. Con el fin de unir instancias de distintas
+  tablas, hemos asignado un identificador único (en el sentido de que
+  cada provincia tiene uno por año) a todos los registros de los datos
+  originales, usando el formato \texttt{yyyy\_xx}, año (\texttt{yyyy}) y
+  código provincial (\texttt{xx}).
 \item
-  \begin{enumerate}
-  \def\labelenumi{\arabic{enumi}.}
-  \setcounter{enumi}{3}
-  \tightlist
-  \item
-    El INE ofrecía algunos datasets con los valores disgregados por
-    variables como sexo,nacionalidad,edad, o valores trimestrales en
-    lugar de anuales. Como el uso de estos escapaban del objetivo del
-    análisis, en los casos en los que también se ofrecía el valor total,
-    se ha seleccionado este, y en los que no, usando el identificador
-    único, los hemos agregado usando la medida adecuada (media para
-    obtener el promedio anual de valores trimestrales, y suma para
-    obtener el total por sexos, edades o nacionalidades).
-  \end{enumerate}
+  El INE ofrece algunos datasets con los valores disgregados por
+  variables como sexo,nacionalidad,edad, o valores trimestrales en lugar
+  de anuales. Como estas variables escapan del objetivo del análisis, en
+  los casos en los que también se ofrecía el valor total, se ha
+  seleccionado este, y en los que no, usando el identificador único, se
+  han agregado los datos, usando la medida adecuada (media para obtener
+  el promedio anual de valores trimestrales, y suma para obtener el
+  total por sexos, edades o nacionalidades).
 \item
-  \begin{enumerate}
-  \def\labelenumi{\arabic{enumi}.}
-  \setcounter{enumi}{4}
-  \tightlist
-  \item
-    En el INE los datos aparecen en un dataset construido
-    específicamente para ellos, por lo que la variable que nos interesa
-    suele llevar el nombre \texttt{Valor} o \texttt{Total}. Lo cambiamos
-    para identificar correctamente el nombre de la variable de interés
-    en nuestro dataset.
-  \end{enumerate}
+  En el INE los datos aparecen en un dataset construido específicamente
+  para ellos, por lo que la variable que nos interesa suele llevar el
+  nombre \texttt{Valor} o \texttt{Total}. Lo cambiamos para identificar
+  correctamente el nombre de la variable de interés en nuestro dataset.
 \item
-  \begin{enumerate}
-  \def\labelenumi{\arabic{enumi}.}
-  \setcounter{enumi}{5}
-  \tightlist
-  \item
-    A veces el INE entrega los datos a nivel provincial y regional en el
-    mismo archivo, pero para las regiones uniprovinciales da el valor de
-    la región, por lo que en estos casos se transforma adecuadamente el
-    código y nombre de la región al de la provincia correspondiente para
-    extraer correctamente los datos, y no perder valores por el camino.
-  \end{enumerate}
+  A veces el INE entrega los datos a nivel provincial y regional en el
+  mismo archivo, pero para las regiones uniprovinciales da el valor de
+  la región, por lo que en estos casos se transforma adecuadamente el
+  código y nombre de la región al de la provincia correspondiente para
+  extraer correctamente los datos, y no perder valores por el camino.
 \item
-  \begin{enumerate}
-  \def\labelenumi{\arabic{enumi}.}
-  \setcounter{enumi}{6}
-  \tightlist
-  \item
-    De igual manera, en esos casos, para extraer únicamente el valor de
-    las provincias (ni el total nacional ni niveles regionales),
-    filtramos usando la lista oficial de provincias del INE.
-  \end{enumerate}
+  Para extraer únicamente el valor de las provincias (ni el total
+  nacional ni niveles regionales), filtramos usando la lista oficial de
+  provincias del INE.
 \end{itemize}
 
 Una vez tenemos los datos tratados, los juntamos haciendo uso del
 identificador único. Para evitar que se generen muchos valores perdidos,
 para la unión solamente tomaremos las instancias comunes a todos.
 
-\begin{Shaded}
-\begin{Highlighting}[]
-\CommentTok{\# Juntamos los datos en formato tidy. Para lo cual separamos los datos laborales en las columnas correspondientes, los unimos y deshacemos la variable id en provincia y año.}
-
-\NormalTok{laborales\_tidy }\OtherTok{\textless{}{-}}\NormalTok{ datos\_laborales\_ESP }\SpecialCharTok{\%\textgreater{}\%}
-  \FunctionTok{pivot\_wider}\NormalTok{(}
-    \AttributeTok{names\_from =}\NormalTok{ Sector,}
-    \AttributeTok{values\_from =} \FunctionTok{c}\NormalTok{(Personas\_Ocupadas, VAB),}
-     \CommentTok{\#Modificamos el nombre para que quede claro el valor, ej: "Personas\_Ocupadas\_Primario"}
-    \AttributeTok{names\_glue =} \StringTok{"\{.value\}\_\{Sector\}"} 
-\NormalTok{  ) }
-
-\NormalTok{df\_completo }\OtherTok{\textless{}{-}}\NormalTok{ datos\_socioecon\_ESP }\SpecialCharTok{\%\textgreater{}\%}
-  \FunctionTok{full\_join}\NormalTok{(laborales\_tidy,}\AttributeTok{by =} \StringTok{"id"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
-  \FunctionTok{separate}\NormalTok{(id, }\AttributeTok{into =} \FunctionTok{c}\NormalTok{(}\StringTok{"Periodo"}\NormalTok{, }\StringTok{"id\_prov"}\NormalTok{), }\AttributeTok{sep =} \StringTok{"\_"}\NormalTok{, }\AttributeTok{convert =} \ConstantTok{FALSE}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
-  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{Periodo =} \FunctionTok{as.integer}\NormalTok{(Periodo)) }\SpecialCharTok{\%\textgreater{}\%} 
-  \FunctionTok{left\_join}\NormalTok{(ine\_provincias,}\AttributeTok{by =} \StringTok{"id\_prov"}\NormalTok{)}\SpecialCharTok{\%\textgreater{}\%}
-  \FunctionTok{rename}\NormalTok{(}\AttributeTok{Provincia =}\NormalTok{ Provincia\_clean) }\SpecialCharTok{\%\textgreater{}\%}
-  \FunctionTok{select}\NormalTok{(}\SpecialCharTok{{-}}\NormalTok{id\_prov)}
-
-\CommentTok{\# Aquí se realizará el proceso de limpieza inicial y el \textquotesingle{}left\_join\textquotesingle{} }
-\CommentTok{\# por el código de provincia para unificar todo en un único dataset \textquotesingle{}df\_final\textquotesingle{}.}
-\end{Highlighting}
-\end{Shaded}
-
 \section{3. Análisis de Datos Perdidos (NAs) e
 Imputación}\label{anuxe1lisis-de-datos-perdidos-nas-e-imputaciuxf3n}
 
-Durante la integración de diferentes fuentes oficiales, es habitual
-encontrar valores perdidos. A continuación, cuantificamos y analizamos
-la naturaleza de estos \emph{missing values}.
+Ahora que tenemos un conjunto de datos con todas las variables de
+interés, y las instancias adecuadamente identificadas, podemos proceder
+al análisis exploratorio propiamente dicho. Para empezar observamos la
+presencia de valores faltantes.
 
-\begin{Shaded}
-\begin{Highlighting}[]
-\CommentTok{\# Código para identificar y visualizar NAs}
-\CommentTok{\# Aplicación de métodos de imputación si procede (ej. media, interpolación) o eliminación de filas.}
-\end{Highlighting}
-\end{Shaded}
+\begin{longtable}[]{@{}lr@{}}
+\caption{Valores perdidos por variable}\tabularnewline
+\toprule\noalign{}
+& Valores Perdidos \\
+\midrule\noalign{}
+\endfirsthead
+\toprule\noalign{}
+& Valores Perdidos \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Periodo & 0 \\
+Precio\_m2 & 0 \\
+Habitantes & 0 \\
+Edad\_Media\_Maternidad & 0 \\
+Migracion\_Interior & 0 \\
+PIB\_per\_capita & 0 \\
+RentaBrutaMedia & 12 \\
+Personas\_Ocupadas\_Primario & 7 \\
+Personas\_Ocupadas\_Secundario & 0 \\
+Personas\_Ocupadas\_Terciario & 0 \\
+VAB\_Primario & 0 \\
+VAB\_Secundario & 0 \\
+VAB\_Terciario & 0 \\
+Provincia & 0 \\
+\end{longtable}
+
+Por suerte, hay pocos valores perdidos, por lo que podemos visualizar
+sus instancias correspondientes para decidir que realizar con ellos.
+
+\begin{longtable}[]{@{}lrrr@{}}
+\caption{Instancias con valores faltantes}\tabularnewline
+\toprule\noalign{}
+Provincia & Periodo & RentaBrutaMedia & Personas\_Ocupadas\_Primario \\
+\midrule\noalign{}
+\endfirsthead
+\toprule\noalign{}
+Provincia & Periodo & RentaBrutaMedia & Personas\_Ocupadas\_Primario \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Araba/Álava & 2015 & NaN & 2.350 \\
+Araba/Álava & 2016 & NaN & 3.475 \\
+Araba/Álava & 2017 & NaN & 3.850 \\
+Araba/Álava & 2018 & NaN & 3.225 \\
+Araba/Álava & 2019 & NaN & 2.825 \\
+Ceuta & 2016 & 11988 & NaN \\
+Ceuta & 2017 & 12094 & NaN \\
+Ceuta & 2020 & 13718 & NaN \\
+Ceuta & 2021 & 14499 & NaN \\
+Gipuzkoa & 2015 & NaN & 2.700 \\
+Melilla & 2015 & 11151 & NaN \\
+Melilla & 2016 & 11377 & NaN \\
+Melilla & 2019 & 12676 & NaN \\
+Navarra & 2015 & NaN & 9.525 \\
+Navarra & 2016 & NaN & 9.575 \\
+Navarra & 2017 & NaN & 11.025 \\
+Navarra & 2018 & NaN & 11.800 \\
+Navarra & 2019 & NaN & 10.225 \\
+Navarra & 2020 & NaN & 9.425 \\
+\end{longtable}
+
+Observamos que los valores faltantes afectan solamente a 5 provincias,
+además, las variables afectadas son series temporales de valores
+numéricos (valores anuales de 2015 a 2021), y en todos los casos tenemos
+al menos un registro de toda la serie, por lo que la decisión sobre los
+valores faltantes es imputarlos siguiendo la siguiente norma. Se imputan
+los valores faltantes con la media del primer valor anterior no
+faltante, y el primer valor posterior no faltante. En caso de no haber
+valores anteriores o posteriores faltantes, se imputará el dato usando
+el primer dato posterior o respectivamente anterior no faltante.
 
 \emph{Justificación de la decisión tomada: por qué se ha elegido un
 método de imputación concreto o por qué se ha descartado una variable
@@ -460,14 +478,375 @@ si se aplican transformaciones logarítmicas para suavizar su impacto.}
 
 \subsection{5.1 Análisis Univariante}\label{anuxe1lisis-univariante}
 
-Exploración de la distribución individual de las principales variables
-de estudio (Salario, Precio Vivienda, Edad Maternidad).
+En esta sección procedemos a examinar la distribución individual de las
+principales variables socioeconómicas, demográficas y de estructura
+productiva obtenidas tras el acondicionamiento del conjunto de datos. El
+objetivo central de este análisis univariante es caracterizar el
+comportamiento estadístico de cada magnitud ---evaluando su tendencia
+central, grado de dispersión, presencia de asimetrías y colas pesadas---
+antes de abordar las relaciones bivariantes.
 
-\begin{Shaded}
-\begin{Highlighting}[]
-\CommentTok{\# Código para histogramas, densidades y estadísticos descriptivos básicos.}
-\end{Highlighting}
-\end{Shaded}
+A partir del dataset unificado \texttt{df\_completo} (resultante del
+cruce de las tablas de datos socioeconómicos y laborales), seleccionamos
+y derivamos las variables cuantitativas continuas organizadas en cuatro
+dimensiones:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Dimensión de Renta y Riqueza Macro vs.~Micro:}
+
+  \begin{itemize}
+  \tightlist
+  \item
+    \texttt{PIB\_per\_capita}: Producto Interior Bruto provincial por
+    habitante (€/hab). Mide la producción agregada regional.
+  \item
+    \texttt{RentaBrutaMedia}: Renta bruta media disponible por persona
+    (€/hab). Funciona como \emph{proxy} del poder adquisitivo real
+    percibido.
+  \end{itemize}
+\item
+  \textbf{Dimensión del Mercado Inmobiliario:}
+
+  \begin{itemize}
+  \tightlist
+  \item
+    \texttt{Precio\_m2\_libre}: valor medio del m² de vivienda libre
+    (€/m²), media anual de los cuatro trimestres.
+  \item
+    \texttt{Precio\_m2\_libre}: lo mismo para vivienda protegida.
+  \end{itemize}
+\item
+  \textbf{Dimensión Demográfica y Ciclo Vital:}
+
+  \begin{itemize}
+  \tightlist
+  \item
+    \texttt{Edad\_Media\_Maternidad}: Edad media de las madres al
+    nacimiento del primer hijo (años).
+  \item
+    \texttt{Migracion\_Interior}: Saldo migratorio neto interprovincial
+    en la cohorte joven de 19 a 35 años (número neto de personas).
+  \item
+    \texttt{Habitantes}: Población provincial total residente
+    (personas).
+  \end{itemize}
+\item
+  \textbf{Dimensión de Estructura Productiva (Métricas Derivadas):}
+
+  \begin{itemize}
+  \tightlist
+  \item
+    \texttt{\%\ Ocupados\ (Primario,\ Secundario,\ Terciario)}:
+    Porcentaje de personas ocupadas en cada sector sobre el total
+    provincial (\%).
+  \item
+    \texttt{\%\ VAB\ (Primario,\ Secundario,\ Terciario)}: Porcentaje
+    del Valor Añadido Bruto aportado por cada sector sobre el VAB total
+    (\%).
+  \end{itemize}
+\end{itemize}
+
+Para caracterizar formalmente la distribución de cada variable \(X\),
+evaluamos la media muestral (\(\bar{x}\)), la mediana (\(\tilde{x}\)),
+la desviación típica muestral (\(s\)), los valores extremos
+(\(\min(X)\), \(\max(X)\)) y el coeficiente de asimetría de Fisher
+(\(\gamma_1\)){[}cite: 11{]}:
+
+\[\bar{x} = \frac{1}{n} \sum_{i=1}^{n} x_i, \quad s = \sqrt{\frac{1}{n-1} \sum_{i=1}^{n} (x_i - \bar{x})^2}, \quad \gamma_1 = \frac{\frac{1}{n} \sum_{i=1}^{n} (x_i - \bar{x})^3}{\left(\frac{1}{n} \sum_{i=1}^{n} (x_i - \bar{x})^2\right)^{3/2}}\]
+
+Donde \(n = 364\) representa el volumen total de observaciones del
+panel.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 14\tabcolsep) * \real{0.3956}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 14\tabcolsep) * \real{0.0440}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 14\tabcolsep) * \real{0.0879}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 14\tabcolsep) * \real{0.0879}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 14\tabcolsep) * \real{0.1209}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 14\tabcolsep) * \real{0.0769}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 14\tabcolsep) * \real{0.0769}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 14\tabcolsep) * \real{0.1099}}@{}}
+\caption{Estadísticos de posición y dispersión del panel provincial (52
+provincias, 2015--2021).}\tabularnewline
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Variable
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+N
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Media
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Mediana
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Desv. típ.
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+CV (\%)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Mín.
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Máx.
+\end{minipage} \\
+\midrule\noalign{}
+\endfirsthead
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Variable
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+N
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Media
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Mediana
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Desv. típ.
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+CV (\%)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Mín.
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Máx.
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+PIB per cápita (€) & 364 & 23.266 & 21.993 & 4.884 & 21,0 & 16.255 &
+38.711 \\
+Renta bruta media (€) & 364 & 13.525 & 13.252 & 2.303 & 17,0 & 9.304 &
+20.471 \\
+Precio m² vivienda (€) & 364 & 1.162,5 & 1.100,8 & 289,0 & 24,9 & 760,1
+& 2.140,8 \\
+Edad media maternidad (años) & 364 & 32,13 & 32,20 & 0,63 & 2,0 & 29,63
+& 33,38 \\
+Saldo migratorio 19-35 años (pers.) & 364 & 0 & -220 & 1.787 & -- &
+-2.156 & 15.116 \\
+Habitantes & 364 & 902.029 & 607.127 & 1.168.472 & 129,5 & 83.517 &
+6.779.888 \\
+Ocupados primario (\%) & 364 & 7,0 & 5,2 & 5,6 & 80,0 & 0,1 & 29,3 \\
+Ocupados secundario (\%) & 364 & 21,2 & 21,4 & 6,5 & 30,6 & 3,8 &
+34,6 \\
+Ocupados terciario (\%) & 364 & 71,8 & 70,7 & 7,3 & 10,2 & 57,8 &
+94,5 \\
+VAB primario (\%) & 364 & 4,8 & 4,0 & 3,9 & 81,0 & 0,0 & 18,2 \\
+VAB secundario (\%) & 364 & 31,9 & 32,0 & 10,9 & 34,0 & 8,5 & 56,0 \\
+VAB terciario (\%) & 364 & 63,2 & 62,2 & 11,3 & 17,8 & 42,0 & 91,4 \\
+\end{longtable}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.3600}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.0800}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1000}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.0800}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1000}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.0900}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1900}}@{}}
+\caption{Cuartiles, forma de la distribución (asimetría y exceso de
+curtosis de Fisher) y porcentaje de la varianza total debido a
+diferencias entre provincias.}\tabularnewline
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Variable
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Q1
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Q3
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+RIC
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Asimetría
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Curtosis
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+\% var. entre prov.
+\end{minipage} \\
+\midrule\noalign{}
+\endfirsthead
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Variable
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Q1
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Q3
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+RIC
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Asimetría
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Curtosis
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+\% var. entre prov.
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+PIB per cápita (€) & 19.328 & 26.985 & 7.658 & 0,80 & -0,02 & 93,7 \\
+Renta bruta media (€) & 11.809 & 14.976 & 3.167 & 0,61 & 0,00 & 74,1 \\
+Precio m² vivienda (€) & 950,0 & 1.243,7 & 293,7 & 1,23 & 1,10 & 98,4 \\
+Edad media maternidad (años) & 31,76 & 32,56 & 0,80 & -0,68 & 0,64 &
+85,4 \\
+Saldo migratorio 19-35 años (pers.) & -535 & 118 & 653 & 5,62 & 37,86 &
+76,2 \\
+Habitantes & 322.714 & 1.024.161 & 701.446 & 3,53 & 13,27 & 100,0 \\
+Ocupados primario (\%) & 2,9 & 10,0 & 7,1 & 1,41 & 2,46 & 82,1 \\
+Ocupados secundario (\%) & 17,3 & 25,6 & 8,3 & -0,35 & -0,10 & 95,7 \\
+Ocupados terciario (\%) & 66,6 & 75,4 & 8,9 & 0,81 & 0,38 & 87,9 \\
+VAB primario (\%) & 1,9 & 6,7 & 4,8 & 1,16 & 1,19 & 97,2 \\
+VAB secundario (\%) & 24,3 & 39,4 & 15,1 & -0,04 & -0,61 & 97,8 \\
+VAB terciario (\%) & 55,2 & 69,1 & 13,9 & 0,56 & -0,13 & 98,0 \\
+\end{longtable}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 14\tabcolsep) * \real{0.3913}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 14\tabcolsep) * \real{0.0870}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 14\tabcolsep) * \real{0.0870}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 14\tabcolsep) * \real{0.0870}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 14\tabcolsep) * \real{0.0870}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 14\tabcolsep) * \real{0.0870}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 14\tabcolsep) * \real{0.0870}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 14\tabcolsep) * \real{0.0870}}@{}}
+\caption{Mediana provincial de cada variable por año.}\tabularnewline
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Variable
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+2015
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+2016
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+2017
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+2018
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+2019
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+2020
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+2021
+\end{minipage} \\
+\midrule\noalign{}
+\endfirsthead
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Variable
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+2015
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+2016
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+2017
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+2018
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+2019
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+2020
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+2021
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+PIB per cápita (€) & 20.214 & 20.686 & 21.641 & 22.094 & 23.116 & 21.037
+& 23.488 \\
+Renta bruta media (€) & 11.910 & 12.157 & 12.617 & 13.188 & 13.838 &
+14.269 & 15.330 \\
+Precio m² vivienda (€) & 1.089,5 & 1.100,3 & 1.096,3 & 1.097,6 & 1.100,7
+& 1.104,3 & 1.115,1 \\
+Edad media maternidad (años) & 32,01 & 32,04 & 32,19 & 32,21 & 32,29 &
+32,33 & 32,51 \\
+Saldo migratorio 19-35 años (pers.) & -348 & -301 & -298 & -267 & -308 &
+-27 & -90 \\
+Habitantes & 612.828 & 611.426 & 611.764 & 609.164 & 607.321 & 608.486 &
+607.127 \\
+Ocupados primario (\%) & 5,5 & 5,7 & 5,4 & 5,1 & 4,9 & 5,0 & 5,5 \\
+Ocupados secundario (\%) & 21,3 & 21,1 & 21,6 & 22,1 & 22,4 & 22,6 &
+21,6 \\
+Ocupados terciario (\%) & 70,9 & 70,7 & 70,7 & 69,8 & 70,7 & 70,8 &
+70,5 \\
+VAB primario (\%) & 4,2 & 4,1 & 3,5 & 3,9 & 3,7 & 4,3 & 4,6 \\
+VAB secundario (\%) & 32,7 & 32,4 & 31,4 & 31,6 & 32,0 & 29,8 & 34,7 \\
+VAB terciario (\%) & 62,3 & 62,5 & 62,3 & 62,6 & 63,0 & 63,9 & 61,4 \\
+\end{longtable}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 14\tabcolsep) * \real{0.4615}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 14\tabcolsep) * \real{0.0769}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 14\tabcolsep) * \real{0.0769}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 14\tabcolsep) * \real{0.0769}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 14\tabcolsep) * \real{0.0769}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 14\tabcolsep) * \real{0.0769}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 14\tabcolsep) * \real{0.0769}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 14\tabcolsep) * \real{0.0769}}@{}}
+\caption{Coeficiente de variación (\%) entre provincias por año (no
+definido para el saldo migratorio, que toma valores
+negativos).}\tabularnewline
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Variable
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+2015
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+2016
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+2017
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+2018
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+2019
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+2020
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+2021
+\end{minipage} \\
+\midrule\noalign{}
+\endfirsthead
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Variable
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+2015
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+2016
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+2017
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+2018
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+2019
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+2020
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+2021
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+PIB per cápita (€) & 21,1 & 21,4 & 21,1 & 20,8 & 20,6 & 20,3 & 19,5 \\
+Renta bruta media (€) & 15,3 & 16,2 & 15,8 & 15,6 & 15,0 & 14,7 &
+14,3 \\
+Precio m² vivienda (€) & 22,6 & 24,0 & 24,1 & 25,2 & 26,2 & 26,2 &
+26,5 \\
+Edad media maternidad (años) & 2,1 & 2,0 & 1,9 & 1,9 & 1,9 & 1,7 &
+1,7 \\
+Saldo migratorio 19-35 años (pers.) & -- & -- & -- & -- & -- & -- &
+-- \\
+Habitantes & 128,6 & 129,3 & 130,0 & 130,7 & 131,4 & 132,3 & 131,9 \\
+Ocupados primario (\%) & 72,4 & 86,1 & 83,0 & 78,1 & 76,5 & 78,0 &
+82,9 \\
+Ocupados secundario (\%) & 32,3 & 31,4 & 32,7 & 31,0 & 29,3 & 29,7 &
+28,9 \\
+Ocupados terciario (\%) & 10,7 & 9,9 & 10,6 & 10,8 & 10,2 & 9,9 &
+10,0 \\
+VAB primario (\%) & 82,2 & 78,2 & 85,3 & 79,8 & 81,0 & 82,5 & 81,6 \\
+VAB secundario (\%) & 33,5 & 33,4 & 35,8 & 35,9 & 35,0 & 34,3 & 31,7 \\
+VAB terciario (\%) & 17,8 & 17,8 & 18,4 & 18,3 & 17,9 & 17,4 & 18,1 \\
+\end{longtable}
 
 \emph{Comentarios sobre las distribuciones obtenidas (simetría, sesgos,
 concentración de datos).}
@@ -476,21 +855,17 @@ concentración de datos).}
 Multivariante}\label{anuxe1lisis-bivariante-y-multivariante}
 
 En esta sección cruzamos las variables para dar respuesta a las
-preguntas planteadas en la introducción, para lo cual fijamos un año
-concreto.
+preguntas planteadas en la introducción. Para ello, fijamos el análisis
+en el año 2018.
 
-Cabe destacar que por limitaciones en los datos, aproximaremos el
-salario medio mediante la renta bruta media y los datos respectivos a
-hostlería y turismo quedan englobadas en el sector terciario. Además,
-para contabilizar la migración, normalizaremos por el número de
-habitantes de la provincia para que no dominen las provincias de mayor
-población y obtendremos la migración por 1000 habitantes. Por otra
-parte, calculamos el peso de cada sector en la economía, la densidad
-poblacional y el esfuerzo para adquirir una vivienda.
+Aproximamos el salario medio mediante la renta bruta media y englobamos
+los datos de hostelería y turismo en el sector terciario. Calculamos el
+esfuerzo inmobiliario, el peso de cada sector, la densidad poblacional y
+normalizamos la migración joven (20-35 años) por cada 1.000 habitantes.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{Anyo }\OtherTok{\textless{}{-}} \DecValTok{2018}   \CommentTok{\#Fijamos un año para el análisis}
+\NormalTok{Anyo }\OtherTok{\textless{}{-}} \DecValTok{2018}
 
 \CommentTok{\# Superficie provincial a partir de mapSpain (para la densidad)}
 \NormalTok{areas\_prov }\OtherTok{\textless{}{-}} \FunctionTok{esp\_get\_prov}\NormalTok{() }\SpecialCharTok{\%\textgreater{}\%}
@@ -499,51 +874,220 @@ poblacional y el esfuerzo para adquirir una vivienda.
   \FunctionTok{select}\NormalTok{(}\AttributeTok{id\_prov =}\NormalTok{ cpro, area\_km2)}
 
 \NormalTok{df\_completo }\OtherTok{\textless{}{-}}\NormalTok{ df\_completo }\SpecialCharTok{\%\textgreater{}\%}
-  \FunctionTok{left\_join}\NormalTok{(ine\_provincias, }\AttributeTok{by =} \FunctionTok{c}\NormalTok{(}\StringTok{"Provincia"} \OtherTok{=} \StringTok{"Provincia\_clean"}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%}  \CommentTok{\# recupera id\_prov}
+  \FunctionTok{left\_join}\NormalTok{(ine\_provincias, }\AttributeTok{by =} \FunctionTok{c}\NormalTok{(}\StringTok{"Provincia"} \OtherTok{=} \StringTok{"Provincia\_clean"}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%} 
   \FunctionTok{left\_join}\NormalTok{(areas\_prov, }\AttributeTok{by =} \StringTok{"id\_prov"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
   \FunctionTok{mutate}\NormalTok{(}
-    \AttributeTok{peso\_primario     =}\NormalTok{ VAB\_Primario   }\SpecialCharTok{/}\NormalTok{ VAB\_Total,}
-    \AttributeTok{peso\_secundario   =}\NormalTok{ VAB\_Secundario }\SpecialCharTok{/}\NormalTok{ VAB\_Total,}
-    \AttributeTok{peso\_terciario    =}\NormalTok{ VAB\_Terciario  }\SpecialCharTok{/}\NormalTok{ VAB\_Total,}
-    \AttributeTok{emp\_terciario     =}\NormalTok{ Personas\_Ocupadas\_Terciario }\SpecialCharTok{/}\NormalTok{ Personas\_Ocupadas\_Total,}
-    \CommentTok{\# años de renta bruta media necesarios para una vivienda de 80 m2}
-    \CommentTok{\# (es la inversa de la ratio Salario/Vivienda de la pregunta 3)}
-    \AttributeTok{esfuerzo\_vivienda =}\NormalTok{ Precio\_m2 }\SpecialCharTok{*} \DecValTok{80} \SpecialCharTok{/}\NormalTok{ RentaBrutaMedia,}
-    \AttributeTok{mig\_joven\_1000    =}\NormalTok{ Migracion\_Interior }\SpecialCharTok{/}\NormalTok{ Habitantes }\SpecialCharTok{*} \DecValTok{1000}\NormalTok{,}
+    \AttributeTok{peso\_primario     =}\NormalTok{ VAB\_Primario   }\SpecialCharTok{/}\NormalTok{ (VAB\_Primario}\SpecialCharTok{+}\NormalTok{VAB\_Secundario}\SpecialCharTok{+}\NormalTok{VAB\_Terciario),}
+    \AttributeTok{peso\_secundario   =}\NormalTok{ VAB\_Secundario }\SpecialCharTok{/}\NormalTok{ (VAB\_Primario}\SpecialCharTok{+}\NormalTok{VAB\_Secundario}\SpecialCharTok{+}\NormalTok{VAB\_Terciario),}
+    \AttributeTok{peso\_terciario    =}\NormalTok{ VAB\_Terciario  }\SpecialCharTok{/}\NormalTok{ (VAB\_Primario}\SpecialCharTok{+}\NormalTok{VAB\_Secundario}\SpecialCharTok{+}\NormalTok{VAB\_Terciario),}
+    \AttributeTok{emp\_terciario     =}\NormalTok{ Personas\_Ocupadas\_Terciario }\SpecialCharTok{/}\NormalTok{(Personas\_Ocupadas\_Primario}\SpecialCharTok{+}\NormalTok{Personas\_Ocupadas\_Secundario}\SpecialCharTok{+}\NormalTok{Personas\_Ocupadas\_Terciario),}
+    \CommentTok{\# Años de renta bruta media necesarios para una vivienda de 80 m2}
+    \AttributeTok{esfuerzo\_vivienda =}\NormalTok{ (Precio\_m2 }\SpecialCharTok{*} \DecValTok{80}\NormalTok{) }\SpecialCharTok{/}\NormalTok{ RentaBrutaMedia,}
+    \AttributeTok{mig\_joven\_1000    =}\NormalTok{ (Migracion\_Interior }\SpecialCharTok{/}\NormalTok{ Habitantes) }\SpecialCharTok{*} \DecValTok{1000}\NormalTok{,}
     \AttributeTok{log\_densidad      =} \FunctionTok{log10}\NormalTok{(Habitantes }\SpecialCharTok{/}\NormalTok{ area\_km2)}
 \NormalTok{  ) }\SpecialCharTok{\%\textgreater{}\%}
   \FunctionTok{group\_by}\NormalTok{(Periodo) }\SpecialCharTok{\%\textgreater{}\%}
   \FunctionTok{mutate}\NormalTok{(}
-    \CommentTok{\# \textgreater{}1: la provincia genera más PIB que renta percibe, respecto a la media nacional del año}
+    \CommentTok{\# Brecha: si es \textgreater{}1, la provincia genera más PIB que renta percibe vs la media nacional}
     \AttributeTok{brecha\_pib\_renta =}\NormalTok{ (PIB\_per\_capita }\SpecialCharTok{/} \FunctionTok{mean}\NormalTok{(PIB\_per\_capita, }\AttributeTok{na.rm =} \ConstantTok{TRUE}\NormalTok{)) }\SpecialCharTok{/}
 \NormalTok{                       (RentaBrutaMedia }\SpecialCharTok{/} \FunctionTok{mean}\NormalTok{(RentaBrutaMedia, }\AttributeTok{na.rm =} \ConstantTok{TRUE}\NormalTok{))}
 \NormalTok{  ) }\SpecialCharTok{\%\textgreater{}\%}
-  \FunctionTok{ungroup}\NormalTok{()}
+  \FunctionTok{ungroup}\NormalTok{() }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{mutate}\NormalTok{(}
+    \AttributeTok{nivel\_terciarizacion =} \FunctionTok{case\_when}\NormalTok{(}
+\NormalTok{      peso\_terciario }\SpecialCharTok{\textless{}} \FloatTok{0.65} \SpecialCharTok{\textasciitilde{}} \StringTok{"Baja (\textless{}65\%)"}\NormalTok{,}
+\NormalTok{      peso\_terciario }\SpecialCharTok{\textgreater{}=} \FloatTok{0.65} \SpecialCharTok{\&}\NormalTok{ peso\_terciario }\SpecialCharTok{\textless{}=} \FloatTok{0.75} \SpecialCharTok{\textasciitilde{}} \StringTok{"Media (65{-}75\%)"}\NormalTok{,}
+\NormalTok{      peso\_terciario }\SpecialCharTok{\textgreater{}} \FloatTok{0.75} \SpecialCharTok{\textasciitilde{}} \StringTok{"Alta (\textgreater{}75\%)"}
+\NormalTok{    ),}
+    \AttributeTok{nivel\_terciarizacion =} \FunctionTok{factor}\NormalTok{(nivel\_terciarizacion, }
+                                  \AttributeTok{levels =} \FunctionTok{c}\NormalTok{(}\StringTok{"Baja (\textless{}65\%)"}\NormalTok{, }\StringTok{"Media (65{-}75\%)"}\NormalTok{, }\StringTok{"Alta (\textgreater{}75\%)"}\NormalTok{))}
+\NormalTok{  )}
 
-\NormalTok{df\_anio }\OtherTok{\textless{}{-}}\NormalTok{ df\_completo }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{filter}\NormalTok{(Periodo }\SpecialCharTok{==}\NormalTok{ Anyo)}
-\end{Highlighting}
-\end{Shaded}
-
-\subsubsection{Relación entre PIB per cápita y salario
-medio}\label{relaciuxf3n-entre-pib-per-cuxe1pita-y-salario-medio}
-
-Con el siguiente scatter plot valoraremos la relación ente PIB per
-cápita y la renta bruta media, así como la influencia del sector
-terciario sobre dicha relación.
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{df\_anio }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{ggplot}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{x=}\NormalTok{PIB\_per\_capita,}\AttributeTok{y =}\NormalTok{ RentaBrutaMedia)) }\SpecialCharTok{+} \FunctionTok{geom\_point}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{colour =}\NormalTok{ peso\_terciario)) }\SpecialCharTok{+} \FunctionTok{geom\_smooth}\NormalTok{(}\AttributeTok{method =} \StringTok{"lm"}\NormalTok{, }\AttributeTok{col =} \StringTok{"black"}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{geom\_text\_repel}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{label =}\NormalTok{ Provincia),}\AttributeTok{size =} \DecValTok{3}\NormalTok{, }\AttributeTok{max.overlaps =} \DecValTok{10}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{labs}\NormalTok{(}
-    \AttributeTok{title =} \StringTok{"PIB per cápita y renta bruta media por provincia"}\NormalTok{,}
-    \AttributeTok{subtitle =} \StringTok{"El color representa el peso del sector servicios"}\NormalTok{,}
-    \AttributeTok{x =} \StringTok{"PIB per cápita (€)"}\NormalTok{,}
-    \AttributeTok{y =} \StringTok{"Renta bruta media anual (€)"}\NormalTok{,}
-    \AttributeTok{color =} \StringTok{"Peso servicios"}
+\NormalTok{df\_anio }\OtherTok{\textless{}{-}}\NormalTok{ df\_completo }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{filter}\NormalTok{(Periodo }\SpecialCharTok{==}\NormalTok{ Anyo) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{mutate}\NormalTok{(}
+    \CommentTok{\# Filtramos el top 5 por arriba y por abajo para la Brecha PIB/Renta}
+    \AttributeTok{label\_pib =} \FunctionTok{ifelse}\NormalTok{(}
+      \FunctionTok{rank}\NormalTok{(brecha\_pib\_renta, }\AttributeTok{ties.method =} \StringTok{"first"}\NormalTok{) }\SpecialCharTok{\textless{}=} \DecValTok{5} \SpecialCharTok{|} \FunctionTok{rank}\NormalTok{(}\FunctionTok{desc}\NormalTok{(brecha\_pib\_renta), }\AttributeTok{ties.method =} \StringTok{"first"}\NormalTok{) }\SpecialCharTok{\textless{}=} \DecValTok{5}\NormalTok{,}
+      \FunctionTok{as.character}\NormalTok{(Provincia), }
+      \ConstantTok{NA}
+\NormalTok{    ),}
+    \CommentTok{\# Filtramos el top 5 por arriba y por abajo para el Esfuerzo Inmobiliario}
+    \AttributeTok{label\_trampa =} \FunctionTok{ifelse}\NormalTok{(}
+      \FunctionTok{rank}\NormalTok{(esfuerzo\_vivienda, }\AttributeTok{ties.method =} \StringTok{"first"}\NormalTok{) }\SpecialCharTok{\textless{}=} \DecValTok{5} \SpecialCharTok{|} \FunctionTok{rank}\NormalTok{(}\FunctionTok{desc}\NormalTok{(esfuerzo\_vivienda), }\AttributeTok{ties.method =} \StringTok{"first"}\NormalTok{) }\SpecialCharTok{\textless{}=} \DecValTok{5}\NormalTok{,}
+      \FunctionTok{as.character}\NormalTok{(Provincia), }
+      \ConstantTok{NA}
+\NormalTok{    )}
 \NormalTok{  )}
 \end{Highlighting}
 \end{Shaded}
 
-\begin{center}\includegraphics{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-18-1} \end{center}
+\subsubsection{El espejismo del PIB}\label{el-espejismo-del-pib}
+
+Analizamos la relación entre la riqueza generada (PIB per cápita) y la
+percibida (Renta Bruta Media), así como la influencia del sector
+terciario en la brecha entre ambas.
+
+\begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-20-1} \end{center}
+
+\begin{verbatim}
+## 
+##  Pearson's product-moment correlation
+## 
+## data:  df_anio$brecha_pib_renta and df_anio$peso_terciario
+## t = -3.5715, df = 50, p-value = 0.0007961
+## alternative hypothesis: true correlation is not equal to 0
+## 95 percent confidence interval:
+##  -0.6444506 -0.2029036
+## sample estimates:
+##        cor 
+## -0.4508398
+\end{verbatim}
+
+\begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-20-2} \end{center}
+
+Interpretación: Observamos si las provincias que quedan por debajo de la
+línea de tendencia (mayor brecha, perciben menos renta de la que
+producen) coinciden con altos porcentajes del sector terciario. El
+contraste de hipótesis evalúa la significancia estadística de esta
+correlación.
+
+Para visualizar geográficamente dónde se concentra esta brecha (dónde se
+produce más de lo que repercute en el salario de los trabajadores),
+representamos los datos en un mapa a nivel provincial.
+
+\begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-21-1} \end{center}
+
+\subsubsection{La trampa del sector
+servicios}\label{la-trampa-del-sector-servicios}
+
+Evaluamos cómo la dependencia del sector terciario presiona el coste de
+la vivienda y cómo afecta a la expulsión de población joven.
+
+\begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-22-1} \end{center}
+
+\begin{verbatim}
+## 
+##  Pearson's product-moment correlation
+## 
+## data:  df_anio$emp_terciario and df_anio$esfuerzo_vivienda
+## t = 4.7199, df = 50, p-value = 1.94e-05
+## alternative hypothesis: true correlation is not equal to 0
+## 95 percent confidence interval:
+##  0.3326822 0.7191252
+## sample estimates:
+##       cor 
+## 0.5551784
+\end{verbatim}
+
+\begin{verbatim}
+## 
+##  Pearson's product-moment correlation
+## 
+## data:  df_anio$emp_terciario and df_anio$mig_joven_1000
+## t = 2.0277, df = 50, p-value = 0.04793
+## alternative hypothesis: true correlation is not equal to 0
+## 95 percent confidence interval:
+##  0.002979316 0.510177011
+## sample estimates:
+##       cor 
+## 0.2756555
+\end{verbatim}
+
+Para contrastar de forma más robusta si el modelo productivo discrimina
+el acceso a la vivienda, agrupamos las provincias por su sector
+económico predominante mediante un boxplot.
+
+\begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-23-1} \end{center}
+
+Interpretación: Este diagrama de cajas nos permite evaluar si las
+provincias fuertemente terciarizadas tienen una mediana de esfuerzo
+inmobiliario significativamente superior frente a aquellas sostenidas
+por el sector primario o secundario, así como detectar provincias
+atípicas (outliers).
+
+\subsubsection{El coste de la
+maternidad}\label{el-coste-de-la-maternidad}
+
+Buscamos evidenciar si el endurecimiento del mercado inmobiliario
+(esfuerzo para acceder a una vivienda) retrasa la edad media a la
+maternidad.
+
+\begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-24-1} \end{center}
+
+\begin{verbatim}
+## 
+##  Pearson's product-moment correlation
+## 
+## data:  df_anio$esfuerzo_vivienda and df_anio$Edad_Media_Maternidad
+## t = -3.5079, df = 50, p-value = 0.0009649
+## alternative hypothesis: true correlation is not equal to 0
+## 95 percent confidence interval:
+##  -0.6397237 -0.1951795
+## sample estimates:
+##        cor 
+## -0.4444086
+\end{verbatim}
+
+Interpretación: La curva de ajuste local (LOESS) permite observar si
+existe un crecimiento no lineal o un umbral crítico de esfuerzo
+inmobiliario a partir del cual la edad de maternidad se dispara.
+
+\subsubsection{El refugio industrial}\label{el-refugio-industrial}
+
+Comprobamos si el tejido industrial funciona como fijador de población
+joven y si se correlaciona con una densidad demográfica más equilibrada.
+
+\begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-25-1} \end{center}
+
+\begin{verbatim}
+## 
+##  Pearson's product-moment correlation
+## 
+## data:  df_anio$peso_secundario and df_anio$mig_joven_1000
+## t = 0.73447, df = 50, p-value = 0.4661
+## alternative hypothesis: true correlation is not equal to 0
+## 95 percent confidence interval:
+##  -0.1745068  0.3658977
+## sample estimates:
+##       cor 
+## 0.1033137
+\end{verbatim}
+
+\begin{verbatim}
+## 
+##  Pearson's product-moment correlation
+## 
+## data:  df_anio$peso_secundario and df_anio$log_densidad
+## t = -2.6481, df = 50, p-value = 0.0108
+## alternative hypothesis: true correlation is not equal to 0
+## 95 percent confidence interval:
+##  -0.5691432 -0.0860515
+## sample estimates:
+##        cor 
+## -0.3507158
+\end{verbatim}
+
+Para observar con claridad cuáles son las provincias que lideran la
+atracción y expulsión de jóvenes, generamos un barplot divergente
+aislando el top 10 y bottom 10.
+
+\begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-26-1} \end{center}
+
+\subsubsection{Visión multivariante
+global}\label{visiuxf3n-multivariante-global}
+
+Para resumir las dinámicas conjuntas, comenzamos con una matriz de
+correlación.
+
+\begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-27-1} \end{center}
+
+Finalmente, para crear un perfil multidimensional sintético de las
+tensiones sociodemográficas, generamos un heatmap estandarizado
+(\texttt{geom\_tile}) de las 15 provincias más pobladas de España. Esto
+nos muestra de un vistazo qué retos afronta cada polo demográfico.
+
+\begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-28-1} \end{center}
 
 \emph{Explicación detallada de los gráficos mostrados. ``Contar la
 historia'' que revelan los datos. ¿Se confirman las hipótesis
