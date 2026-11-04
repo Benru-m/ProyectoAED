@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.1.27)  3 NOV 2026 20:46
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.1.27)  4 NOV 2026 00:20
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1400,7 +1400,7 @@ Package epstopdf Info: Source file: <Definitions/logo-mdpi.eps>
 (epstopdf)                    size: 736802 bytes
 (epstopdf)             Output file: <Definitions/logo-mdpi-eps-converted-to.pdf
 >
-(epstopdf)                    date: 2026-11-03 20:42:41
+(epstopdf)                    date: 2026-11-03 21:40:47
 (epstopdf)                    size: 43966 bytes
 (epstopdf)             Command: <miktex-epstopdf --outfile=Definitions/logo-mdp
 i-eps-converted-to.pdf Definitions/logo-mdpi.eps>
@@ -1497,11 +1497,11 @@ Package rerunfilecheck Info: File `plantilla_proyecto_aed.out' has not changed.
 (rerunfilecheck)             Checksum: AC6B8D185BAB4298B63B7FBFADB60A1B;2121.
  ) 
 Here is how much of TeX's memory you used:
- 33866 strings out of 467871
- 637532 string characters out of 5417408
- 1139161 words of memory out of 5000000
+ 33872 strings out of 467871
+ 637586 string characters out of 5417408
+ 1139159 words of memory out of 5000000
  61862 multiletter control sequences out of 15000+600000
- 681286 words of font info for 285 fonts, out of 8000000 for 9000
+ 681600 words of font info for 289 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  123i,12n,121p,1021b,782s stack positions out of 10000i,1000n,20000p,200000b,200000s
  <C:\Users\USUARIO\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\tc
@@ -1512,9 +1512,9 @@ ur/jknappen/ec/dpi375\ecss0800.pk><C:/Users/USUARIO/AppData/Local/Programs/MiKT
 eX/fonts/type1/urw/palatino/uplb8a.pfb><C:/Users/USUARIO/AppData/Local/Programs
 /MiKTeX/fonts/type1/urw/palatino/uplr8a.pfb><C:/Users/USUARIO/AppData/Local/Pro
 grams/MiKTeX/fonts/type1/urw/palatino/uplri8a.pfb>
-Output written on plantilla_proyecto_aed.pdf (6 pages, 190359 bytes).
+Output written on plantilla_proyecto_aed.pdf (6 pages, 187586 bytes).
 PDF statistics:
- 279 PDF objects out of 1000 (max. 8388607)
+ 270 PDF objects out of 1000 (max. 8388607)
  23 named destinations out of 1000 (max. 500000)
  89690 words of extra memory for PDF output out of 106986 (max. 10000000)
 
