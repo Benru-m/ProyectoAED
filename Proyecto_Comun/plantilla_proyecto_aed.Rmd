@@ -643,10 +643,300 @@ knitr::kable(
 
 ## 5.2 Análisis Bivariante y Multivariante
 
-En esta sección cruzamos las variables para dar respuesta a las preguntas planteadas en la introducción.
+En esta sección cruzamos las variables para dar respuesta a las preguntas planteadas en la introducción. Para ello, fijamos el análisis en el año 2018. 
 
-```{r bivariante}
-# Código para gráficos de dispersión (scatter plots), matrices de correlación (corrplot), etc.
+Aproximamos el salario medio mediante la renta bruta media y englobamos los datos de hostelería y turismo en el sector terciario. Calculamos el esfuerzo inmobiliario, el peso de cada sector, la densidad poblacional y normalizamos la migración joven (20-35 años) por cada 1.000 habitantes.
+
+```{r preparacion-bivariante}
+Anyo <- 2018
+
+# Superficie provincial a partir de mapSpain (para la densidad)
+areas_prov <- esp_get_prov() %>%
+  mutate(area_km2 = as.numeric(st_area(geometry)) / 1e6) %>%
+  st_drop_geometry() %>%
+  select(id_prov = cpro, area_km2)
+
+df_completo <- df_completo %>%
+  left_join(ine_provincias, by = c("Provincia" = "Provincia_clean")) %>% 
+  left_join(areas_prov, by = "id_prov") %>%
+  mutate(
+    peso_primario     = VAB_Primario   / (VAB_Primario+VAB_Secundario+VAB_Terciario),
+    peso_secundario   = VAB_Secundario / (VAB_Primario+VAB_Secundario+VAB_Terciario),
+    peso_terciario    = VAB_Terciario  / (VAB_Primario+VAB_Secundario+VAB_Terciario),
+    emp_terciario     = Personas_Ocupadas_Terciario / Personas_Ocupadas_Total,
+    # Años de renta bruta media necesarios para una vivienda de 80 m2
+    esfuerzo_vivienda = (Precio_m2 * 80) / RentaBrutaMedia,
+    mig_joven_1000    = (Migracion_Interior / Habitantes) * 1000,
+    log_densidad      = log10(Habitantes / area_km2)
+  ) %>%
+  group_by(Periodo) %>%
+  mutate(
+    # Brecha: si es >1, la provincia genera más PIB que renta percibe vs la media nacional
+    brecha_pib_renta = (PIB_per_capita / mean(PIB_per_capita, na.rm = TRUE)) /
+                       (RentaBrutaMedia / mean(RentaBrutaMedia, na.rm = TRUE))
+  ) %>%
+  ungroup() %>%
+  mutate(
+    nivel_terciarizacion = case_when(
+      peso_terciario < 0.65 ~ "Baja (<65%)",
+      peso_terciario >= 0.65 & peso_terciario <= 0.75 ~ "Media (65-75%)",
+      peso_terciario > 0.75 ~ "Alta (>75%)"
+    ),
+    nivel_terciarizacion = factor(nivel_terciarizacion, 
+                                  levels = c("Baja (<65%)", "Media (65-75%)", "Alta (>75%)"))
+  )
+
+df_anio <- df_completo %>% 
+  filter(Periodo == Anyo) %>%
+  mutate(
+    # Filtramos el top 5 por arriba y por abajo para la Brecha PIB/Renta
+    label_pib = ifelse(
+      rank(brecha_pib_renta, ties.method = "first") <= 5 | rank(desc(brecha_pib_renta), ties.method = "first") <= 5,
+      as.character(Provincia), 
+      NA
+    ),
+    # Filtramos el top 5 por arriba y por abajo para el Esfuerzo Inmobiliario
+    label_trampa = ifelse(
+      rank(esfuerzo_vivienda, ties.method = "first") <= 5 | rank(desc(esfuerzo_vivienda), ties.method = "first") <= 5,
+      as.character(Provincia), 
+      NA
+    )
+  )
+```
+### El espejismo del PIB
+
+Analizamos la relación entre la riqueza generada (PIB per cápita) y la percibida (Renta Bruta Media), así como la influencia del sector terciario en la brecha entre ambas.
+
+```{r}
+ggplot(df_anio, aes(x = PIB_per_capita, y = RentaBrutaMedia)) + 
+  geom_point(aes(colour = peso_terciario), size = 3, alpha = 0.8) + 
+  geom_smooth(method = "lm", col = "black", linetype = "dashed") + 
+  geom_text_repel(aes(label = label_pib), size = 3, max.overlaps = Inf, na.rm = TRUE, box.padding = 0.5) + 
+  labs(
+    title = "Relación entre PIB per cápita y Renta Bruta Media",
+    x = "PIB per cápita (€)",
+    y = "Renta bruta media anual (€)",
+    color = "Peso del\nSector Terciario"
+  ) + 
+  theme_minimal()
+
+# Contraste de correlación: Brecha PIB/Renta vs Peso del sector terciario
+cor.test(df_anio$brecha_pib_renta, df_anio$peso_terciario)
+
+df_anio %>% ggplot(aes(x = brecha_pib_renta, y = peso_terciario)) + 
+  geom_point(colour = "steelblue") + 
+  geom_smooth(method = "lm", col = "black", linetype = "dashed") +
+  geom_text_repel(aes(label = label_pib), size = 3, max.overlaps = Inf, na.rm = TRUE, box.padding = 0.5) +
+  labs(
+    title = "Relación entre la brecha PIB/Renta y el peso del sector terciario",
+    x = "Brecha PIB/Renta",
+    y = "Peso del sector terciario",
+    color = "Peso del\nSector Terciario"
+  ) + 
+  theme_minimal()
+```
+
+Interpretación: Observamos si las provincias que quedan por debajo de la línea de tendencia (mayor brecha, perciben menos renta de la que producen) coinciden con altos porcentajes del sector terciario. El contraste de hipótesis evalúa la significancia estadística de esta correlación.
+
+Para visualizar geográficamente dónde se concentra esta brecha (dónde se produce más de lo que repercute en el salario de los trabajadores), representamos los datos en un mapa a nivel provincial.
+
+```{r}
+# Unimos los datos espaciales con nuestro dataframe
+mapa_sf <- esp_get_prov() %>%
+  inner_join(df_anio, by = c("cpro" = "id_prov"))
+
+ggplot(mapa_sf) +
+  geom_sf(aes(fill = brecha_pib_renta), color = "white", size = 0.1) +
+  scale_fill_gradient2(
+    low = "steelblue", mid = "white", high = "darkred", 
+    midpoint = 1, name = "Brecha\n(>1 peor)"
+  ) +
+  labs(
+    title = "Mapa de la Brecha entre PIB y Renta Bruta",
+    subtitle = "Zonas en rojo indican mayor desconexión entre la riqueza generada y la renta percibida"
+  ) +
+  theme_void()
+```
+
+
+### La trampa del sector servicios
+
+Evaluamos cómo la dependencia del sector terciario presiona el coste de la vivienda y cómo afecta a la expulsión de población joven.
+
+```{r}
+ggplot(df_anio, aes(x = emp_terciario, y = esfuerzo_vivienda)) +
+  geom_point(alpha = 0.7, color = "darkred", size = 3) +
+  geom_smooth(method = "lm", se = TRUE, color = "black") +
+  geom_text_repel(aes(label = label_trampa), size = 3, max.overlaps = Inf, na.rm = TRUE, box.padding = 0.5) +
+  scale_x_continuous(labels = scales::percent) +
+  labs(
+    title = "Empleo en el Sector Terciario vs Esfuerzo Inmobiliario",
+    x = "Proporción de empleo en el sector terciario",
+    y = "Años de renta para vivienda de 80m²"
+  ) +
+  theme_minimal()
+
+# Contraste: Empleo terciario y esfuerzo inmobiliario
+cor.test(df_anio$emp_terciario, df_anio$esfuerzo_vivienda)
+
+# Contraste: Empleo terciario y migración joven (expulsión)
+cor.test(df_anio$emp_terciario, df_anio$mig_joven_1000)
+
+```
+
+Para contrastar de forma más robusta si el modelo productivo discrimina el acceso a la vivienda, agrupamos las provincias por su sector económico predominante mediante un boxplot.
+
+```{r}
+ggplot(df_anio, aes(x = nivel_terciarizacion, y = esfuerzo_vivienda, fill = nivel_terciarizacion)) +
+  geom_boxplot(alpha = 0.7, outlier.color = "red", outlier.size = 2) +
+  geom_jitter(width = 0.15, alpha = 0.5, color = "darkslategrey") +
+  scale_fill_brewer(palette = "Oranges") +
+  labs(
+    title = "Distribución del Esfuerzo Inmobiliario según Grado de Terciarización",
+    x = "Peso del Sector Terciario en el VAB",
+    y = "Años de renta para vivienda (80m²)",
+    fill = "Terciarización"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+Interpretación: Este diagrama de cajas nos permite evaluar si las provincias fuertemente terciarizadas tienen una mediana de esfuerzo inmobiliario significativamente superior frente a aquellas sostenidas por el sector primario o secundario, así como detectar provincias atípicas (outliers).
+
+### El coste de la maternidad
+
+Buscamos evidenciar si el endurecimiento del mercado inmobiliario (esfuerzo para acceder a una vivienda) retrasa la edad media a la maternidad.
+
+```{r}
+ggplot(df_anio, aes(x = esfuerzo_vivienda, y = Edad_Media_Maternidad)) +
+  geom_point(aes(size = Habitantes), alpha = 0.6, color = "steelblue") +
+  geom_smooth(method = "loess", color = "darkorange", fill = "lightgray") +
+  labs(
+    title = "Esfuerzo Inmobiliario vs Edad de Maternidad",
+    x = "Años de renta necesarios para comprar una vivienda de 80m²",
+    y = "Edad Media a la Maternidad",
+    size = "Población"
+  ) + scale_size_continuous(labels = scales::comma) +
+  theme_minimal()
+
+# Contraste de correlación lineal
+cor.test(df_anio$esfuerzo_vivienda, df_anio$Edad_Media_Maternidad)
+```
+
+Interpretación: La curva de ajuste local (LOESS) permite observar si existe un crecimiento no lineal o un umbral crítico de esfuerzo inmobiliario a partir del cual la edad de maternidad se dispara.
+
+### El refugio industrial
+
+Comprobamos si el tejido industrial funciona como fijador de población joven y si se correlaciona con una densidad demográfica más equilibrada.
+
+```{r}
+ggplot(df_anio, aes(x = peso_secundario, y = mig_joven_1000)) +
+  geom_point(color = "forestgreen", size = 3, alpha = 0.7) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  geom_smooth(method = "lm", color = "black") +
+  scale_x_continuous(labels = scales::percent) +
+  labs(
+    title = "Peso del Sector Industrial vs Saldo Migratorio Joven",
+    x = "Peso del sector secundario en el VAB",
+    y = "Saldo migratorio interior (20-35 años) por mil hab."
+  ) +
+  theme_minimal()
+
+# Contraste: Industrialización vs retención de jóvenes
+cor.test(df_anio$peso_secundario, df_anio$mig_joven_1000)
+
+# Contraste: Industrialización vs Densidad poblacional
+cor.test(df_anio$peso_secundario, df_anio$log_densidad)
+```
+
+Para observar con claridad cuáles son las provincias que lideran la atracción y expulsión de jóvenes, generamos un barplot divergente aislando el top 10 y bottom 10.
+
+```{r}
+df_anio %>%
+  arrange(desc(mig_joven_1000)) %>%
+  # Seleccionamos las 10 con mayor saldo positivo y las 10 con mayor saldo negativo
+  filter(row_number() <= 10 | row_number() >= (n() - 9)) %>%
+  mutate(Provincia = fct_reorder(Provincia, mig_joven_1000)) %>%
+  ggplot(aes(x = mig_joven_1000, y = Provincia, fill = mig_joven_1000 > 0)) +
+  geom_col() +
+  scale_fill_manual(values = c("TRUE" = "forestgreen", "FALSE" = "firebrick")) +
+  labs(
+    title = "Top 10 Atracción vs Top 10 Expulsión \nde Jóvenes (20-35 años)",
+    subtitle = "Saldo migratorio interno normalizado por mil habitantes",
+    x = "Migración Neta (Jóvenes / 1000 hab.)",
+    y = NULL
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+
+### Visión multivariante global
+
+Para resumir las dinámicas conjuntas, comenzamos con una matriz de correlación.
+
+```{r}
+# Seleccionamos las variables continuas de interés
+var_corr <- df_anio %>%
+  select(
+    PIB_per_capita, RentaBrutaMedia, brecha_pib_renta, 
+    peso_primario, peso_secundario, peso_terciario,
+    esfuerzo_vivienda, Edad_Media_Maternidad, mig_joven_1000, log_densidad
+  ) %>%
+  drop_na()
+
+# Calculamos matriz de correlación
+matriz_cor <- cor(var_corr)
+
+# Visualización
+corrplot(matriz_cor, 
+         method = "color", 
+         type = "upper", 
+         order = "hclust",
+         tl.col = "black", 
+         tl.srt = 45, 
+         addCoef.col = "black", 
+         number.cex = 0.7,
+         diag = FALSE)
+```
+
+Finalmente, para crear un perfil multidimensional sintético de las tensiones sociodemográficas, generamos un heatmap estandarizado (`geom_tile`) de las 15 provincias más pobladas de España. Esto nos muestra de un vistazo qué retos afronta cada polo demográfico.
+
+```{r}
+# Estandarizamos (Z-score) las variables para poder compararlas visualmente en la misma escala
+df_heat <- df_anio %>%
+  slice_max(Habitantes, n = 15) %>%
+  select(Provincia, 
+         `PIB per cápita` = PIB_per_capita, 
+         `Renta Media` = RentaBrutaMedia, 
+         `Esfuerzo Inmobiliario` = esfuerzo_vivienda, 
+         `Migración Joven` = mig_joven_1000, 
+         `Edad Maternidad` = Edad_Media_Maternidad) %>%
+  pivot_longer(cols = -Provincia, names_to = "Variable", values_to = "Valor") %>%
+  group_by(Variable) %>%
+  mutate(Valor_Escalado = scale(Valor)) %>%
+  ungroup()
+
+# Extraemos el orden exacto ordenando por el esfuerzo inmobiliario
+orden_provincias <- df_heat %>%
+  filter(Variable == "Esfuerzo Inmobiliario") %>%
+  arrange(Valor_Escalado) %>%
+  pull(Provincia)
+
+# Aplicamos el orden convirtiendo Provincia a un factor
+df_heat <- df_heat %>%
+  mutate(Provincia = factor(Provincia, levels = orden_provincias))
+
+ggplot(df_heat, aes(x = Variable, y = Provincia, fill = Valor_Escalado)) +
+  geom_tile(color = "white", size = 0.5) +
+  scale_fill_gradient2(low = "royalblue", mid = "white", high = "darkred", midpoint = 0) +
+  labs(
+    title = "Perfil Sociodemográfico de las 15 Provincias \nMás Pobladas",
+    subtitle = "Valores estandarizados (Z-scores).\nProvincias ordenadas por Esfuerzo Inmobiliario.",
+    x = NULL,
+    y = NULL,
+    fill = "Desviación\nEstándar"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
 *Explicación detallada de los gráficos mostrados. "Contar la historia" que revelan los datos. ¿Se confirman las hipótesis iniciales?*
