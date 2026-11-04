@@ -1,0 +1,676 @@
+%  LaTeX support: latex@mdpi.com
+%  For support, please attach all files needed for compiling as well as the log file, and specify your operating system, LaTeX version, and LaTeX editor.
+
+%=================================================================
+% pandoc conditionals added to preserve backwards compatibility with previous versions of rticles
+
+\documentclass[data,article,submit,moreauthors,pdftex]{Definitions/mdpi}
+
+
+%% Some pieces required from the pandoc template
+\setlist[itemize]{leftmargin=*,labelsep=5.8mm}
+\setlist[enumerate]{leftmargin=*,labelsep=4.9mm}
+
+
+%--------------------
+% Class Options:
+%--------------------
+
+%---------
+% article
+%---------
+% The default type of manuscript is "article", but can be replaced by:
+% abstract, addendum, article, book, bookreview, briefreport, casereport, comment, commentary, communication, conferenceproceedings, correction, conferencereport, entry, expressionofconcern, extendedabstract, datadescriptor, editorial, essay, erratum, hypothesis, interestingimage, obituary, opinion, projectreport, reply, retraction, review, perspective, protocol, shortnote, studyprotocol, systematicreview, supfile, technicalnote, viewpoint, guidelines, registeredreport, tutorial
+% supfile = supplementary materials
+
+%----------
+% submit
+%----------
+% The class option "submit" will be changed to "accept" by the Editorial Office when the paper is accepted. This will only make changes to the frontpage (e.g., the logo of the journal will get visible), the headings, and the copyright information. Also, line numbering will be removed. Journal info and pagination for accepted papers will also be assigned by the Editorial Office.
+
+%------------------
+% moreauthors
+%------------------
+% If there is only one author the class option oneauthor should be used. Otherwise use the class option moreauthors.
+
+%---------
+% pdftex
+%---------
+% The option pdftex is for use with pdfLaTeX. Remove "pdftex" for (1) compiling with LaTeX & dvi2pdf (if eps figures are used) or for (2) compiling with XeLaTeX.
+
+%=================================================================
+% MDPI internal commands - do not modify
+\firstpage{1}
+\makeatletter
+\setcounter{page}{\@firstpage}
+\makeatother
+\pubvolume{1}
+\issuenum{1}
+\articlenumber{0}
+\pubyear{2023}
+\copyrightyear{2023}
+%\externaleditor{Academic Editor: Firstname Lastname}
+\datereceived{ }
+\daterevised{ } % Comment out if no revised date
+\dateaccepted{ }
+\datepublished{ }
+%\datecorrected{} % For corrected papers: "Corrected: XXX" date in the original paper.
+%\dateretracted{} % For corrected papers: "Retracted: XXX" date in the original paper.
+\hreflink{https://doi.org/} % If needed use \linebreak
+%\doinum{}
+%\pdfoutput=1 % Uncommented for upload to arXiv.org
+
+%=================================================================
+% Add packages and commands here. The following packages are loaded in our class file: fontenc, inputenc, calc, indentfirst, fancyhdr, graphicx, epstopdf, lastpage, ifthen, float, amsmath, amssymb, lineno, setspace, enumitem, mathpazo, booktabs, titlesec, etoolbox, tabto, xcolor, colortbl, soul, multirow, microtype, tikz, totcount, changepage, attrib, upgreek, array, tabularx, pbox, ragged2e, tocloft, marginnote, marginfix, enotez, amsthm, natbib, hyperref, cleveref, scrextend, url, geometry, newfloat, caption, draftwatermark, seqsplit
+% cleveref: load \crefname definitions after \begin{document}
+
+%=================================================================
+% Please use the following mathematics environments: Theorem, Lemma, Corollary, Proposition, Characterization, Property, Problem, Example, ExamplesandDefinitions, Hypothesis, Remark, Definition, Notation, Assumption
+%% For proofs, please use the proof environment (the amsthm package is loaded by the MDPI class).
+
+%=================================================================
+% Full title of the paper (Capitalized)
+\Title{Estructura Productiva, Presión Inmobiliaria y su Impacto en el
+Ciclo Vital y Migratorio en España}
+
+% MDPI internal command: Title for citation in the left column
+\TitleCitation{Estructura Productiva, Presión Inmobiliaria y su Impacto
+en el Ciclo Vital y Migratorio en España}
+
+% Author Orchid ID: enter ID or remove command
+%\newcommand{\orcidauthorA}{0000-0000-0000-000X} % Add \orcidA{} behind the author's name
+%\newcommand{\orcidauthorB}{0000-0000-0000-000X} % Add \orcidB{} behind the author's name
+
+
+% Authors, for the paper (add full first names)
+\Author{Nombre Apellido 1$^{1}$, Nombre Apellido 2$^{1}$, Nombre
+Apellido 3$^{1}$}
+
+
+%\longauthorlist{yes}
+
+
+% MDPI internal command: Authors, for metadata in PDF
+\AuthorNames{Nombre Apellido 1, Nombre Apellido 2, Nombre Apellido 3}
+
+% MDPI internal command: Authors, for citation in the left column
+
+% Affiliations / Addresses (Add [1] after \address if there is only one affiliation.)
+\address{%
+$^{1}$ \quad Máster en Ciencia de Datos, Universitat de València (UV),
+España.; \\
+}
+
+% Contact information of the corresponding author
+\corres{Correspondence: }
+
+% Current address and/or shared authorship
+
+
+
+
+
+
+
+
+% The commands \thirdnote{} till \eighthnote{} are available for further notes
+
+% Simple summary
+\simplesumm{Este proyecto de Análisis Exploratorio de Datos (AED) evalúa
+las dinámicas entre el modelo productivo provincial, el coste de la
+vivienda y su impacto en la demografía española utilizando datos del
+INE.}
+
+%\conference{} % An extended version of a conference paper
+
+% Abstract (Do not insert blank lines, i.e. \\)
+\abstract{El presente trabajo desarrolla un Análisis Exploratorio de
+Datos (AED) cruzando dimensiones económicas, inmobiliarias y
+sociodemográficas a nivel provincial en España. Se emplean datos del
+Instituto Nacional de Estadística (INE) para analizar cómo la
+hiperdependencia de ciertos sectores tensiona el mercado inmobiliario,
+afectando a los saldos migratorios y al ciclo vital. El análisis cubre
+la importación y limpieza de datos, el tratamiento de valores perdidos y
+atípicos, y un análisis univariante y bivariante para dar respuesta a
+las preguntas planteadas.}
+
+
+% Keywords
+\keyword{Análisis Exploratorio de Datos; Demografía; Mercado
+Inmobiliario; R}
+
+% The fields PACS, MSC, and JEL may be left empty or commented out if not applicable
+%\PACS{J0101}
+%\MSC{}
+%\JEL{}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Only for the journal Diversity
+%\LSID{\url{http://}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Only for the journal Applied Sciences
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Only for the journal Data
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Only for the journal Toxins
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Only for the journal Encyclopedia
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Only for the journal Advances in Respiratory Medicine
+%\addhighlights{yes}
+%\renewcommand{\addhighlights}{%
+
+%\noindent This is an obligatory section in “Advances in Respiratory Medicine”, whose goal is to increase the discoverability and readability of the article via search engines and other scholars. Highlights should not be a copy of the abstract, but a simple text allowing the reader to quickly and simplified find out what the article is about and what can be cited from it. Each of these parts should be devoted up to 2~bullet points.\vspace{3pt}\\
+%\textbf{What are the main findings?}
+% \begin{itemize}[labelsep=2.5mm,topsep=-3pt]
+% \item First bullet.
+% \item Second bullet.
+% \end{itemize}\vspace{3pt}
+%\textbf{What is the implication of the main finding?}
+% \begin{itemize}[labelsep=2.5mm,topsep=-3pt]
+% \item First bullet.
+% \item Second bullet.
+% \end{itemize}
+%}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Pandoc syntax highlighting
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+
+% tightlist command for lists without linebreak
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+
+
+
+
+\begin{document}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{1. Introducción y Planteamiento de
+Preguntas}\label{introducciuxf3n-y-planteamiento-de-preguntas}
+
+El objetivo de este proyecto es analizar cómo el modelo productivo de
+las diferentes provincias españolas condiciona sus mercados laborales e
+inmobiliarios y, consecuentemente, altera el ciclo vital y demográfico
+de sus habitantes.
+
+A partir del cruce de datos, nos planteamos responder a las siguientes
+preguntas de investigación: 1. \textbf{El espejismo del PIB:} ¿En qué
+provincias es mayor la brecha entre la riqueza generada (PIB per cápita)
+y la riqueza percibida por los trabajadores (salario medio)?
+¿Correlaciona esta desigualdad de manera directa con un peso excesivo
+del sector servicios? 2. \textbf{La trampa del sector servicios:}
+¿Existe una correlación entre el porcentaje de empleo en
+hostelería/turismo y el encarecimiento de la vivienda respecto al
+salario medio?¿Existe una brecha salarial más acentuada en aquellas
+provincias cuyo PIB depende mayoritariamente del sector agrícola frente
+a las centradas en servicios?¿Genera la hiperdependencia del sector
+turismo una expulsión de la población joven nativa (saldo migratorio
+interior negativo para la franja de 20-35 años)? 3. \textbf{El coste de
+la maternidad:} ¿Hay un umbral crítico en la ratio Salario/Vivienda a
+partir del cual la edad media a la maternidad aumenta
+significativamente? 4. \textbf{El refugio industrial:} ¿Logran las
+provincias con un tejido industrial fuerte retener mejor a la población
+joven (saldo migratorio positivo) frente a aquellas con modelos
+primarios?¿Se constata una relación entre el nivel de industrialización
+de una provincia y una distribución poblacional más homogénea (evitando
+la macrocefalia poblacional concentrada solo en la capital)?
+
+\section{2. Importación y Acondicionamiento de
+Datos}\label{importaciuxf3n-y-acondicionamiento-de-datos}
+
+En esta sección procedemos a cargar los conjuntos de datos descargados
+del INE. Como la fuente de datos no proporcionaba los datos
+estrictamente necesarios para el análisis que queremos realizar
+(buscamos un análisis anual a nivel provincial de ciertas variables
+socioeconómicas), el primer paso será acondicionar los datos que más se
+ajustaban a los necesitados para seleccionar los que nos interesan y
+juntarlos todos en la misma estructura de datos.
+
+Para ello, comenzamos cargando los datos, los ficheros originales se
+encuentran almacenados en la carpeta local \texttt{data/raw}. Los datos
+han sido tomados y guardados en español, por lo que hemos de tener
+cuidado con el indicador de millares y decimales en los datos numéricos.
+Como el proceso es común para todos los ficheros a cargar, hemos
+implementado una función basada en \texttt{read\_delim} de
+\texttt{readr} para tratar adecuadamente las variables numéricas. Usamos
+esta función para cargar los distintos conjuntos de datos.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{leer\_base }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(fichero, separador) \{}
+\NormalTok{  readr}\SpecialCharTok{::}\FunctionTok{read\_delim}\NormalTok{(}
+    \AttributeTok{file =}\NormalTok{ fichero,}
+    \AttributeTok{delim =}\NormalTok{ separador,}
+    \AttributeTok{locale =}\NormalTok{ readr}\SpecialCharTok{::}\FunctionTok{locale}\NormalTok{(}\AttributeTok{decimal\_mark =} \StringTok{","}\NormalTok{, }\AttributeTok{grouping\_mark =} \StringTok{"."}\NormalTok{),}
+    \AttributeTok{na =} \FunctionTok{c}\NormalTok{(}\StringTok{""}\NormalTok{, }\StringTok{"NA"}\NormalTok{, }\StringTok{"null"}\NormalTok{,}\StringTok{".."}\NormalTok{),}
+    \AttributeTok{name\_repair =} \StringTok{"minimal"}\NormalTok{,}
+    \AttributeTok{show\_col\_types =} \ConstantTok{FALSE}\NormalTok{,}
+    \AttributeTok{progress =} \ConstantTok{FALSE}
+\NormalTok{  )}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\emph{Explicación detallada de los pasos seguidos para homogeneizar los
+nombres de las columnas, filtrar los años de estudio (ej. 2015-2022) y
+el cruce de las tablas.} El proceso de preparación de los datos se hace
+siguiendo la filosofía tidy. Al ser un proceso mecánico y repetitivo, no
+se explicitarán todos y cada uno de los pasos hechos en el informe,
+aunque se pueden consultar en el script que lo genera, y se comentarán
+aquellos que requieran mayor detenimiento. En general, el
+acondicionamiento de los datos ha requerido las siguientes acciones:
+
+\begin{itemize}
+\tightlist
+\item
+  \begin{enumerate}
+  \def\labelenumi{\arabic{enumi}.}
+  \tightlist
+  \item
+    Acondicionamiento de nombres de variables para evitar errores de
+    compilación, como \texttt{Año} que pasa a ser \texttt{Periodo} o
+    \texttt{Comunidad\ Autónoma} a \texttt{Comunidad\_Autonoma}.
+  \end{enumerate}
+\item
+  \begin{enumerate}
+  \def\labelenumi{\arabic{enumi}.}
+  \setcounter{enumi}{1}
+  \tightlist
+  \item
+    Es una práctica común en el INE incluir la variable
+    \texttt{Provincias} que tiene la forma
+    \texttt{xx\ Nombre\_Provincia}, siendo \texttt{XX} el código de
+    provincia oficial (asignados por orden alfabético, del 01 al 50,
+    siendo Ceuta el 51 y Melilla el 52). Nosotros hemos separado esa
+    variable en código provincial \texttt{cod\_prov} y nombre provincial
+    (\texttt{Provincia}).
+  \end{enumerate}
+\item
+  \begin{enumerate}
+  \def\labelenumi{\arabic{enumi}.}
+  \setcounter{enumi}{2}
+  \tightlist
+  \item
+    Para el estudio hemos considerado como instancia una provincia en
+    cierto año, por lo que, con el fin de unir instancias de distintas
+    tablas, hemos asignado un identificador único (en el sentido de que
+    cada provincia tiene uno por año) a todos los registros, usando el
+    formato \texttt{yyyy\_xx}, año (\texttt{yyyy}) y código provincial
+    (\texttt{xx}). Para ello se ha implementado la siguiente función.
+  \end{enumerate}
+\end{itemize}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Función para generar el ID único}
+\NormalTok{generar\_id\_obs }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(df, col\_anyo, col\_prov) \{}
+\NormalTok{  df }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{mutate}\NormalTok{(}
+      \AttributeTok{id =} \FunctionTok{paste0}\NormalTok{(}
+        \FunctionTok{as.numeric}\NormalTok{(\{\{ col\_anyo \}\}),}
+        \StringTok{"\_"}\NormalTok{,}
+        \FunctionTok{str\_pad}\NormalTok{(}\FunctionTok{as.character}\NormalTok{(\{\{ col\_prov \}\}), }\AttributeTok{width =} \DecValTok{2}\NormalTok{, }\AttributeTok{side =} \StringTok{"left"}\NormalTok{, }\AttributeTok{pad =} \StringTok{"0"}\NormalTok{)}
+\NormalTok{      )}
+\NormalTok{    )}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{itemize}
+\tightlist
+\item
+  \begin{enumerate}
+  \def\labelenumi{\arabic{enumi}.}
+  \setcounter{enumi}{3}
+  \tightlist
+  \item
+    El INE ofrecía algunos datasets con los valores disgregados por
+    variables como sexo,nacionalidad,edad, o valores trimestrales en
+    lugar de anuales. Como el uso de estos escapaban del objetivo del
+    análisis, en los casos en los que también se ofrecía el valor total,
+    se ha seleccionado este, y en los que no, usando el identificador
+    único, los hemos agregado usando la medida adecuada (media para
+    obtener el promedio anual de valores trimestrales, y suma para
+    obtener el total por sexos, edades o nacionalidades).
+  \end{enumerate}
+\item
+  \begin{enumerate}
+  \def\labelenumi{\arabic{enumi}.}
+  \setcounter{enumi}{4}
+  \tightlist
+  \item
+    En el INE los datos aparecen en un dataset construido
+    específicamente para ellos, por lo que la variable que nos interesa
+    suele llevar el nombre \texttt{Valor} o \texttt{Total}. Lo cambiamos
+    para identificar correctamente el nombre de la variable de interés
+    en nuestro dataset.
+  \end{enumerate}
+\item
+  \begin{enumerate}
+  \def\labelenumi{\arabic{enumi}.}
+  \setcounter{enumi}{5}
+  \tightlist
+  \item
+    A veces el INE entrega los datos a nivel provincial y regional en el
+    mismo archivo, pero para las regiones uniprovinciales da el valor de
+    la región, por lo que en estos casos se transforma adecuadamente el
+    código y nombre de la región al de la provincia correspondiente para
+    extraer correctamente los datos, y no perder valores por el camino.
+    Para ello el procedimiento suele ser similar al siguiente:
+  \end{enumerate}
+\end{itemize}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# En las comunidades uniprovinciales, el fichero incluye filas regionales}
+\CommentTok{\# (CPRO vacio) cuyo valor coincide con el de la provincia. Las incorporamos}
+\CommentTok{\# usando el codigo de comunidad autonoma antes de eliminar CODAUTO.}
+\NormalTok{coste\_uniprov\_codes }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}
+  \StringTok{"03"} \OtherTok{=} \StringTok{"33"}\NormalTok{, }\CommentTok{\# Asturias}
+  \StringTok{"04"} \OtherTok{=} \StringTok{"07"}\NormalTok{, }\CommentTok{\# Illes Balears}
+  \StringTok{"06"} \OtherTok{=} \StringTok{"39"}\NormalTok{, }\CommentTok{\# Cantabria}
+  \StringTok{"13"} \OtherTok{=} \StringTok{"28"}\NormalTok{, }\CommentTok{\# Madrid}
+  \StringTok{"14"} \OtherTok{=} \StringTok{"30"}\NormalTok{, }\CommentTok{\# Murcia}
+  \StringTok{"15"} \OtherTok{=} \StringTok{"31"}\NormalTok{, }\CommentTok{\# Navarra}
+  \StringTok{"17"} \OtherTok{=} \StringTok{"26"}\NormalTok{, }\CommentTok{\# La Rioja}
+  \StringTok{"18"} \OtherTok{=} \StringTok{"51"}\NormalTok{, }\CommentTok{\# Ceuta}
+  \StringTok{"19"} \OtherTok{=} \StringTok{"52"}  \CommentTok{\# Melilla}
+\NormalTok{)}
+
+\NormalTok{coste\_vivienda }\OtherTok{\textless{}{-}}\NormalTok{ coste\_vivienda }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{mutate}\NormalTok{(}
+    \AttributeTok{codigo\_ccaa =} \FunctionTok{str\_pad}\NormalTok{(}\FunctionTok{as.character}\NormalTok{(.data[[}\StringTok{"CODAUTO"}\NormalTok{]]), }\AttributeTok{width =} \DecValTok{2}\NormalTok{, }\AttributeTok{side =} \StringTok{"left"}\NormalTok{, }\AttributeTok{pad =} \StringTok{"0"}\NormalTok{),}
+    \AttributeTok{codigo\_ccaa =} \FunctionTok{case\_when}\NormalTok{(}
+      \FunctionTok{str\_detect}\NormalTok{(}\FunctionTok{str\_to\_lower}\NormalTok{(Comunidad\_Autonoma), }\StringTok{"astur"}\NormalTok{) }\SpecialCharTok{\textasciitilde{}} \StringTok{"03"}\NormalTok{,}
+      \FunctionTok{str\_detect}\NormalTok{(}\FunctionTok{str\_to\_lower}\NormalTok{(Comunidad\_Autonoma), }\StringTok{"balear"}\NormalTok{) }\SpecialCharTok{\textasciitilde{}} \StringTok{"04"}\NormalTok{,}
+      \FunctionTok{str\_detect}\NormalTok{(}\FunctionTok{str\_to\_lower}\NormalTok{(Comunidad\_Autonoma), }\StringTok{"cantabr"}\NormalTok{) }\SpecialCharTok{\textasciitilde{}} \StringTok{"06"}\NormalTok{,}
+      \FunctionTok{str\_detect}\NormalTok{(}\FunctionTok{str\_to\_lower}\NormalTok{(Comunidad\_Autonoma), }\StringTok{"madrid"}\NormalTok{) }\SpecialCharTok{\textasciitilde{}} \StringTok{"13"}\NormalTok{,}
+      \FunctionTok{str\_detect}\NormalTok{(}\FunctionTok{str\_to\_lower}\NormalTok{(Comunidad\_Autonoma), }\StringTok{"murcia"}\NormalTok{) }\SpecialCharTok{\textasciitilde{}} \StringTok{"14"}\NormalTok{,}
+      \FunctionTok{str\_detect}\NormalTok{(}\FunctionTok{str\_to\_lower}\NormalTok{(Comunidad\_Autonoma), }\StringTok{"navarr"}\NormalTok{) }\SpecialCharTok{\textasciitilde{}} \StringTok{"15"}\NormalTok{,}
+      \FunctionTok{str\_detect}\NormalTok{(}\FunctionTok{str\_to\_lower}\NormalTok{(Comunidad\_Autonoma), }\StringTok{"rioja"}\NormalTok{) }\SpecialCharTok{\textasciitilde{}} \StringTok{"17"}\NormalTok{,}
+      \FunctionTok{str\_detect}\NormalTok{(}\FunctionTok{str\_to\_lower}\NormalTok{(Comunidad\_Autonoma), }\StringTok{"ceuta"}\NormalTok{) }\SpecialCharTok{\textasciitilde{}} \StringTok{"18"}\NormalTok{,}
+      \FunctionTok{str\_detect}\NormalTok{(}\FunctionTok{str\_to\_lower}\NormalTok{(Comunidad\_Autonoma), }\StringTok{"melilla"}\NormalTok{) }\SpecialCharTok{\textasciitilde{}} \StringTok{"19"}\NormalTok{,}
+      \ConstantTok{TRUE} \SpecialCharTok{\textasciitilde{}}\NormalTok{ codigo\_ccaa}
+\NormalTok{    ),}
+    \AttributeTok{CPRO =} \FunctionTok{if\_else}\NormalTok{(}
+      \FunctionTok{is.na}\NormalTok{(CPRO),}
+      \FunctionTok{unname}\NormalTok{(coste\_uniprov\_codes[codigo\_ccaa]),}
+      \FunctionTok{as.character}\NormalTok{(CPRO)}
+\NormalTok{    )}
+\NormalTok{  ) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{select}\NormalTok{(}\SpecialCharTok{{-}}\NormalTok{codigo\_ccaa)}
+
+\NormalTok{coste\_vivienda}\SpecialCharTok{$}\NormalTok{CODAUTO }\OtherTok{\textless{}{-}} \ConstantTok{NULL}
+\NormalTok{coste\_vivienda}\SpecialCharTok{$}\NormalTok{Comunidad\_Autonoma }\OtherTok{\textless{}{-}} \ConstantTok{NULL}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{itemize}
+\tightlist
+\item
+  \begin{enumerate}
+  \def\labelenumi{\arabic{enumi}.}
+  \setcounter{enumi}{6}
+  \tightlist
+  \item
+    De igual manera, en esos casos, para extraer únicamente el valor de
+    las provincias (ni el total nacional ni niveles regionales), hacemos
+    uso de la siguiente función, que identifica las provincias que se
+    encuentran únicamente en la lista oficial del INE.
+  \end{enumerate}
+\end{itemize}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{filtrar\_provincias }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(df) \{}
+\NormalTok{  df }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{mutate}\NormalTok{(}\AttributeTok{id\_prov =} \FunctionTok{str\_pad}\NormalTok{(}\FunctionTok{as.character}\NormalTok{(id\_prov), }\AttributeTok{width =} \DecValTok{2}\NormalTok{, }\AttributeTok{side =} \StringTok{"left"}\NormalTok{, }\AttributeTok{pad =} \StringTok{"0"}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{filter}\NormalTok{(id\_prov }\SpecialCharTok{\%in\%}\NormalTok{ ine\_provincias}\SpecialCharTok{$}\NormalTok{id\_prov)}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+Una vez tenemos los datos tratados, los juntamos haciendo uso del
+identificador único. Para evitar que se generen muchos valores perdidos,
+para la unión solamente tomaremos las instancias comunes a todos.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Juntamos los datos en formato tidy. Para lo cual separamos los datos laborales en las columnas correspondientes, los unimos y deshacemos la variable id en provincia y año.}
+
+\NormalTok{laborales\_tidy }\OtherTok{\textless{}{-}}\NormalTok{ datos\_laborales\_ESP }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{pivot\_wider}\NormalTok{(}
+    \AttributeTok{names\_from =}\NormalTok{ Sector,}
+    \AttributeTok{values\_from =} \FunctionTok{c}\NormalTok{(Personas\_Ocupadas, VAB),}
+     \CommentTok{\#Modificamos el nombre para que quede claro el valor, ej: "Personas\_Ocupadas\_Primario"}
+    \AttributeTok{names\_glue =} \StringTok{"\{.value\}\_\{Sector\}"} 
+\NormalTok{  ) }
+
+\NormalTok{df\_completo }\OtherTok{\textless{}{-}}\NormalTok{ datos\_socioecon\_ESP }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{full\_join}\NormalTok{(laborales\_tidy,}\AttributeTok{by =} \StringTok{"id"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{separate}\NormalTok{(id, }\AttributeTok{into =} \FunctionTok{c}\NormalTok{(}\StringTok{"Periodo"}\NormalTok{, }\StringTok{"id\_prov"}\NormalTok{), }\AttributeTok{sep =} \StringTok{"\_"}\NormalTok{, }\AttributeTok{convert =} \ConstantTok{FALSE}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{Periodo =} \FunctionTok{as.integer}\NormalTok{(Periodo)) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{left\_join}\NormalTok{(ine\_provincias,}\AttributeTok{by =} \StringTok{"id\_prov"}\NormalTok{)}\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{rename}\NormalTok{(}\AttributeTok{Provincia =}\NormalTok{ Provincia\_clean) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{select}\NormalTok{(}\SpecialCharTok{{-}}\NormalTok{id\_prov)}
+
+\CommentTok{\# Aquí se realizará el proceso de limpieza inicial y el \textquotesingle{}left\_join\textquotesingle{} }
+\CommentTok{\# por el código de provincia para unificar todo en un único dataset \textquotesingle{}df\_final\textquotesingle{}.}
+\end{Highlighting}
+\end{Shaded}
+
+\section{3. Análisis de Datos Perdidos (NAs) e
+Imputación}\label{anuxe1lisis-de-datos-perdidos-nas-e-imputaciuxf3n}
+
+Durante la integración de diferentes fuentes oficiales, es habitual
+encontrar valores perdidos. A continuación, cuantificamos y analizamos
+la naturaleza de estos \emph{missing values}.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Código para identificar y visualizar NAs}
+\CommentTok{\# Aplicación de métodos de imputación si procede (ej. media, interpolación) o eliminación de filas.}
+\end{Highlighting}
+\end{Shaded}
+
+\emph{Justificación de la decisión tomada: por qué se ha elegido un
+método de imputación concreto o por qué se ha descartado una variable
+con demasiados valores nulos.}
+
+\section{4. Análisis de Valores Atípicos
+(Outliers)}\label{anuxe1lisis-de-valores-atuxedpicos-outliers}
+
+Algunas provincias (como Madrid, Barcelona o regiones insulares) pueden
+presentar comportamientos extremos que distorsionen el análisis general.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Código para visualizar outliers mediante boxplots}
+\CommentTok{\# Métodos aplicados (ej. Rango Intercuartílico {-} IQR) para filtrar o transformar variables.}
+\end{Highlighting}
+\end{Shaded}
+
+\emph{Explicación del tratamiento de los outliers. Se debe justificar si
+se mantienen en el dataset porque representan información real valiosa o
+si se aplican transformaciones logarítmicas para suavizar su impacto.}
+
+\section{5. Análisis Exploratorio de Datos
+(EDA)}\label{anuxe1lisis-exploratorio-de-datos-eda}
+
+\subsection{5.1 Análisis Univariante}\label{anuxe1lisis-univariante}
+
+Exploración de la distribución individual de las principales variables
+de estudio (Salario, Precio Vivienda, Edad Maternidad).
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Código para histogramas, densidades y estadísticos descriptivos básicos.}
+\end{Highlighting}
+\end{Shaded}
+
+\emph{Comentarios sobre las distribuciones obtenidas (simetría, sesgos,
+concentración de datos).}
+
+\subsection{5.2 Análisis Bivariante y
+Multivariante}\label{anuxe1lisis-bivariante-y-multivariante}
+
+En esta sección cruzamos las variables para dar respuesta a las
+preguntas planteadas en la introducción.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Código para gráficos de dispersión (scatter plots), matrices de correlación (corrplot), etc.}
+\end{Highlighting}
+\end{Shaded}
+
+\emph{Explicación detallada de los gráficos mostrados. ``Contar la
+historia'' que revelan los datos. ¿Se confirman las hipótesis
+iniciales?}
+
+\section{6. Conclusiones Finales}\label{conclusiones-finales}
+
+A partir del análisis exploratorio realizado, podemos extraer las
+siguientes conclusiones:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Sobre el mercado inmobiliario y demografía:} (Respuesta a las
+  preguntas 1 y 2).
+\item
+  \textbf{Sobre el modelo productivo y migración:} (Respuesta a las
+  preguntas 3 y 4).
+\item
+  \textbf{Aportaciones adicionales:} (Limitaciones del estudio, posibles
+  líneas futuras o reflexiones sobre los datos).
+\end{itemize}
+
+\newpage
+
+\section{Referencias}\label{referencias}
+
+\begin{itemize}
+\tightlist
+\item
+  Instituto Nacional de Estadística (INE). (2026). \emph{Bases de datos
+  provinciales}. Recuperado de
+  \url{https://www.ine.es/dyngs/DAB/index.htm?cid=1722}
+\item
+  Xie, Y., Allaire, J. J., \& Grolemund, G. (2018). \emph{R Markdown:
+  The Definitive Guide}. Chapman and Hall/CRC.
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\vspace{6pt}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% optional
+
+% Only for the journal Methods and Protocols:
+% If you wish to submit a video article, please do so with any other supplementary material.
+% \supplementary{The following supporting information can be downloaded at: \linksupplementary{s1}, Figure S1: title; Table S1: title; Video S1: title. A supporting video article is available at doi: link.}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Optional
+
+%% Only for journal Encyclopedia
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Optional
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{adjustwidth}{-\extralength}{0cm}
+
+%\printendnotes[custom] % Un-comment to print a list of endnotes
+
+
+
+% If authors have biography, please use the format below
+%\section*{Short Biography of Authors}
+%\bio
+%{\raisebox{-0.35cm}{\includegraphics[width=3.5cm,height=5.3cm,clip,keepaspectratio]{Definitions/author1.pdf}}}
+%{\textbf{Firstname Lastname} Biography of first author}
+%
+%\bio
+%{\raisebox{-0.35cm}{\includegraphics[width=3.5cm,height=5.3cm,clip,keepaspectratio]{Definitions/author2.jpg}}}
+%{\textbf{Firstname Lastname} Biography of second author}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% for journal Sci
+%\reviewreports{\\
+%Reviewer 1 comments and authors’ response\\
+%Reviewer 2 comments and authors’ response\\
+%Reviewer 3 comments and authors’ response
+%}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\PublishersNote{}
+\end{adjustwidth}
+
+
+\end{document}
