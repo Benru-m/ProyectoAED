@@ -155,11 +155,11 @@ remove(list=c("ruta_archivo","nombre_archivo","enlaces_datos"))
 Para ello, comenzamos cargando los datos, los ficheros originales se encuentran almacenados en la carpeta local `data/raw`. Los datos han sido tomados y guardados en español, por lo que hemos de tener cuidado con el indicador de millares y decimales en los datos numéricos. Como el proceso es común para todos los ficheros a cargar, hemos implementado una función basada en `read_delim` de `readr` para tratar adecuadamente las variables numéricas. Usamos esta función para cargar los distintos conjuntos de datos.
 
 ```{r}
-leer_base <- function(fichero, separador) {
+leer_base <- function(fichero, separador, decimal = ",", agrupacion = ".") {
   readr::read_delim(
     file = fichero,
     delim = separador,
-    locale = readr::locale(decimal_mark = ",", grouping_mark = "."),
+    locale = readr::locale(decimal_mark = decimal, grouping_mark = agrupacion),
     na = c("", "NA", "null",".."),
     name_repair = "minimal",
     show_col_types = FALSE,
@@ -169,7 +169,7 @@ leer_base <- function(fichero, separador) {
 ``` 
 
 ```{r,include = FALSE}
-coste_vivienda <- leer_base("./data/raw/coste_vivienda.csv", ";")
+coste_vivienda <- leer_base("./data/raw/coste_vivienda.csv", ";", decimal = ".", agrupacion = ",")
 distr_pobl <- leer_base("./data/raw/distribucion_poblacional.csv", "\t")
 edad_maternidad <- leer_base("./data/raw/edad_maternidad.csv", "\t")
 migracion_interior <- leer_base("./data/raw/migracion_interior.csv", "\t")
@@ -267,15 +267,23 @@ filtrar_provincias <- function(df) {
 ```{r,include = FALSE}
 colnames(coste_vivienda)[5]<- "id_prov"
 coste_vivienda <- filtrar_provincias(coste_vivienda)
+# Conservamos ambos regímenes (libre y protegida) en columnas separadas.
+# distinct() elimina filas exactamente duplicadas (p. ej. Navarra en algunos trimestres).
 coste_vivienda <- coste_vivienda %>%
+  distinct() %>%
   arrange(id_prov) %>%
   arrange(Periodo) %>%
- generar_id_obs(.,col_anyo = .$Periodo, col_prov = .$id_prov) %>%
- group_by(id) %>%
-  mutate(Precio_m2 = mean(Valor, na.rm = TRUE)) %>%
-  ungroup() %>%
-  select(id,Precio_m2) %>%
-  distinct()
+  generar_id_obs(.,col_anyo = .$Periodo, col_prov = .$id_prov) %>%
+  group_by(id, Regimen) %>%
+  summarise(Precio_m2 = mean(Valor, na.rm = TRUE), .groups = "drop") %>%
+  mutate(Precio_m2 = ifelse(is.nan(Precio_m2), NA_real_, Precio_m2)) %>%
+  pivot_wider(
+    names_from  = Regimen,
+    values_from = Precio_m2,
+    names_prefix = "Precio_m2_"
+  ) %>%
+  rename(Precio_m2_libre = Precio_m2_Libre,
+         Precio_m2_protegida = Precio_m2_Protegida)
 ```
 
 ```{r,include=FALSE}
@@ -453,9 +461,10 @@ renta_bruta_media <- renta_bruta_media %>%
 colnames(valor_bruto_sector)[2] <- "Rama_Actividad"
 sectores <- unique(valor_bruto_sector[[2]])
 
-sector_primario <- c(sectores[[1]])
-sector_secundario <- c(sectores[2:4])
-sector_terciario <- c(sectores[5:7])
+sector_primario   <- c(sectores[[1]])          # A. Agricultura
+sector_secundario <- c(sectores[c(2, 4)])      # B_E (industria) + F (construcción); se excluye C
+                                               # (industria manufacturera) por ser un subconjunto de B_E
+sector_terciario  <- c(sectores[5:7])          # G_J + K_N + O_U
 
 valor_bruto_sector <- valor_bruto_sector %>%
   separate(
@@ -570,7 +579,8 @@ A partir del dataset unificado `df_completo` (resultante del cruce de las tablas
   * `RentaBrutaMedia`: Renta bruta media disponible por persona (€/hab). Funciona como *proxy* del poder adquisitivo real percibido.
 
 * **Dimensión del Mercado Inmobiliario:**
-  * `Precio_m2`: Precio medio del metro cuadrado o coste de transacción de la vivienda libre (€/m²).
+  * `Precio_m2_libre`: valor medio del m² de vivienda libre (€/m²), media anual de los cuatro trimestres.
+  * `Precio_m2_libre`: lo mismo para vivienda protegida.
 
 * **Dimensión Demográfica y Ciclo Vital:**
   * `Edad_Media_Maternidad`: Edad media de las madres al nacimiento del primer hijo (años).
@@ -588,56 +598,129 @@ $$\bar{x} = \frac{1}{n} \sum_{i=1}^{n} x_i, \quad s = \sqrt{\frac{1}{n-1} \sum_{
 Donde $n = 364$ representa el volumen total de observaciones del panel.
 
 ```{r univariante-tabla, echo=TRUE, message=FALSE, warning=FALSE}
-# Función analítica para la asimetría de Fisher (momento de orden 3 estandarizado)
-calc_asimetria <- function(x) {
-  x <- na.omit(x)
-  n <- length(x)
-  m3 <- sum((x - mean(x))^3) / n
-  s2 <- sum((x - mean(x))^2) / n
-  return(m3 / (s2^(3/2)))
+# ---- Funciones de apoyo ------------------------------------------------------
+calc_asimetria <- function(x) {            # coeficiente de asimetría de Fisher (g1)
+  x <- x[!is.na(x)]; m <- mean(x)
+  (sum((x - m)^3) / length(x)) / (sum((x - m)^2) / length(x))^(3/2)
+}
+calc_curtosis <- function(x) {             # exceso de curtosis (0 = normal)
+  x <- x[!is.na(x)]; m <- mean(x)
+  (sum((x - m)^4) / length(x)) / (sum((x - m)^2) / length(x))^2 - 3
+}
+calc_cv <- function(x) {
+  x <- x[!is.na(x)]
+  if (length(x) == 0 || min(x) < 0 || mean(x) <= 0) {
+    NA_real_
+  } else {
+    sd(x) / mean(x) * 100
+  }
+}
+pct_var_entre <- function(df, var) {       # % de varianza debido a diferencias entre provincias
+  d <- df %>% select(Provincia, x = all_of(var)) %>% filter(!is.na(x))
+  m <- mean(d$x)
+  sce <- d %>% group_by(Provincia) %>%
+    summarise(n = n(), mi = mean(x), .groups = "drop") %>%
+    summarise(s = sum(n * (mi - m)^2)) %>% pull(s)
+  100 * sce / sum((d$x - m)^2)
+}
+fmt_es <- function(x, d = 2) {             # formato español; NA -> "–"
+  purrr::map2_chr(x, d, ~ if (is.na(.x)) "–" else formatC(round(.x, .y) + 0, format = "f", digits = .y,
+            big.mark = ".", decimal.mark = ","))
 }
 
-# Construcción de variables derivadas de estructura productiva (porcentajes)
+# ---- Variables, etiquetas y decimales a mostrar -----------------------------------
+etiquetas <- tibble::tribble(
+  ~Variable,                  ~Etiqueta,                              ~dec,
+  "PIB_per_capita",           "PIB per cápita (€)",                    0,
+  "RentaBrutaMedia",          "Renta bruta media (€)",                 0,
+  "Precio_m2_libre",          "Precio m² vivienda libre (€)",          1,
+  "Precio_m2_protegida",      "Precio m² vivienda protegida (€)",      1,
+  "Edad_Media_Maternidad",    "Edad media maternidad (años)",          2,
+  "Migracion_Interior",       "Saldo migratorio 19-35 años (pers.)",   0,
+  "Habitantes",               "Habitantes",                            0,
+  "pct_Ocupados_Primario",    "Ocupados primario (%)",                 1,
+  "pct_Ocupados_Secundario",  "Ocupados secundario (%)",               1,
+  "pct_Ocupados_Terciario",   "Ocupados terciario (%)",                1,
+  "pct_VAB_Primario",         "VAB primario (%)",                      1,
+  "pct_VAB_Secundario",       "VAB secundario (%)",                    1,
+  "pct_VAB_Terciario",        "VAB terciario (%)",                     1
+)
+vars_univariante <- etiquetas$Variable
+
+# ---- Base de análisis: porcentajes sobre la suma de los tres sectores ------------------
 df_analisis <- df_completo %>%
+  filter(Periodo >= 2015, Periodo <= 2021) %>%
   mutate(
-    pct_Ocupados_Primario   = (Personas_Ocupadas_Primario / Personas_Ocupadas_Total) * 100,
-    pct_Ocupados_Secundario = (Personas_Ocupadas_Secundario / Personas_Ocupadas_Total) * 100,
-    pct_Ocupados_Terciario  = (Personas_Ocupadas_Terciario / Personas_Ocupadas_Total) * 100,
-    pct_VAB_Primario        = (VAB_Primario / VAB_Total) * 100,
-    pct_VAB_Secundario      = (VAB_Secundario / VAB_Total) * 100,
-    pct_VAB_Terciario       = (VAB_Terciario / VAB_Total) * 100
+    Ocupados_Suma = Personas_Ocupadas_Primario + Personas_Ocupadas_Secundario + Personas_Ocupadas_Terciario,
+    VAB_Suma      = VAB_Primario + VAB_Secundario + VAB_Terciario,
+    pct_Ocupados_Primario   = Personas_Ocupadas_Primario   / Ocupados_Suma * 100,
+    pct_Ocupados_Secundario = Personas_Ocupadas_Secundario / Ocupados_Suma * 100,
+    pct_Ocupados_Terciario  = Personas_Ocupadas_Terciario  / Ocupados_Suma * 100,
+    pct_VAB_Primario        = VAB_Primario   / VAB_Suma * 100,
+    pct_VAB_Secundario      = VAB_Secundario / VAB_Suma * 100,
+    pct_VAB_Terciario       = VAB_Terciario  / VAB_Suma * 100
   )
 
-# Selección de variables para el resumen cuantitativo
-vars_univariante <- c(
-  "PIB_per_capita", "RentaBrutaMedia", "Precio_m2",
-  "Edad_Media_Maternidad", "Migracion_Interior", "Habitantes",
-  "pct_Ocupados_Primario", "pct_Ocupados_Secundario", "pct_Ocupados_Terciario",
-  "pct_VAB_Primario", "pct_VAB_Secundario", "pct_VAB_Terciario"
-)
-
-# Cálculo de la tabla de estadísticos descriptivos
 tabla_univariante <- df_analisis %>%
   select(all_of(vars_univariante)) %>%
-  pivot_longer(cols = everything(), names_to = "Variable", values_to = "Valor") %>%
+  pivot_longer(everything(), names_to = "Variable", values_to = "Valor") %>%
   group_by(Variable) %>%
   summarise(
     N         = sum(!is.na(Valor)),
     Media     = mean(Valor, na.rm = TRUE),
     Mediana   = median(Valor, na.rm = TRUE),
     DT        = sd(Valor, na.rm = TRUE),
+    CV        = calc_cv(Valor),
     Min       = min(Valor, na.rm = TRUE),
+    Q1        = unname(quantile(Valor, 0.25, na.rm = TRUE)),
+    Q3        = unname(quantile(Valor, 0.75, na.rm = TRUE)),
     Max       = max(Valor, na.rm = TRUE),
-    Asimetria = calc_asimetria(Valor)
+    RIC       = IQR(Valor, na.rm = TRUE),
+    Asimetria = calc_asimetria(Valor),
+    Curtosis  = calc_curtosis(Valor),
+    .groups = "drop"
   ) %>%
-  mutate(across(c(Media, Mediana, DT, Min, Max, Asimetria), ~ round(., 2)))
+  mutate(Var_entre = purrr::map_dbl(Variable, ~ pct_var_entre(df_analisis, .x))) %>%
+  left_join(etiquetas, by = "Variable") %>%
+  arrange(match(Variable, etiquetas$Variable))
 
-knitr::kable(
-  tabla_univariante,
-  caption = "Tabla 3: Estadísticos descriptivos del panel provincial (2015–2021).",
-  col.names = c("Variable", "N", "Media", "Mediana", "Desv. Típ.", "Mínimo", "Máximo", "Asimetría")
-)
+# Tabla 3: posición y dispersión
+tabla3 <- tabla_univariante %>%
+  transmute(Variable = Etiqueta, N,
+            Media = fmt_es(Media, dec), Mediana = fmt_es(Mediana, dec),
+            `Desv. típ.` = fmt_es(DT, dec), `CV (%)` = fmt_es(CV, 1),
+            `Mín.` = fmt_es(Min, dec), `Máx.` = fmt_es(Max, dec))
+knitr::kable(tabla3, align = c("l", rep("r", 7)),
+  caption = "Estadísticos de posición y dispersión del panel provincial (52 provincias, 2015–2021).")
+
+# Tabla 4: cuartiles, forma de la distribución y estructura del panel
+tabla4 <- tabla_univariante %>%
+  transmute(Variable = Etiqueta,
+            Q1 = fmt_es(Q1, dec), Q3 = fmt_es(Q3, dec), RIC = fmt_es(RIC, dec),
+            Asimetría = fmt_es(Asimetria, 2), Curtosis = fmt_es(Curtosis, 2),
+            `% var. entre prov.` = fmt_es(Var_entre, 1))
+knitr::kable(tabla4, align = c("l", rep("r", 6)),
+  caption = "Cuartiles, forma de la distribución (asimetría y exceso de curtosis de Fisher) y porcentaje de la varianza total debido a diferencias entre provincias.")
+
+resumen_anual <- function(fun, d_fija = NULL) {
+  df_analisis %>%
+    select(Periodo, all_of(vars_univariante)) %>%
+    pivot_longer(-Periodo, names_to = "Variable", values_to = "Valor") %>%
+    group_by(Variable, Periodo) %>%
+    summarise(Valor = fun(Valor), .groups = "drop") %>%
+    left_join(etiquetas, by = "Variable") %>%
+    mutate(ord = match(Variable, etiquetas$Variable),
+           Valor = fmt_es(Valor, if (is.null(d_fija)) dec else d_fija)) %>%
+    pivot_wider(id_cols = c(ord, Etiqueta), names_from = Periodo, values_from = Valor) %>%
+    arrange(ord) %>% select(Variable = Etiqueta, everything(), -ord)
+}
+
+knitr::kable(resumen_anual(function(x) median(x, na.rm = TRUE)), align = c("l", rep("r", 7)),
+  caption = "Mediana provincial de cada variable por año.")
+knitr::kable(resumen_anual(calc_cv, d_fija = 1), align = c("l", rep("r", 7)),
+  caption = "Coeficiente de variación (%) entre provincias por año (no definido para el saldo migratorio, que toma valores negativos).")
 ```
+
 
 *Comentarios sobre las distribuciones obtenidas (simetría, sesgos, concentración de datos).*
 
@@ -665,7 +748,7 @@ df_completo <- df_completo %>%
     peso_terciario    = VAB_Terciario  / (VAB_Primario+VAB_Secundario+VAB_Terciario),
     emp_terciario     = Personas_Ocupadas_Terciario / Personas_Ocupadas_Total,
     # Años de renta bruta media necesarios para una vivienda de 80 m2
-    esfuerzo_vivienda = (Precio_m2 * 80) / RentaBrutaMedia,
+    esfuerzo_vivienda = (Precio_m2_libre * 80) / RentaBrutaMedia,
     mig_joven_1000    = (Migracion_Interior / Habitantes) * 1000,
     log_densidad      = log10(Habitantes / area_km2)
   ) %>%
