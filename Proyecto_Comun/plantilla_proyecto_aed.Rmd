@@ -608,13 +608,14 @@ df_completo <- df_completo %>%
                        (RentaBrutaMedia / mean(RentaBrutaMedia, na.rm = TRUE))
   ) %>%
   ungroup() %>%
-  # Creamos una variable categórica para el sector con mayor peso en el VAB
   mutate(
-    sector_predominante = case_when(
-      peso_primario > peso_secundario & peso_primario > peso_terciario ~ "Primario",
-      peso_secundario > peso_primario & peso_secundario > peso_terciario ~ "Secundario",
-      TRUE ~ "Terciario"
-    )
+    nivel_terciarizacion = case_when(
+      peso_terciario < 0.65 ~ "Baja (<65%)",
+      peso_terciario >= 0.65 & peso_terciario <= 0.75 ~ "Media (65-75%)",
+      peso_terciario > 0.75 ~ "Alta (>75%)"
+    ),
+    nivel_terciarizacion = factor(nivel_terciarizacion, 
+                                  levels = c("Baja (<65%)", "Media (65-75%)", "Alta (>75%)"))
   )
 
 df_anio <- df_completo %>% 
@@ -718,15 +719,15 @@ cor.test(df_anio$emp_terciario, df_anio$mig_joven_1000)
 Para contrastar de forma más robusta si el modelo productivo discrimina el acceso a la vivienda, agrupamos las provincias por su sector económico predominante mediante un boxplot.
 
 ```{r}
-ggplot(df_anio, aes(x = sector_predominante, y = esfuerzo_vivienda, fill = sector_predominante)) +
+ggplot(df_anio, aes(x = nivel_terciarizacion, y = esfuerzo_vivienda, fill = nivel_terciarizacion)) +
   geom_boxplot(alpha = 0.7, outlier.color = "red", outlier.size = 2) +
-  geom_jitter(width = 0.15, alpha = 0.5) +
-  scale_fill_brewer(palette = "Set2") +
+  geom_jitter(width = 0.15, alpha = 0.5, color = "darkslategrey") +
+  scale_fill_brewer(palette = "Oranges") +
   labs(
-    title = "Distribución del Esfuerzo Inmobiliario por Modelo Productivo",
-    x = "Sector Dominante en el VAB Provincial",
+    title = "Distribución del Esfuerzo Inmobiliario según Grado de Terciarización",
+    x = "Peso del Sector Terciario en el VAB",
     y = "Años de renta para vivienda (80m²)",
-    fill = "Sector"
+    fill = "Terciarización"
   ) +
   theme_minimal() +
   theme(legend.position = "none")
@@ -746,7 +747,7 @@ ggplot(df_anio, aes(x = esfuerzo_vivienda, y = Edad_Media_Maternidad)) +
     x = "Años de renta necesarios para comprar una vivienda de 80m²",
     y = "Edad Media a la Maternidad",
     size = "Población"
-  ) +
+  ) + scale_size_continuous(labels = scales::comma) +
   theme_minimal()
 
 # Contraste de correlación lineal
@@ -791,7 +792,7 @@ df_anio %>%
   geom_col() +
   scale_fill_manual(values = c("TRUE" = "forestgreen", "FALSE" = "firebrick")) +
   labs(
-    title = "Top 10 Atracción vs Top 10 Expulsión de Jóvenes (20-35 años)",
+    title = "Top 10 Atracción vs Top 10 Expulsión \nde Jóvenes (20-35 años)",
     subtitle = "Saldo migratorio interno normalizado por mil habitantes",
     x = "Migración Neta (Jóvenes / 1000 hab.)",
     y = NULL
@@ -860,8 +861,8 @@ ggplot(df_heat, aes(x = Variable, y = Provincia, fill = Valor_Escalado)) +
   geom_tile(color = "white", size = 0.5) +
   scale_fill_gradient2(low = "royalblue", mid = "white", high = "darkred", midpoint = 0) +
   labs(
-    title = "Perfil Sociodemográfico de las 15 Provincias Más Pobladas",
-    subtitle = "Valores estandarizados (Z-scores). Provincias ordenadas por Esfuerzo Inmobiliario.",
+    title = "Perfil Sociodemográfico de las 15 Provincias \nMás Pobladas",
+    subtitle = "Valores estandarizados (Z-scores).\nProvincias ordenadas por Esfuerzo Inmobiliario.",
     x = NULL,
     y = NULL,
     fill = "Desviación\nEstándar"
