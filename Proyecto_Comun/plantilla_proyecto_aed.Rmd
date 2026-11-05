@@ -1,11 +1,11 @@
 ---
 title: "Estructura Productiva, Presión Inmobiliaria y su Impacto en el Ciclo Vital y Migratorio en España"
 author:
-  - name: "Nombre Apellido 1"
+  - name: "Luis Molina Villar"
     affil: 1
-  - name: "Nombre Apellido 2"
+  - name: "Rubén Sánchez Munuera"
     affil: 1
-  - name: "Nombre Apellido 3"
+  - name: "Pablo Gallart Carbonell"
     affil: 1
 affiliation:
   - num: 1
@@ -26,17 +26,23 @@ output: rticles::mdpi_article
 
 ```{r setup, include=FALSE}
 # Configuración global de los chunks de código
+options(tinytex.verbose = TRUE)
+
 knitr::opts_chunk$set(
   echo = TRUE,       # Mostrar el código
   warning = FALSE,   # Ocultar advertencias en el PDF final
   message = FALSE,   # Ocultar mensajes de carga de librerías
   fig.align = "center",
-  fig.pos = "H"
+  fig.pos = "H",
+  fig.width = 6,        # tamaño de dibujo (pulgadas)
+  fig.height = 4,
+  out.width = "100%"    # tamaño final: nunca supera el ancho del texto
 )
+
 # Carga/Descarga de paquetes necesarios
 
 #AVISO: Es normal que la librería MapSpain tarde cierto tiempo en descargarse, por lo que se recomienda hacerlo antes de querer compilar el archivo.
-paquetes <- c("rticles","knitr","dplyr", "tidyr", "stringr", "readr", "tibble","ggplot2","mapSpain","sf","corrplot","scales","ggrepel","tidyverse")
+paquetes <- c("rmarkdown","rticles","knitr","dplyr", "tidyr", "stringr", "readr", "tibble","ggplot2","mapSpain","sf","corrplot","scales","ggrepel","tidyverse")
 
 paquetes_faltantes <- paquetes[!paquetes %in% rownames(installed.packages())]
 
@@ -119,7 +125,7 @@ A partir del cruce de datos, nos planteamos responder a las siguientes preguntas
 
 # 2. Importación y Acondicionamiento de Datos
 
-En esta sección procedemos a cargar los conjuntos de datos descargados del INE. Como la fuente de datos no proporcionaba los datos estrictamente necesarios para el análisis que queremos realizar (buscamos un análisis anual a nivel provincial de ciertas variables socioeconómicas), el primer paso será acondicionar los datos que más se ajustaban a los necesitados para seleccionar los que nos interesan y juntarlos todos en la misma estructura de datos.  
+El primer paso para el análisis es cargar los conjuntos de datos obtenidos del [INE](https://ine.es/dyngs/INEbase/listaoperaciones.htm). Los ficheros originales se encuentran almacenados en la carpeta local `data/raw`.
 
 ```{r,include = FALSE}
 #Aún así, en caso de que por algún casual los archivos no se encuentren como tal, incluimos este chunk de código que crea la carpeta e intenta realizar la descarga directamente del INE, para evitar que haya errores antes de cargarlos.
@@ -152,14 +158,14 @@ for (nombre_archivo in names(enlaces_datos)) {
 remove(list=c("ruta_archivo","nombre_archivo","enlaces_datos"))
 ``` 
 
-Para ello, comenzamos cargando los datos, los ficheros originales se encuentran almacenados en la carpeta local `data/raw`. Los datos han sido tomados y guardados en español, por lo que hemos de tener cuidado con el indicador de millares y decimales en los datos numéricos. Como el proceso es común para todos los ficheros a cargar, hemos implementado una función basada en `read_delim` de `readr` para tratar adecuadamente las variables numéricas. Usamos esta función para cargar los distintos conjuntos de datos.
+La fuente de datos no proporciona los datos estrictamente adecuados para el análisis que queremos realizar (buscamos un análisis anual a nivel provincial de ciertas variables socioeconómicas). Por lo tanto, el primer paso será acondicionar los datos que más se ajustaban a los necesitados para seleccionar los que nos interesan y juntarlos todos en la misma estructura de datos. Uno de los factores principales a tener en cuenta es que los datos han sido tomados y guardados en español, por lo que hemos de tener cuidado con el indicador de millares y decimales en los datos numéricos.  Los datos han sido importados a `R` usando una función basada en `read_delim` de `readr` para tratar adecuadamente las variables numéricas, usando la función `locale`.
 
-```{r}
-leer_base <- function(fichero, separador, decimal = ",", agrupacion = ".") {
+```{r,include = FALSE}
+leer_base <- function(fichero, separador,decimal=",",grouping=".") {
   readr::read_delim(
     file = fichero,
     delim = separador,
-    locale = readr::locale(decimal_mark = decimal, grouping_mark = agrupacion),
+    locale = readr::locale(decimal_mark=decimal ,grouping_mark= grouping),
     na = c("", "NA", "null",".."),
     name_repair = "minimal",
     show_col_types = FALSE,
@@ -169,7 +175,7 @@ leer_base <- function(fichero, separador, decimal = ",", agrupacion = ".") {
 ``` 
 
 ```{r,include = FALSE}
-coste_vivienda <- leer_base("./data/raw/coste_vivienda.csv", ";", decimal = ".", agrupacion = ",")
+coste_vivienda <- leer_base("./data/raw/coste_vivienda.csv", ";", decimal = ".", grouping = ",")
 distr_pobl <- leer_base("./data/raw/distribucion_poblacional.csv", "\t")
 edad_maternidad <- leer_base("./data/raw/edad_maternidad.csv", "\t")
 migracion_interior <- leer_base("./data/raw/migracion_interior.csv", "\t")
@@ -546,14 +552,55 @@ remove(list = c("datos_laborales_ESP",
 
 # 3. Análisis de Datos Perdidos (NAs) e Imputación
 
-Durante la integración de diferentes fuentes oficiales, es habitual encontrar valores perdidos. A continuación, cuantificamos y analizamos la naturaleza de estos *missing values*.
+Ahora que tenemos un conjunto de datos con todas las variables de interés, y las instancias adecuadamente identificadas, podemos proceder al análisis exploratorio propiamente dicho. Para empezar observamos la presencia de valores faltantes.
 
-```{r analisis-nas}
-# Código para identificar y visualizar NAs
-# Aplicación de métodos de imputación si procede (ej. media, interpolación) o eliminación de filas.
+```{r analisis-nas,echo=FALSE}
+kable(x= apply(is.na(df_completo),MARGIN =2,FUN=sum),col.names="Valores Perdidos",caption="Valores perdidos por variable")
+```
+Por suerte, hay pocos valores perdidos, por lo que podemos visualizar sus instancias correspondientes para decidir que realizar con ellos.
+```{r,echo=FALSE}
+instancias_faltantes <- !complete.cases(df_completo)
+columnas_faltantes <- apply(apply(df_completo[instancias_faltantes,],MARGIN=1,FUN=is.na),MARGIN=1,FUN=sum)
+columnas_faltantes <- names(columnas_faltantes[columnas_faltantes>0])
+df_faltantes <- df_completo[instancias_faltantes,c("Provincia","Periodo",columnas_faltantes)] %>%
+  arrange(Provincia,Periodo)
+kable(df_faltantes,caption="Instancias con valores faltantes")
+remove(list=c("df_faltantes"))
+```
+Observamos que los valores faltantes afectan solamente a 5 provincias, además, las variables afectadas son series temporales de valores numéricos (valores anuales de 2015 a 2021), y en todos los casos tenemos al menos un registro de toda la serie, por lo que la decisión sobre los valores faltantes es imputarlos siguiendo la siguiente norma. Se imputan los valores faltantes con la media del primer valor anterior no faltante, y el primer valor posterior no faltante. En caso de no haber valores anteriores o posteriores faltantes, se imputará el dato usando el primer dato posterior o respectivamente anterior no faltante.
+```{r,include=FALSE}
+imputation_value <- function(x){
+  # Si el vector está completamente vacío (solo NAs) o no tiene faltantes, se devuelve igual
+  if (all(is.na(x)) || !any(is.na(x))) {
+    return(x)
+  }
+  
+  n <- length(x)
+  valid_idx <- which(!is.na(x))
+  
+  # 1. Obtener el valor válido ANTES de cada posición (NA si no existe)
+  idx_before_pos <- findInterval(1:n, valid_idx)
+  val_before <- ifelse(idx_before_pos == 0, NA_real_, x[valid_idx[pmax(1, idx_before_pos)]])
+  
+  # 2. Obtener el valor válido DESPUÉS de cada posición (NA si no existe)
+  idx_after_pos <- findInterval((1:n) - 0.0001, valid_idx) + 1
+  val_after <- ifelse(idx_after_pos > length(valid_idx), NA_real_, x[valid_idx[pmin(length(valid_idx), idx_after_pos)]])
+  
+  # 3. Media entre ambos vecinos
+  # rowMeans con na.rm = TRUE asigna el único valor disponible en los extremos inicial/final
+  res <- rowMeans(cbind(val_before, val_after), na.rm = TRUE)
+  
+  return(res)
+}
+
+df_completo <- df_completo %>%
+  mutate(across(.cols = c(RentaBrutaMedia,Personas_Ocupadas_Primario),imputation_value))
+
+remove(list=c("imputation_value"))
 ```
 
 *Justificación de la decisión tomada: por qué se ha elegido un método de imputación concreto o por qué se ha descartado una variable con demasiados valores nulos.*
+
 
 # 4. Análisis de Valores Atípicos (Outliers)
 
@@ -623,9 +670,17 @@ pct_var_entre <- function(df, var) {       # % de varianza debido a diferencias 
     summarise(s = sum(n * (mi - m)^2)) %>% pull(s)
   100 * sce / sum((d$x - m)^2)
 }
-fmt_es <- function(x, d = 2) {             # formato español; NA -> "–"
-  purrr::map2_chr(x, d, ~ if (is.na(.x)) "–" else formatC(round(.x, .y) + 0, format = "f", digits = .y,
-            big.mark = ".", decimal.mark = ","))
+fmt_es <- function(x, d = 2) {
+  purrr::map2_chr(x, d, function(v, k) {
+    if (is.na(v)) {
+      "–"
+    } else {
+      v <- round(v, k)
+      if (v == 0) v <- 0
+      formatC(v, format = "f", digits = k,
+              big.mark = ".", decimal.mark = ",")
+    }
+  })
 }
 
 # ---- Variables, etiquetas y decimales a mostrar -----------------------------------
@@ -691,7 +746,7 @@ tabla3 <- tabla_univariante %>%
             `Desv. típ.` = fmt_es(DT, dec), `CV (%)` = fmt_es(CV, 1),
             `Mín.` = fmt_es(Min, dec), `Máx.` = fmt_es(Max, dec))
 knitr::kable(tabla3, align = c("l", rep("r", 7)),
-  caption = "Estadísticos de posición y dispersión del panel provincial (52 provincias, 2015–2021).")
+  caption = "Tabla 3: Estadísticos de posición y dispersión del panel provincial (52 provincias, 2015–2021).")
 
 # Tabla 4: cuartiles, forma de la distribución y estructura del panel
 tabla4 <- tabla_univariante %>%
@@ -700,7 +755,7 @@ tabla4 <- tabla_univariante %>%
             Asimetría = fmt_es(Asimetria, 2), Curtosis = fmt_es(Curtosis, 2),
             `% var. entre prov.` = fmt_es(Var_entre, 1))
 knitr::kable(tabla4, align = c("l", rep("r", 6)),
-  caption = "Cuartiles, forma de la distribución (asimetría y exceso de curtosis de Fisher) y porcentaje de la varianza total debido a diferencias entre provincias.")
+  caption = "Tabla 4: Cuartiles, forma de la distribución (asimetría y exceso de curtosis de Fisher) y porcentaje de la varianza total debido a diferencias entre provincias.")
 
 resumen_anual <- function(fun, d_fija = NULL) {
   df_analisis %>%
@@ -716,11 +771,21 @@ resumen_anual <- function(fun, d_fija = NULL) {
 }
 
 knitr::kable(resumen_anual(function(x) median(x, na.rm = TRUE)), align = c("l", rep("r", 7)),
-  caption = "Mediana provincial de cada variable por año.")
+  caption = "Tabla 5: Mediana provincial de cada variable por año.")
 knitr::kable(resumen_anual(calc_cv, d_fija = 1), align = c("l", rep("r", 7)),
-  caption = "Coeficiente de variación (%) entre provincias por año (no definido para el saldo migratorio, que toma valores negativos).")
+  caption = "Tabla 6: Coeficiente de variación (%) entre provincias por año (no definido para el saldo migratorio, que toma valores negativos).")
 ```
+Los estadísticos descriptivos (Tablas 3–6) muestran cuatro rasgos principales.
 
+En primer lugar, las variables económicas son moderadamente asimétricas, pero con dispersión muy desigual. El PIB per cápita (media 23.266 €, mediana 21.993 €, CV del 21 %) y la renta bruta media (13.525 €, CV del 17 %) presentan una asimetría positiva suave (0,80 y 0,61), sin colas pesadas (curtosis próxima a 0), y su valor máximo es solo 2,4 y 2,2 veces el mínimo. El precio del metro cuadrado de la vivienda libre varía mucho más: CV del 36 %, asimetría de 1,50 y un rango de 715 a 2.747 €/m², un factor de 3,8. Su media (1.261 €) supera a la mediana (1.133 €) por la cola de las provincias más caras. La vivienda protegida es mucho más homogénea (CV del 11 %, de 725 a 1.397 €/m²), algo coherente con que su precio está regulado.
+
+En segundo lugar, dos variables están dominadas por pocas provincias. El número de habitantes tiene un CV del 130 %, asimetría de 3,5 y curtosis de 13,3, con valores desde 83.517 (Ceuta) hasta 6,8 millones (Madrid). El saldo migratorio joven tiene media nula por construcción, ya que los saldos entre provincias se compensan, pero una mediana de −220, una asimetría de 5,6 y una curtosis de 37,9: la mayoría de las provincias pierde jóvenes y unas pocas, sobre todo Madrid (hasta +15.116), los atraen.
+
+En tercer lugar, la estructura productiva está claramente terciarizada: el terciario supone de media el 71,8 % de los ocupados y el 70,5 % del VAB, con un rango del 56 % al 95 %, mientras que el secundario ronda el 21-24 %. El peso del sector primario es pequeño y muy desigual (CV cercano al 80 %, asimetría de 1,1 a 1,4), con unas pocas provincias de peso agrario elevado (hasta el 29,3 % de los ocupados).
+
+En cuarto lugar, la evolución anual (Tablas 5 y 6) es estable en la estructura productiva, pero no en precios. La mediana del PIB per cápita pasa de 20.214 € a 23.488 € entre 2015 y 2021, con un descenso del 9 % en 2020 (21.037 €) y recuperación en 2021, mientras que la renta mediana crece de 11.910 € a 15.330 € sin caída en 2020. El precio mediano de la vivienda libre apenas cambia (1.150 € a 1.144 €/m²), pero su dispersión entre provincias aumenta (CV del 33,0 % al 39,1 %) mientras que la del PIB per cápita disminuye (del 21,1 % al 19,5 %): los precios divergen entre provincias aunque la mediana se mantenga. La edad media de maternidad sube de 32,01 a 32,51 años con muy poca dispersión (CV ≈ 2 %), y la mediana del saldo migratorio joven pasa de −348 a −27 en 2020 y −90 en 2021, probablemente por la menor movilidad durante la pandemia.
+
+Por último, entre el 74 % y el 100 % de la varianza de cada variable es varianza entre provincias (Tabla 4), por lo que el panel se comporta casi como un corte transversal repetido y puede analizarse conjuntamente. Las asimetrías y colas pesadas observadas justifican el uso de medidas robustas y de la correlación de Spearman en el análisis bivariante, así como trabajar con el número de habitantes en escala logarítmica.
 
 *Comentarios sobre las distribuciones obtenidas (simetría, sesgos, concentración de datos).*
 
