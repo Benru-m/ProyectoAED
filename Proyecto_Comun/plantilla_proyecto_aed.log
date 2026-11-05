@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.1.27)  5 NOV 2026 14:47
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.1.27)  5 NOV 2026 16:53
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1730,7 +1730,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 
 [13 <./plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-8-1.pdf> <./plan
 tilla_proyecto_aed_files/figure-latex/unnamed-chunk-8-2.pdf>]
-<plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-9-1.pdf, id=226, 433.6
+<plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-9-1.pdf, id=225, 433.6
 2pt x 289.08pt>
 File: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-9-1.pdf Graphic f
 ile (type pdf)
@@ -1738,7 +1738,7 @@ ile (type pdf)
 Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/unnamed-chun
 k-9-1.pdf  used on input line 906.
 (pdftex.def)             Requested size: 394.35522pt x 262.91763pt.
-<plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-10-1.pdf, id=227, 433.
+<plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-10-1.pdf, id=226, 433.
 62pt x 289.08pt>
 File: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-10-1.pdf Graphic 
 file (type pdf)
@@ -1754,13 +1754,21 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-4.18796pt}.
 
 [14 <./plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-9-1.pdf>]
-<plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-11-1.pdf, id=238, 433.
+<plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-11-1.pdf, id=237, 433.
 62pt x 289.08pt>
 File: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-11-1.pdf Graphic 
 file (type pdf)
 <use plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-11-1.pdf>
 Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/unnamed-chun
-k-11-1.pdf  used on input line 935.
+k-11-1.pdf  used on input line 936.
+(pdftex.def)             Requested size: 394.35522pt x 262.91763pt.
+<plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-12-1.pdf, id=238, 433.
+62pt x 289.08pt>
+File: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-12-1.pdf Graphic 
+file (type pdf)
+<use plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-12-1.pdf>
+Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/unnamed-chun
+k-12-1.pdf  used on input line 938.
 (pdftex.def)             Requested size: 394.35522pt x 262.91763pt.
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
@@ -1771,27 +1779,13 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 
 [15 <./plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-10-1.pdf> <./pla
 ntilla_proyecto_aed_files/figure-latex/unnamed-chunk-11-1.pdf>]
-<plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-12-1.pdf, id=264, 433.
-62pt x 289.08pt>
-File: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-12-1.pdf Graphic 
-file (type pdf)
-<use plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-12-1.pdf>
-Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/unnamed-chun
-k-12-1.pdf  used on input line 962.
-(pdftex.def)             Requested size: 394.35522pt x 262.91763pt.
-
-Overfull \hbox (4.54736pt too wide) in paragraph at lines 967--967
-[]\T1/cmtt/m/n/10 ##  Correlación de Pearson: -0.4857543 ; Correlación de Spear
-man: -0.4040818[] 
- []
-
-<plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-13-1.pdf, id=265, 433.
+<plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-13-1.pdf, id=264, 433.
 62pt x 289.08pt>
 File: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-13-1.pdf Graphic 
 file (type pdf)
 <use plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-13-1.pdf>
 Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/unnamed-chun
-k-13-1.pdf  used on input line 988.
+k-13-1.pdf  used on input line 965.
 (pdftex.def)             Requested size: 394.35522pt x 262.91763pt.
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
@@ -1801,9 +1795,9 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-4.18796pt}.
 
 [16 <./plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-12-1.pdf>]
-Overfull \hbox (4.54736pt too wide) in paragraph at lines 999--999
-[]\T1/cmtt/m/n/10 ##  Correlación de Pearson: -0.4076108 ; Correlación de Spear
-man: -0.2987279[] 
+Overfull \hbox (4.54736pt too wide) in paragraph at lines 970--970
+[]\T1/cmtt/m/n/10 ##  Correlación de Pearson: -0.4857543 ; Correlación de Spear
+man: -0.4040818[] 
  []
 
 <plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-14-1.pdf, id=280, 433.
@@ -1812,7 +1806,7 @@ File: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-14-1.pdf Graphic
 file (type pdf)
 <use plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-14-1.pdf>
 Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/unnamed-chun
-k-14-1.pdf  used on input line 1005.
+k-14-1.pdf  used on input line 991.
 (pdftex.def)             Requested size: 394.35522pt x 262.91763pt.
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
@@ -1821,23 +1815,19 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-4.18796pt}.
 
-[17 <./plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-13-1.pdf> <./pla
-ntilla_proyecto_aed_files/figure-latex/unnamed-chunk-14-1.pdf>]
-<plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-15-1.pdf, id=300, 433.
+[17 <./plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-13-1.pdf>]
+Overfull \hbox (4.54736pt too wide) in paragraph at lines 1002--1002
+[]\T1/cmtt/m/n/10 ##  Correlación de Pearson: -0.4076108 ; Correlación de Spear
+man: -0.2987279[] 
+ []
+
+<plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-15-1.pdf, id=295, 433.
 62pt x 289.08pt>
 File: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-15-1.pdf Graphic 
 file (type pdf)
 <use plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-15-1.pdf>
 Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/unnamed-chun
-k-15-1.pdf  used on input line 1031.
-(pdftex.def)             Requested size: 394.35522pt x 262.91763pt.
-<plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-16-1.pdf, id=301, 433.
-62pt x 289.08pt>
-File: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-16-1.pdf Graphic 
-file (type pdf)
-<use plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-16-1.pdf>
-Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/unnamed-chun
-k-16-1.pdf  used on input line 1038.
+k-15-1.pdf  used on input line 1008.
 (pdftex.def)             Requested size: 394.35522pt x 262.91763pt.
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
@@ -1846,7 +1836,16 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-4.18796pt}.
 
-[18 <./plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-15-1.pdf>]
+[18 <./plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-14-1.pdf> <./pla
+ntilla_proyecto_aed_files/figure-latex/unnamed-chunk-15-1.pdf>]
+<plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-16-1.pdf, id=315, 433.
+62pt x 289.08pt>
+File: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-16-1.pdf Graphic 
+file (type pdf)
+<use plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-16-1.pdf>
+Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/unnamed-chun
+k-16-1.pdf  used on input line 1034.
+(pdftex.def)             Requested size: 394.35522pt x 262.91763pt.
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 16.18796pt, for example:
@@ -1877,11 +1876,11 @@ Package rerunfilecheck Info: File `plantilla_proyecto_aed.out' has not changed.
 (rerunfilecheck)             Checksum: AEF33FD9E7E8E4CF948BBBE8B8C79FC1;3096.
  ) 
 Here is how much of TeX's memory you used:
- 35160 strings out of 467871
- 668181 string characters out of 5417408
+ 35157 strings out of 467871
+ 668154 string characters out of 5417408
  1156865 words of memory out of 5000000
  62926 multiletter control sequences out of 15000+600000
- 698836 words of font info for 405 fonts, out of 8000000 for 9000
+ 698677 words of font info for 403 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  123i,12n,121p,1497b,670s stack positions out of 10000i,1000n,20000p,200000b,200000s
  <C:\Users\USUARIO\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ec
@@ -1898,9 +1897,9 @@ USUARIO/AppData/Local/Programs/MiKTeX/fonts/type1/public/mathpazo/fplmr.pfb><C:
 plb8a.pfb><C:/Users/USUARIO/AppData/Local/Programs/MiKTeX/fonts/type1/urw/palat
 ino/uplr8a.pfb><C:/Users/USUARIO/AppData/Local/Programs/MiKTeX/fonts/type1/urw/
 palatino/uplri8a.pfb>
-Output written on plantilla_proyecto_aed.pdf (20 pages, 766277 bytes).
+Output written on plantilla_proyecto_aed.pdf (20 pages, 767722 bytes).
 PDF statistics:
- 497 PDF objects out of 1000 (max. 8388607)
+ 501 PDF objects out of 1000 (max. 8388607)
  52 named destinations out of 1000 (max. 500000)
  104658 words of extra memory for PDF output out of 106986 (max. 10000000)
 

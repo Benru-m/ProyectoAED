@@ -929,10 +929,13 @@ coste de la vivienda y cómo afecta a la expulsión de población joven.
 \end{verbatim}
 
 Para contrastar de forma más robusta si el modelo productivo discrimina
-el acceso a la vivienda, agrupamos las provincias por su sector
-económico predominante mediante un boxplot.
+el acceso a la vivienda, representamos mediante boxplots el esfuerzo
+inmobiliario en cada cluster. Además, realizamos una agrupación por peso
+del sector terciario.
 
 \begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-11-1} \end{center}
+
+\begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-12-1} \end{center}
 
 Los datos confirman de forma contundente la hipótesis de ``la trampa del
 sector servicios''. El diagrama de dispersión muestra una correlación
@@ -959,7 +962,7 @@ Buscamos evidenciar si el endurecimiento del mercado inmobiliario
 (esfuerzo para acceder a una vivienda) retrasa la edad media a la
 maternidad.
 
-\begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-12-1} \end{center}
+\begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-13-1} \end{center}
 
 \begin{verbatim}
 ## Esfuerzo Inmobiliario vs Edad de Maternidad:
@@ -985,7 +988,7 @@ pirámide poblacional.
 Comprobamos si el tejido industrial funciona como fijador de población
 joven y si se correlaciona con una densidad demográfica más equilibrada.
 
-\begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-13-1} \end{center}
+\begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-14-1} \end{center}
 
 \begin{verbatim}
 ## Peso del Sector Industrial vs Saldo Migratorio Joven:
@@ -1002,7 +1005,7 @@ Para observar con claridad cuáles son las provincias que lideran la
 atracción y expulsión de jóvenes, generamos un barplot divergente
 aislando el top 10 y bottom 10.
 
-\begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-14-1} \end{center}
+\begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-15-1} \end{center}
 
 La premisa de que la industria actúa como un imán demográfico absoluto
 debe ser matizada. El contraste de hipótesis muestra que la relación
@@ -1028,33 +1031,12 @@ global}\label{visiuxf3n-multivariante-global}
 Para resumir las dinámicas conjuntas, comenzamos con una matriz de
 correlación.
 
-\begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-15-1} \end{center}
-
-Finalmente, para crear un perfil multidimensional sintético de las
-tensiones sociodemográficas, generamos un heatmap estandarizado
-(\texttt{geom\_tile}) de las 15 provincias más pobladas de España. Esto
-nos muestra de un vistazo qué retos afronta cada polo demográfico.
-
 \begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-16-1} \end{center}
 
 La matriz de correlaciones consolida matemáticamente la narrativa del
 proyecto: el esfuerzo para acceder a la vivienda está fuertemente
 acoplado a la terciarización de la economía (\(0.60\)) y empuja al alza
 la edad de maternidad (\(0.55\)).
-
-El heatmap de las 15 provincias más pobladas resulta definitivo para
-identificar ``arquetipos'' territoriales en España. Por un lado,
-destacan polos como Madrid y Barcelona, que combinan un altísimo PIB per
-cápita y fuerte atracción migratoria, pero a costa de un mercado
-inmobiliario saturado que castiga la natalidad. Por otro lado, emergen
-los Polos Turísticos (Málaga, Alicante, Balears, Las Palmas), los cuales
-exhiben una tremenda capacidad de atracción de población joven y alta
-presión inmobiliaria, pero sostenidos sobre niveles de Renta Media y PIB
-per cápita inferiores a la media. Finalmente, provincias como Zaragoza,
-Asturias o A Coruña presentan modelos más equilibrados: menor presión
-inmobiliaria y menor atracción migratoria, con salarios medios
-competitivos, reflejando mercados más estables pero menos dinámicos
-demográficamente.
 
 \section{6. Conclusiones Finales}\label{conclusiones-finales}
 

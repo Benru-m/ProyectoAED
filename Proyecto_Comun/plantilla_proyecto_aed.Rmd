@@ -1108,6 +1108,19 @@ df_analisis_bivariante <- df_corte %>%
       NA
     )
   )
+
+# Unir el Cluster al df bivariante
+df_analisis_bivariante <- df_analisis_bivariante %>%
+  left_join(df_corte_clustered %>% select(Provincia, Cluster), by = "Provincia")
+
+# Paleta de colores consistente con el mapa
+colores_cluster <- c(
+  "Cluster 1" = "#E74C3C",  # Metropolitano / Mercado Tensionado
+  "Cluster 2" = "#3498DB",  # Servicios / Turístico
+  "Cluster 3" = "#2ECC71",  # Polo Industrial / Foral
+  "Cluster 4" = "#F39C12",  # Interior / Sector Primario
+  "Cluster 5" = "#9B59B6"   # Excepciones / Macro-urbes
+)
 ```
 ### El espejismo del PIB
 
@@ -1115,14 +1128,16 @@ Analizamos la relación entre la riqueza generada (PIB per cápita) y la percibi
 
 ```{r,echo=FALSE}
 ggplot(df_analisis_bivariante, aes(x = PIB_per_capita, y = Renta_bruta_media)) + 
-  geom_point(aes(colour = peso_terciario), size = 3, alpha = 0.8) + 
+  geom_point(aes(colour = Cluster, size = peso_terciario), alpha = 0.8) + 
+  scale_color_manual(values = colores_cluster) +
   geom_smooth(method = "lm", col = "black", linetype = "dashed") + 
   geom_text_repel(aes(label = label_pib), size = 3, max.overlaps = Inf, na.rm = TRUE, box.padding = 0.5) + 
   labs(
     title = "Relación entre PIB per cápita y Renta Bruta Media",
     x = "PIB per cápita (€)",
     y = "Renta bruta media anual (€)",
-    color = "Peso del\nSector Terciario"
+    color = "Tipología (Cluster)",
+    size = "Peso Terciario"
   ) + 
   theme_minimal()
 
@@ -1175,14 +1190,16 @@ Pasamos a evaluar cómo la dependencia del sector terciario presiona el coste de
 
 ```{r,echo=FALSE}
 ggplot(df_analisis_bivariante, aes(x = emp_terciario, y = esfuerzo_vivienda)) +
-  geom_point(alpha = 0.7, color = "darkred", size = 3) +
+  geom_point(aes(color = Cluster), alpha = 0.8, size = 3) +
+  scale_color_manual(values = colores_cluster) +
   geom_smooth(method = "lm", se = TRUE, color = "black") +
   geom_text_repel(aes(label = label_trampa), size = 3, max.overlaps = Inf, na.rm = TRUE, box.padding = 0.5) +
   scale_x_continuous(labels = scales::percent) +
   labs(
     title = "Empleo en el Sector Terciario vs Esfuerzo Inmobiliario",
     x = "Proporción de empleo en el sector terciario",
-    y = "Años de renta para vivienda de 80m²"
+    y = "Años de renta para vivienda de 80m²",
+    color = "Cluster"
   ) +
   theme_minimal()
 
@@ -1192,7 +1209,22 @@ Esfuerzo_Spearman <- cor(df_analisis_bivariante$emp_terciario, df_analisis_bivar
 cat("Empleo en el Sector Terciario vs Esfuerzo Inmobiliario:\n Correlación de Pearson:", Esfuerzo_Pearson,"; Correlación de Spearman:", Esfuerzo_Spearman)
 ```
 
-Para contrastar de forma más robusta si el modelo productivo discrimina el acceso a la vivienda, agrupamos las provincias por su sector económico predominante mediante un boxplot.
+Para contrastar de forma más robusta si el modelo productivo discrimina el acceso a la vivienda, representamos mediante boxplots el esfuerzo inmobiliario en cada cluster. Además, realizamos una agrupación por peso del sector terciario.
+
+```{r, echo = FALSE}
+# Esfuerzo Inmobiliario por Cluster
+ggplot(df_analisis_bivariante, aes(x = Cluster, y = esfuerzo_vivienda, fill = Cluster)) +
+  geom_boxplot(alpha = 0.7, outlier.color = "red", outlier.size = 2) +
+  geom_jitter(width = 0.15, alpha = 0.5, color = "darkslategrey") +
+  scale_fill_manual(values = colores_cluster) +
+  labs(
+    title = "Presión Inmobiliaria según Tipología Provincial",
+    x = "Cluster Socioeconómico",
+    y = "Años de renta para vivienda (80m²)"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
 
 ```{r,echo=FALSE}
 ggplot(df_analisis_bivariante, aes(x = nivel_terciarizacion, y = esfuerzo_vivienda, fill = nivel_terciarizacion)) +
@@ -1218,14 +1250,17 @@ Buscamos evidenciar si el endurecimiento del mercado inmobiliario (esfuerzo para
 
 ```{r,echo=FALSE}
 ggplot(df_analisis_bivariante, aes(x = esfuerzo_vivienda, y = Edad_Media_Maternidad)) +
-  geom_point(aes(size = Habitantes), alpha = 0.6, color = "steelblue") +
+  geom_point(aes(size = Habitantes, color = Cluster), alpha = 0.7) +
+  scale_color_manual(values = colores_cluster) +
   geom_smooth(method = "loess", color = "darkorange", fill = "lightgray") +
   labs(
     title = "Esfuerzo Inmobiliario vs Edad de Maternidad",
     x = "Años de renta necesarios para comprar una vivienda de 80m²",
     y = "Edad Media a la Maternidad",
-    size = "Población"
-  ) + scale_size_continuous(labels = scales::comma) +
+    size = "Población",
+    color = "Cluster"
+  ) + 
+  scale_size_continuous(labels = scales::comma) +
   theme_minimal()
 
 Maternidad_Pearson <- cor(df_analisis_bivariante$esfuerzo_vivienda, df_analisis_bivariante$Edad_Media_Maternidad, method = "pearson")
@@ -1243,8 +1278,9 @@ La curva de ajuste local (LOESS) es particularmente reveladora: muestra una fase
 Comprobamos si el tejido industrial funciona como fijador de población joven y si se correlaciona con una densidad demográfica más equilibrada.
 
 ```{r,echo=FALSE}
-ggplot(df_analisis_bivariante, aes(x = peso_secundario, y = mig_joven_1000)) +
-  geom_point(color = "forestgreen", size = 3, alpha = 0.7) +
+df_analisis_bivariante %>% ggplot(aes(x = peso_secundario, y = mig_joven_1000)) +
+  geom_point(aes(color = Cluster), size = 3, alpha = 0.7) + 
+  scale_color_manual(values = colores_cluster) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
   geom_smooth(method = "lm", color = "black") +
   scale_x_continuous(labels = scales::percent) +
@@ -1271,20 +1307,20 @@ Para observar con claridad cuáles son las provincias que lideran la atracción 
 ```{r,echo=FALSE}
 df_analisis_bivariante %>%
   arrange(desc(mig_joven_1000)) %>%
-  # Seleccionamos las 10 con mayor saldo positivo y las 10 con mayor saldo negativo
   filter(row_number() <= 10 | row_number() >= (n() - 9)) %>%
   mutate(Provincia = fct_reorder(Provincia, mig_joven_1000)) %>%
-  ggplot(aes(x = mig_joven_1000, y = Provincia, fill = mig_joven_1000 > 0)) +
+  ggplot(aes(x = mig_joven_1000, y = Provincia, fill = Cluster)) +
   geom_col() +
-  scale_fill_manual(values = c("TRUE" = "forestgreen", "FALSE" = "firebrick")) +
+  scale_fill_manual(values = colores_cluster) +
   labs(
-    title = "Top 10 Atracción vs Top 10 Expulsión \nde Jóvenes (20-35 años)",
+    title = "Top 10 Atracción vs Top 10 Expulsión de Jóvenes (20-35 años)",
     subtitle = "Saldo migratorio interno normalizado por mil habitantes",
     x = "Migración Neta (Jóvenes / 1000 hab.)",
-    y = NULL
+    y = NULL,
+    fill = "Perfil Socioeconómico"
   ) +
   theme_minimal() +
-  theme(legend.position = "none")
+  theme(legend.position = "bottom")
 ```
 
 La premisa de que la industria actúa como un imán demográfico absoluto debe ser matizada. El contraste de hipótesis muestra que la relación lineal entre el peso del sector secundario y la atracción neta de jóvenes no es estadísticamente significativa ($cor = 0.10$, $p = 0.46$). De hecho, el gráfico de barras divergente ilustra que las provincias que más jóvenes atraen (Illes Balears, Madrid, Las Palmas) son precisamente los grandes polos terciarios, a pesar de su elevada presión inmobiliaria. 
@@ -1320,50 +1356,8 @@ corrplot(matriz_cor,
          diag = FALSE)
 ```
 
-Finalmente, para crear un perfil multidimensional sintético de las tensiones sociodemográficas, generamos un heatmap estandarizado (`geom_tile`) de las 15 provincias más pobladas de España. Esto nos muestra de un vistazo qué retos afronta cada polo demográfico.
-
-```{r,echo=FALSE}
-# Estandarizamos (Z-score) las variables para poder compararlas visualmente en la misma escala
-df_heat <- df_analisis_bivariante %>%
-  slice_max(Habitantes, n = 15) %>%
-  select(Provincia, 
-         `PIB per cápita` = PIB_per_capita, 
-         `Renta Media` = Renta_bruta_media, 
-         `Esfuerzo Inmobiliario` = esfuerzo_vivienda, 
-         `Migración Joven` = mig_joven_1000, 
-         `Edad Maternidad` = Edad_Media_Maternidad) %>%
-  pivot_longer(cols = -Provincia, names_to = "Variable", values_to = "Valor") %>%
-  group_by(Variable) %>%
-  mutate(Valor_Escalado = scale(Valor)) %>%
-  ungroup()
-
-# Extraemos el orden exacto ordenando por el esfuerzo inmobiliario
-orden_provincias <- df_heat %>%
-  filter(Variable == "Esfuerzo Inmobiliario") %>%
-  arrange(Valor_Escalado) %>%
-  pull(Provincia)
-
-# Aplicamos el orden convirtiendo Provincia a un factor
-df_heat <- df_heat %>%
-  mutate(Provincia = factor(Provincia, levels = orden_provincias))
-
-ggplot(df_heat, aes(x = Variable, y = Provincia, fill = Valor_Escalado)) +
-  geom_tile(color = "white", size = 0.5) +
-  scale_fill_gradient2(low = "royalblue", mid = "white", high = "darkred", midpoint = 0) +
-  labs(
-    title = "Perfil Sociodemográfico de las 15 Provincias \nMás Pobladas",
-    subtitle = "Valores estandarizados (Z-scores).\nProvincias ordenadas por Esfuerzo Inmobiliario.",
-    x = NULL,
-    y = NULL,
-    fill = "Desviación\nEstándar"
-  ) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-```
 
 La matriz de correlaciones consolida matemáticamente la narrativa del proyecto: el esfuerzo para acceder a la vivienda está fuertemente acoplado a la terciarización de la economía ($0.60$) y empuja al alza la edad de maternidad ($0.55$).
-
-El heatmap de las 15 provincias más pobladas resulta definitivo para identificar "arquetipos" territoriales en España. Por un lado, destacan polos como Madrid y Barcelona, que combinan un altísimo PIB per cápita y fuerte atracción migratoria, pero a costa de un mercado inmobiliario saturado que castiga la natalidad. Por otro lado, emergen los Polos Turísticos (Málaga, Alicante, Balears, Las Palmas), los cuales exhiben una tremenda capacidad de atracción de población joven y alta presión inmobiliaria, pero sostenidos sobre niveles de Renta Media y PIB per cápita inferiores a la media. Finalmente, provincias como Zaragoza, Asturias o A Coruña presentan modelos más equilibrados: menor presión inmobiliaria y menor atracción migratoria, con salarios medios competitivos, reflejando mercados más estables pero menos dinámicos demográficamente.
 
 # 6. Conclusiones Finales
 
