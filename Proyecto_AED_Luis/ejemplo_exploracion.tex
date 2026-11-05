@@ -1,0 +1,350 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\documentclass[
+]{article}
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx}
+\makeatletter
+\newsavebox\pandoc@box
+\newcommand*\pandocbounded[1]{% scales image to fit in text height/width
+  \sbox\pandoc@box{#1}%
+  \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
+  \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
+  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi% select the smaller of both
+  \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
+  \else\usebox{\pandoc@box}%
+  \fi%
+}
+% Set default figure placement to htbp
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{wrapfig}
+\usepackage{float}
+\usepackage{colortbl}
+\usepackage{pdflscape}
+\usepackage{tabu}
+\usepackage{threeparttable}
+\usepackage{threeparttablex}
+\usepackage[normalem]{ulem}
+\usepackage{makecell}
+\usepackage{xcolor}
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+% fallback for those not using the hyperref driver hyperxmp:
+\makeatletter
+\@ifundefined{xmpquote}{\newcommand{\xmpquote}[1]{#1}}{}
+\makeatother
+\hypersetup{
+  pdftitle={ejemplo\_exploración},
+  pdfauthor={Luis Molina Villar},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{ejemplo\_exploración}
+\author{Luis Molina Villar}
+\date{2026-10-30}
+
+\begin{document}
+\maketitle
+
+En este archivo se desarrolla una exploración del conjunto de datos
+\texttt{datos\_SocioEcon\_ESP} para un corte de un único año. Los
+resultados son reproducibles para cualquier año seleccionado del
+conjunto de datos.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{load}\NormalTok{(}\StringTok{"./data/Datos\_SocioEcon.Rdata"}\NormalTok{)}
+
+\CommentTok{\# 1. Selección de un único año para el análisis de sección cruzada}
+\NormalTok{anio\_estudio }\OtherTok{\textless{}{-}} \DecValTok{2021} \CommentTok{\# Cambiar al año que prefieras}
+
+\NormalTok{df\_corte }\OtherTok{\textless{}{-}}\NormalTok{ datos\_socioecon\_ESP }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{filter}\NormalTok{(Año }\SpecialCharTok{==}\NormalTok{ anio\_estudio)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{vars\_num }\OtherTok{\textless{}{-}}\NormalTok{ df\_corte }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{select}\NormalTok{(}\FunctionTok{where}\NormalTok{(is.numeric)) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{select}\NormalTok{(}\SpecialCharTok{{-}}\FunctionTok{any\_of}\NormalTok{(}\FunctionTok{c}\NormalTok{(}\StringTok{"Periodo"}\NormalTok{))) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{colnames}\NormalTok{()}
+\NormalTok{resumen\_cuant }\OtherTok{\textless{}{-}}\NormalTok{ df\_corte }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{pivot\_longer}\NormalTok{(}\AttributeTok{cols =} \FunctionTok{all\_of}\NormalTok{(vars\_num), }\AttributeTok{names\_to =} \StringTok{"Variable"}\NormalTok{, }\AttributeTok{values\_to =} \StringTok{"Valor"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{group\_by}\NormalTok{(Variable) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{summarise}\NormalTok{(}
+    \AttributeTok{N =} \FunctionTok{sum}\NormalTok{(}\SpecialCharTok{!}\FunctionTok{is.na}\NormalTok{(Valor)),}
+    \AttributeTok{Media =} \FunctionTok{mean}\NormalTok{(Valor, }\AttributeTok{na.rm =} \ConstantTok{TRUE}\NormalTok{),}
+    \AttributeTok{Mediana =} \FunctionTok{median}\NormalTok{(Valor, }\AttributeTok{na.rm =} \ConstantTok{TRUE}\NormalTok{),}
+    \AttributeTok{Desv\_Est =} \FunctionTok{sd}\NormalTok{(Valor, }\AttributeTok{na.rm =} \ConstantTok{TRUE}\NormalTok{),}
+    \AttributeTok{IQR =} \FunctionTok{IQR}\NormalTok{(Valor, }\AttributeTok{na.rm =} \ConstantTok{TRUE}\NormalTok{),}
+    \AttributeTok{Min =} \FunctionTok{min}\NormalTok{(Valor, }\AttributeTok{na.rm =} \ConstantTok{TRUE}\NormalTok{),}
+    \AttributeTok{Max =} \FunctionTok{max}\NormalTok{(Valor, }\AttributeTok{na.rm =} \ConstantTok{TRUE}\NormalTok{),}
+    \AttributeTok{.groups =} \StringTok{"drop"}
+\NormalTok{  )}
+
+\NormalTok{resumen\_cuant }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{kable}\NormalTok{(}
+    \AttributeTok{caption =} \FunctionTok{paste}\NormalTok{(}\StringTok{"Estadísticos Descriptivos Provinciales {-} Año"}\NormalTok{, anio\_estudio),}
+    \AttributeTok{digits =} \DecValTok{2}
+\NormalTok{  ) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{kable\_styling}\NormalTok{(}\AttributeTok{bootstrap\_options =} \FunctionTok{c}\NormalTok{(}\StringTok{"striped"}\NormalTok{, }\StringTok{"hover"}\NormalTok{, }\StringTok{"condensed"}\NormalTok{), }\AttributeTok{full\_width =} \ConstantTok{TRUE}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{longtabu} to \linewidth {>{\raggedright}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X}
+\caption{\label{tab:unnamed-chunk-2}Estadísticos Descriptivos Provinciales - Año 2021}\\
+\toprule
+Variable & N & Media & Mediana & Desv\_Est & IQR & Min & Max\\
+\midrule
+Habitantes & 52 & 911252.06 & 607127.00 & 1202328.15 & 695486.50 & 83517.00 & 6751251.00\\
+Migracion\_Interior & 52 & 0.00 & -89.50 & 616.67 & 467.00 & -1271.00 & 2664.00\\
+Ocupados\_Agricultura & 51 & 16042.16 & 11600.00 & 15160.65 & 12575.00 & 200.00 & 78550.00\\
+Ocupados\_Industria & 52 & 77420.19 & 48437.50 & 102110.61 & 64381.25 & 1400.00 & 587625.00\\
+Ocupados\_Servicios & 52 & 288263.46 & 169900.00 & 450454.62 & 208875.00 & 23400.00 & 2682100.00\\
+\addlinespace
+PIB\_per\_capita & 43 & 24268.65 & 23251.00 & 4627.38 & 7773.00 & 18313.00 & 35924.00\\
+Precio\_m2 & 48 & 10534.72 & 10103.69 & 3065.85 & 3183.91 & 4843.62 & 19566.38\\
+RentaBrutaMedia & 52 & 15233.65 & 15329.50 & 2180.04 & 3260.40 & 11877.00 & 20471.00\\
+VAB\_Primario & 52 & 657711.54 & 547613.50 & 516249.14 & 594664.50 & 685.00 & 2464148.00\\
+VAB\_Secundario & 52 & 7501384.62 & 4052216.50 & 10459514.14 & 6451125.75 & 128377.00 & 63952644.00\\
+\addlinespace
+VAB\_Terciario & 52 & 16005203.46 & 8328955.00 & 29623913.95 & 11088014.25 & 1317812.00 & 187100268.00\\
+\bottomrule
+\end{longtabu}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{df\_corte }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{select}\NormalTok{(}\FunctionTok{all\_of}\NormalTok{(vars\_num)) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{pivot\_longer}\NormalTok{(}\AttributeTok{cols =} \FunctionTok{everything}\NormalTok{(), }\AttributeTok{names\_to =} \StringTok{"Variable"}\NormalTok{, }\AttributeTok{values\_to =} \StringTok{"Valor"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{filter}\NormalTok{(}\SpecialCharTok{!}\FunctionTok{is.na}\NormalTok{(Valor)) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{ggplot}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ Valor)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_histogram}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{y =} \FunctionTok{after\_stat}\NormalTok{(density)), }\AttributeTok{bins =} \DecValTok{20}\NormalTok{, }\AttributeTok{fill =} \StringTok{"\#2C3E50"}\NormalTok{, }\AttributeTok{color =} \StringTok{"white"}\NormalTok{, }\AttributeTok{alpha =} \FloatTok{0.7}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{geom\_density}\NormalTok{(}\AttributeTok{color =} \StringTok{"\#E74C3C"}\NormalTok{, }\AttributeTok{linewidth =} \DecValTok{1}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{facet\_wrap}\NormalTok{(}\SpecialCharTok{\textasciitilde{}}\NormalTok{ Variable, }\AttributeTok{scales =} \StringTok{"free"}\NormalTok{, }\AttributeTok{ncol =} \DecValTok{3}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{theme\_minimal}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}
+    \AttributeTok{title =} \FunctionTok{paste}\NormalTok{(}\StringTok{"Distribución Empírica de Variables Socioeconómicas (Año"}\NormalTok{, anio\_estudio, }\StringTok{")"}\NormalTok{),}
+    \AttributeTok{subtitle =} \StringTok{"Histograma y estimación de densidad Kernel por variable"}\NormalTok{,}
+    \AttributeTok{x =} \ConstantTok{NULL}\NormalTok{,}
+    \AttributeTok{y =} \StringTok{"Densidad"}
+\NormalTok{  )}
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{ejemplo_exploracion_files/ejemplo_exploracion_files/figure-latex/unnamed-chunk-3-1.pdf}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{df\_outliers }\OtherTok{\textless{}{-}}\NormalTok{ df\_corte }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{select}\NormalTok{(Provincia, }\FunctionTok{all\_of}\NormalTok{(vars\_num)) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{pivot\_longer}\NormalTok{(}\AttributeTok{cols =} \SpecialCharTok{{-}}\NormalTok{Provincia, }\AttributeTok{names\_to =} \StringTok{"Variable"}\NormalTok{, }\AttributeTok{values\_to =} \StringTok{"Valor"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{filter}\NormalTok{(}\SpecialCharTok{!}\FunctionTok{is.na}\NormalTok{(Valor)) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{group\_by}\NormalTok{(Variable) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{mutate}\NormalTok{(}
+    \AttributeTok{q1 =} \FunctionTok{quantile}\NormalTok{(Valor, }\FloatTok{0.25}\NormalTok{, }\AttributeTok{na.rm =} \ConstantTok{TRUE}\NormalTok{),}
+    \AttributeTok{q3 =} \FunctionTok{quantile}\NormalTok{(Valor, }\FloatTok{0.75}\NormalTok{, }\AttributeTok{na.rm =} \ConstantTok{TRUE}\NormalTok{),}
+    \AttributeTok{iqr =}\NormalTok{ q3 }\SpecialCharTok{{-}}\NormalTok{ q1,}
+    \CommentTok{\# Criterio estándar de Tukey para identificar outliers}
+    \AttributeTok{is\_outlier =}\NormalTok{ Valor }\SpecialCharTok{\textless{}}\NormalTok{ (q1 }\SpecialCharTok{{-}} \FloatTok{1.5} \SpecialCharTok{*}\NormalTok{ iqr) }\SpecialCharTok{|}\NormalTok{ Valor }\SpecialCharTok{\textgreater{}}\NormalTok{ (q3 }\SpecialCharTok{+} \FloatTok{1.5} \SpecialCharTok{*}\NormalTok{ iqr),}
+    \AttributeTok{etiqueta =} \FunctionTok{if\_else}\NormalTok{(is\_outlier, Provincia, }\ConstantTok{NA\_character\_}\NormalTok{)}
+\NormalTok{  ) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{ungroup}\NormalTok{()}
+
+\CommentTok{\# 2. Representación gráfica con etiquetas dinámicas}
+\FunctionTok{ggplot}\NormalTok{(df\_outliers, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ Variable, }\AttributeTok{y =} \FunctionTok{log10}\NormalTok{(Valor))) }\SpecialCharTok{+}
+  \CommentTok{\# Omitimos la gráfica de outliers por defecto para dibujarlos manualmente}
+  \FunctionTok{geom\_boxplot}\NormalTok{(}\AttributeTok{fill =} \StringTok{"\#3498DB"}\NormalTok{, }\AttributeTok{alpha =} \FloatTok{0.5}\NormalTok{, }\AttributeTok{outlier.shape =} \ConstantTok{NA}\NormalTok{) }\SpecialCharTok{+}
+  \CommentTok{\# Dibujamos manualmente solo los puntos atípicos}
+  \FunctionTok{geom\_point}\NormalTok{(}
+    \AttributeTok{data =} \FunctionTok{filter}\NormalTok{(df\_outliers, is\_outlier),}
+    \AttributeTok{color =} \StringTok{"red"}\NormalTok{,}
+    \AttributeTok{size =} \DecValTok{2}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \CommentTok{\# Añadimos los nombres de las provincias atípicas con ggrepel}
+  \FunctionTok{geom\_text\_repel}\NormalTok{(}
+    \FunctionTok{aes}\NormalTok{(}\AttributeTok{label =}\NormalTok{ etiqueta),}
+    \AttributeTok{color =} \StringTok{"red"}\NormalTok{,}
+    \AttributeTok{size =} \DecValTok{3}\NormalTok{,}
+    \AttributeTok{max.overlaps =} \DecValTok{15}\NormalTok{,}
+    \AttributeTok{box.padding =} \FloatTok{0.3}\NormalTok{,}
+    \AttributeTok{na.rm =} \ConstantTok{TRUE}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \FunctionTok{facet\_wrap}\NormalTok{(}\SpecialCharTok{\textasciitilde{}}\NormalTok{ Variable, }\AttributeTok{scales =} \StringTok{"free"}\NormalTok{, }\AttributeTok{ncol =} \DecValTok{3}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{theme\_minimal}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{theme}\NormalTok{(}
+    \AttributeTok{axis.text.x =} \FunctionTok{element\_blank}\NormalTok{(),}
+    \AttributeTok{axis.ticks.x =} \FunctionTok{element\_blank}\NormalTok{()}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}
+    \AttributeTok{title =} \FunctionTok{paste}\NormalTok{(}\StringTok{"Dispersión Interprovincial e Identificación de Outliers (Año"}\NormalTok{, anio\_estudio, }\StringTok{")"}\NormalTok{),}
+    \AttributeTok{subtitle =} \StringTok{"Etiquetas rojas corresponden a provincias fuera del rango intercuartílico (1.5 * IQR)"}\NormalTok{,}
+    \AttributeTok{x =} \ConstantTok{NULL}\NormalTok{,}
+    \AttributeTok{y =} \StringTok{"Valor en Escala Logarítmica"}
+\NormalTok{  )}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning in FUN(X[[i]], ...): Se han producido NaNs
+## Warning in FUN(X[[i]], ...): Se han producido NaNs
+## Warning in FUN(X[[i]], ...): Se han producido NaNs
+\end{verbatim}
+
+\begin{verbatim}
+## Warning: Removed 32 rows containing non-finite outside the scale range
+## (`stat_boxplot()`).
+\end{verbatim}
+
+\begin{verbatim}
+## Warning: Removed 2 rows containing missing values or values outside the scale range
+## (`geom_point()`).
+\end{verbatim}
+
+\pandocbounded{\includegraphics[keepaspectratio]{ejemplo_exploracion_files/ejemplo_exploracion_files/figure-latex/unnamed-chunk-4-1.pdf}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\ControlFlowTok{if}\NormalTok{ (}\SpecialCharTok{!}\StringTok{"id\_prov"} \SpecialCharTok{\%in\%} \FunctionTok{colnames}\NormalTok{(df\_corte)) \{}
+\NormalTok{  df\_corte }\OtherTok{\textless{}{-}}\NormalTok{ df\_corte }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{left\_join}\NormalTok{(ine\_provincias, }\AttributeTok{by =} \FunctionTok{c}\NormalTok{(}\StringTok{"Provincia"} \OtherTok{=} \StringTok{"Provincia\_clean"}\NormalTok{))}
+\NormalTok{\} }\ControlFlowTok{else}\NormalTok{ \{}
+\NormalTok{  df\_corte }\OtherTok{\textless{}{-}}\NormalTok{ df\_corte }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{mutate}\NormalTok{(}\AttributeTok{id\_prov =} \FunctionTok{str\_pad}\NormalTok{(}\FunctionTok{as.character}\NormalTok{(id\_prov), }\AttributeTok{width =} \DecValTok{2}\NormalTok{, }\AttributeTok{side =} \StringTok{"left"}\NormalTok{, }\AttributeTok{pad =} \StringTok{"0"}\NormalTok{))}
+\NormalTok{\}}
+
+\CommentTok{\# 3. Cargar la cartografía oficial y realizar el cruce seguro por cpro = id\_prov}
+\NormalTok{mapa\_spain }\OtherTok{\textless{}{-}} \FunctionTok{esp\_get\_prov}\NormalTok{() }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{cpro =} \FunctionTok{str\_pad}\NormalTok{(cpro, }\AttributeTok{width =} \DecValTok{2}\NormalTok{, }\AttributeTok{side =} \StringTok{"left"}\NormalTok{, }\AttributeTok{pad =} \StringTok{"0"}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{left\_join}\NormalTok{(df\_corte, }\AttributeTok{by =} \FunctionTok{c}\NormalTok{(}\StringTok{"cpro"} \OtherTok{=} \StringTok{"id\_prov"}\NormalTok{))}
+
+\CommentTok{\# 4. Representación gráfica del mapa}
+\NormalTok{var\_principal }\OtherTok{\textless{}{-}}\NormalTok{ vars\_num[}\DecValTok{1}\NormalTok{]}
+
+\FunctionTok{ggplot}\NormalTok{(mapa\_spain) }\SpecialCharTok{+}
+  \FunctionTok{geom\_sf}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{fill =}\NormalTok{ .data[[var\_principal]]), }\AttributeTok{color =} \StringTok{"white"}\NormalTok{, }\AttributeTok{size =} \FloatTok{0.2}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{scale\_fill\_viridis\_c}\NormalTok{(}\AttributeTok{option =} \StringTok{"mako"}\NormalTok{, }\AttributeTok{na.value =} \StringTok{"grey80"}\NormalTok{, }\AttributeTok{labels =}\NormalTok{ comma) }\SpecialCharTok{+}
+  \FunctionTok{theme\_void}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}
+    \AttributeTok{title =} \FunctionTok{paste}\NormalTok{(}\StringTok{"Distribución Espacial Provincial:"}\NormalTok{, var\_principal),}
+    \AttributeTok{subtitle =} \FunctionTok{paste}\NormalTok{(}\StringTok{"Sección cruzada correspondiente al año"}\NormalTok{, anio\_estudio),}
+    \AttributeTok{fill =}\NormalTok{ var\_principal,}
+    \AttributeTok{caption =} \StringTok{"Fuente: INE / mapSpain"}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \FunctionTok{theme}\NormalTok{(}
+    \AttributeTok{legend.position =} \StringTok{"right"}\NormalTok{,}
+    \AttributeTok{plot.title =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{face =} \StringTok{"bold"}\NormalTok{, }\AttributeTok{size =} \DecValTok{12}\NormalTok{, }\AttributeTok{hjust =} \FloatTok{0.5}\NormalTok{),}
+    \AttributeTok{plot.subtitle =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{10}\NormalTok{, }\AttributeTok{hjust =} \FloatTok{0.5}\NormalTok{)}
+\NormalTok{  )}
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{ejemplo_exploracion_files/ejemplo_exploracion_files/figure-latex/unnamed-chunk-5-1.pdf}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{matriz\_corr }\OtherTok{\textless{}{-}}\NormalTok{ df\_corte }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{select}\NormalTok{(}\FunctionTok{all\_of}\NormalTok{(vars\_num)) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{drop\_na}\NormalTok{() }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{cor}\NormalTok{(}\AttributeTok{method =} \StringTok{"pearson"}\NormalTok{)}
+
+\FunctionTok{corrplot}\NormalTok{(}
+\NormalTok{  matriz\_corr,}
+  \AttributeTok{method =} \StringTok{"color"}\NormalTok{,}
+  \AttributeTok{type =} \StringTok{"upper"}\NormalTok{,}
+  \AttributeTok{addCoef.col =} \StringTok{"black"}\NormalTok{,}
+  \AttributeTok{number.cex =} \FloatTok{0.75}\NormalTok{,}
+  \AttributeTok{tl.col =} \StringTok{"black"}\NormalTok{,}
+  \AttributeTok{tl.srt =} \DecValTok{45}\NormalTok{,}
+  \AttributeTok{diag =} \ConstantTok{FALSE}\NormalTok{,}
+  \AttributeTok{title =} \FunctionTok{paste}\NormalTok{(}\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{Matriz de Correlación de Pearson (Año"}\NormalTok{, anio\_estudio, }\StringTok{")"}\NormalTok{)}
+\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{ejemplo_exploracion_files/ejemplo_exploracion_files/figure-latex/unnamed-chunk-6-1.pdf}}
+
+\end{document}
