@@ -547,7 +547,7 @@ remove(list = c("datos_laborales_ESP",
                 "generar_id_obs"))
 ```
 
-#  Análisis de Datos Perdidos (NAs) e Imputación
+#  Análisis de Datos Perdidos
 
 Ahora que tenemos un conjunto de datos con todas las variables de interés, y las instancias adecuadamente identificadas, podemos proceder al análisis exploratorio propiamente dicho. Para empezar observamos en qué variables hay valores faltantes.
 
@@ -555,7 +555,7 @@ Ahora que tenemos un conjunto de datos con todas las variables de interés, y la
 valores_faltantes_col <- apply(is.na(df_completo),MARGIN =2,FUN=sum)
 kable(x= valores_faltantes_col[valores_faltantes_col>0],col.names="Valores Perdidos",caption="Valores perdidos por variable")
 ```
-Por suerte, hay pocos valores perdidos, por lo que podemos visualizar sus instancias correspondientes para decidir que realizar con ellos.
+Por suerte, hay pocos valores perdidos, por lo que podemos visualizar sus instancias correspondientes antes de decidir qué hacer con ellos.
 ```{r,echo=FALSE}
 instancias_faltantes <- !complete.cases(df_completo)
 columnas_faltantes <- apply(apply(df_completo[instancias_faltantes,],MARGIN=1,FUN=is.na),MARGIN=1,FUN=sum)
@@ -627,9 +627,11 @@ Para caracterizar formalmente la distribución de cada variable $X$ evaluamos su
 
 
 ```{r univariante-tabla, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
-# ---- Funciones de apoyo ------------------------------------------------------
+#Funciones de apoyo 
+
+# Transforma el caracter % a \% para evitar errores de compilación a PDF con las tablas.
 tabla_pie <- function(df, caption, align) {
-  cap <- gsub("%", "\\\\%", caption)            # escapa el % para LaTeX
+  cap <- gsub("%", "\\\\%", caption)          
   cat("\\begin{table}[H]\n\\centering\n\\small\n",
       "\\resizebox{\\ifdim\\width>\\linewidth\\linewidth\\else\\width\\fi}{!}{%\n",
       knitr::kable(df, format = "latex", booktabs = TRUE, align = align, linesep = ""),
