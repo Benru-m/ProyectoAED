@@ -546,8 +546,9 @@ remove(list = c("datos_laborales_ESP",
                 "filtrar_provincias",
                 "generar_id_obs"))
 ```
+#  Análisis Exploratorio de Datos (EDA)
 
-#  Análisis de Datos Perdidos
+##  Análisis de Datos Perdidos
 
 Ahora que tenemos un conjunto de datos con todas las variables de interés, y las instancias adecuadamente identificadas, podemos proceder al análisis exploratorio propiamente dicho. Para empezar observamos en qué variables hay valores faltantes.
 
@@ -565,7 +566,7 @@ df_faltantes <- df_completo[instancias_faltantes,c("Provincia","Periodo",columna
 kable(df_faltantes,caption="Instancias con valores faltantes")
 remove(list=c("df_faltantes"))
 ```
-Observamos que los valores faltantes afectan solamente a 5 provincias, además, las variables afectadas son series temporales de valores numéricos (valores anuales de 2015 a 2021), y en todos los casos tenemos al menos un registro de toda la serie, por lo que la decisión sobre los valores faltantes es imputarlos siguiendo la siguiente norma. Se imputan los valores faltantes con la media del primer valor anterior no faltante, y el primer valor posterior no faltante. En caso de no haber valores anteriores o posteriores faltantes, se imputará el dato usando el primer dato posterior o respectivamente anterior no faltante.
+Observamos que los valores faltantes afectan solamente a 5 provincias, además, cada instancia tiene como mucho un valor faltante, las variables afectadas son series temporales de valores numéricos (valores anuales de 2015 a 2021), y en todos los casos tenemos al menos un registro de toda la serie, por lo que la decisión sobre los valores faltantes es imputarlos siguiendo la siguiente norma. Se imputan los valores faltantes con la media del primer valor anterior no faltante, y el primer valor posterior no faltante. En caso de no haber valores anteriores o posteriores faltantes, se imputará el dato usando el primer dato posterior o respectivamente anterior no faltante.
 ```{r,include=FALSE}
 imputation_value <- function(x){
   # Si el vector está completamente vacío (solo NAs) o no tiene faltantes, se devuelve igual
@@ -596,10 +597,6 @@ df_completo <- df_completo %>%
 
 remove(list=c("imputation_value"))
 ```
-
-*Justificación de la decisión tomada: por qué se ha elegido un método de imputación concreto o por qué se ha descartado una variable con demasiados valores nulos.*
-
-#  Análisis Exploratorio de Datos (EDA)
 
 ## Análisis Univariante
 
@@ -656,6 +653,7 @@ calc_cv <- function(x) {
     sd(x) / mean(x) * 100
   }
 }
+# Formatea los números para que salgan  en castellano
 fmt_es <- function(x, d = 2) {
   purrr::map2_chr(x, d, function(v, k) {
     if (is.na(v)) {
@@ -737,8 +735,11 @@ tabla_pie(tabla3, "Estadísticos de posición y dispersión del panel provincial
 # Tabla 4: cuartiles, forma de la distribución y estructura del panel
 tabla4 <- tabla_univariante %>%
   transmute(Variable = Etiqueta,
-            Q1 = fmt_es(Q1, dec), Q3 = fmt_es(Q3, dec), IQR = fmt_es(IQR, dec),
-            Asimetría = fmt_es(Asimetria, 2), Curtosis = fmt_es(Curtosis, 2))
+            Q1 = fmt_es(Q1, dec),
+            Q3 = fmt_es(Q3, dec),
+            IQR = fmt_es(IQR, dec),
+            Asimetría = fmt_es(Asimetria, 2),
+            Curtosis = fmt_es(Curtosis, 2))
 tabla_pie(tabla4, "Cuartiles, forma de la distribución (asimetría y exceso de curtosis de Fisher) y porcentaje de la varianza total debido a diferencias entre provincias.", c("l", rep("r", 5)))
 ```
 Los estadísticos descriptivos (Tablas 3-6) revelan la estructura socioeconómica transversal del año 2019 a través de tres grandes rasgos.
@@ -757,10 +758,8 @@ En tercer lugar, se confirma la profunda terciarización del tejido productivo p
 
 Para visualizar mejor estas distribuciones, las representamos gráficamente:
 
-
-
 ```{r univ-graficas-setup, echo=FALSE, message=FALSE, warning=FALSE}
-df_graf <- df_analisis %>% mutate(log10_Habitantes = log10(Habitantes))
+df_hist_univ <- df_analisis %>% mutate(log10_Habitantes = log10(Habitantes))
 
 etiq_graf <- etiquetas %>%
   mutate(Variable = ifelse(Variable == "Habitantes", "log10_Habitantes", Variable),
@@ -775,17 +774,35 @@ tema_univ <- theme_minimal(base_size = 9) +
         axis.title.x = element_blank(),
         axis.text.x = element_text(size = 7))
 
-# Histograma + densidad (azul) + mediana (rojo discontinuo), un panel por variable
-panel_hist <- function(vars, ncol) {
-  lev <- etiq_graf %>% filter(Variable %in% vars) %>% arrange(match(Variable, vars))
+library(ggrepel)
+
+# Histograma + densidad + media + mediana + detección de outliers (Regla de la Varianza / 3-Sigma)
+vars <- c("PIB_per_capita", "Renta_bruta_media", "Precio_m2",
+             "Edad_Media_Maternidad", "Migracion_Interior", "log10_Habitantes")
+
+lev <- etiq_graf %>% filter(Variable %in% vars) %>% arrange(match(Variable, vars))
   
-  d <- df_graf %>%
-    select(all_of(lev$Variable)) %>%
-    pivot_longer(everything(), names_to = "Variable", values_to = "Valor") %>%
+  # 1. Mantenemos 'Provincia' al pivotar para no perder los nombres
+  d <- df_hist_univ %>%
+    select(Provincia, all_of(lev$Variable)) %>%
+    pivot_longer(cols = -Provincia, names_to = "Variable", values_to = "Valor") %>%
     left_join(lev, by = "Variable") %>%
     mutate(Etiqueta = factor(Etiqueta, levels = lev$Etiqueta))
   
-  med <- d %>% group_by(Etiqueta) %>% summarise(m = median(Valor, na.rm = TRUE), .groups = "drop")
+  # 2. Calculamos media, mediana y desviación típica (sd)
+  estats <- d %>% 
+    group_by(Etiqueta) %>% 
+    summarise(
+      mediana = median(Valor, na.rm = TRUE),
+      media = mean(Valor, na.rm = TRUE),
+      desv_tipica = sd(Valor, na.rm = TRUE),
+      .groups = "drop"
+    )
+  
+  # 3. Filtramos los valores atípicos (Regla: alejados más de 3 desviaciones de la media)
+  outliers_df <- d %>%
+    left_join(estats, by = "Etiqueta") %>%
+    filter(abs(Valor - media) > 3 * desv_tipica)
   
   ggplot(d, aes(x = Valor)) +
     geom_histogram(aes(y = after_stat(density)),
@@ -796,57 +813,152 @@ panel_hist <- function(vars, ncol) {
     geom_density(colour = "steelblue",
                  linewidth = 0.7,
                  na.rm = TRUE) +
-    geom_vline(data = med,
-               aes(xintercept = m),
-               colour = "firebrick",
-               linetype = "dashed") +
+    geom_vline(data = estats,
+               aes(xintercept = mediana, color = "Mediana", linetype = "Mediana"),
+               linewidth = 0.8) +
+    geom_vline(data = estats,
+               aes(xintercept = media, color = "Media", linetype = "Media"),
+               linewidth = 0.9) +
+    # 4. Dibujamos un punto naranja en la base (y = 0) para cada atípico
+    geom_point(data = outliers_df, 
+               aes(x = Valor, y = 0), 
+               color = "darkorange", size = 2.5, shape = 4, stroke = 1.2) +
+# 5. Añadimos el texto corregido sin romper el eje Y de densidad
+    geom_text_repel(data = outliers_df,
+                    aes(x = Valor, y = 0, label = Provincia),
+                    color = "darkorange",
+                    size = 2.5,
+                    fontface = "bold",
+                    angle = 90,
+                    hjust = -0.2,# Empuja el texto hacia arriba usando proporción, no coordenadas Y absolutas
+                    direction = "x",# Evita solapamientos desplazando solo en horizontal
+                    segment.size = 0.4,
+                    segment.color = "darkorange",
+                    max.overlaps = Inf) +
     facet_wrap(~ Etiqueta,
                scales = "free",
-               ncol = ncol,
+               ncol = 3,
                labeller = label_wrap_gen(width = 22)) +
-    scale_x_continuous(labels = fmt_eje,
-                       n.breaks = 4) +
-    labs(y = "Densidad") +
+    scale_x_continuous(labels = fmt_eje, n.breaks = 4) +
+    scale_color_manual(
+      name = "Estadístico:", 
+      values = c("Mediana" = "firebrick", "Media" = "forestgreen")
+    ) +
+    scale_linetype_manual(
+      name = "Estadístico:", 
+      values = c("Mediana" = "dashed", "Media" = "dotted")
+    ) +
+    labs(
+      y = "Densidad",
+      caption = "Las marcas naranjas indican valores atípicos (Alejados de la media más de 3 desviaciones típicas)"
+    ) +
     tema_univ +
-    theme(axis.text.y = element_blank(),
-          axis.ticks.y = element_blank())
-}
+    theme(
+      axis.text.y = element_blank(),
+      axis.ticks.y = element_blank(),
+      legend.position = "bottom",
+      legend.title = element_text(face = "bold", size = 8),
+      legend.text = element_text(size = 8),
+      plot.caption = element_text(color = "grey40", size = 7.5, hjust = 0.5, margin = margin(t = 10))
+    )
 ```
 
-
-```{r fig-univ-1, echo=FALSE, message=FALSE, warning=FALSE, fig.height=4.5, out.width="100%", fig.cap="Distribución de las variables económicas y demográficas del panel provincial (2015-2021): histograma, densidad (azul) y mediana (rojo discontinuo). El número de habitantes se muestra en escala logarítmica."}
-panel_hist(c("PIB_per_capita", "Renta_bruta_media", "Precio_m2",
-             "Edad_Media_Maternidad", "Migracion_Interior", "log10_Habitantes"), ncol = 4)
-```
 En la primera figura, el PIB per cápita y la renta bruta muestran distribuciones unimodales, aunque en el PIB se insinúa un ligero abultamiento en la cola derecha (cerca de los $30.000$ €), reflejo de las provincias más ricas. El precio de la vivienda evidencia su fuerte asimetría: una gran masa concentrada en torno a los $1.000-1.200$ €/m$^2$ y una cola alargada hacia la derecha. La gráfica del saldo migratorio joven es especialmente reveladora, con un pico leptocúrtico masivo ligeramente por debajo de cero y una cola derecha extensa y casi plana que llega hasta los $12.000$. Por su parte, la aplicación de la escala logarítmica normaliza la campana de la población ($\log_{10}(\text{Habitantes})$), aislando de forma clara en la cola superior a las provincias millonarias.
 
-```{r fig-univ-2, echo=FALSE, message=FALSE, warning=FALSE, fig.height=3.8, out.width="100%", fig.cap="Distribución de la estructura productiva provincial: porcentaje de ocupados (fila superior) y de VAB (fila inferior) por sector."}
-panel_hist(etiquetas$Variable[8:13], ncol = 3)
-```
 En la segunda figura, la distribución de la estructura productiva muestra cómo el peso del primario (tanto en VAB como en ocupados) se agolpa contra el cero con una larga cola derecha, mientras que los sectores secundario y terciario adoptan formas más amplias y centradas en valores considerablemente más altos.
 
 ```{r fig-univ-3, echo=FALSE, message=FALSE, warning=FALSE, fig.height=4.5, out.width="100%", fig.cap="Distribución provincial por año de las variables clave. Los puntos rojos son valores fuera de 1,5 veces el rango intercuartílico."}
-vars_fig3 <- c("PIB_per_capita", "Renta_bruta_media", "Precio_m2",
-               "Edad_Media_Maternidad", "Migracion_Interior", "pct_VAB_Terciario")
-lev3 <- etiquetas %>%
-  filter(Variable %in% vars_fig3) %>%
-  arrange(match(Variable, vars_fig3)) %>%
-  mutate(Etiqueta = gsub("m\u00b2", "m2", Etiqueta))
 
-df_analisis %>%
-  select(Periodo, all_of(vars_fig3)) %>%
-  pivot_longer(-Periodo, names_to = "Variable", values_to = "Valor") %>%
+# 1. Definimos las nuevas variables del panel
+vars_fig3 <- c("PIB_per_capita", "Renta_bruta_media", "Precio_m2", 
+               "Edad_Media_Maternidad", "Migracion_Interior", "log10_Habitantes")
+
+# 2. Ajustamos las etiquetas para reflejar las transformaciones matemáticas
+lev3 <- etiquetas %>%
+  # Buscamos tanto log10_Habitantes como su original por seguridad
+  filter(Variable %in% c(vars_fig3, "Habitantes")) %>%
+  mutate(
+    Variable = ifelse(Variable == "Habitantes", "log10_Habitantes", Variable),
+    Etiqueta = case_when(
+      Variable == "log10_Habitantes" ~ "Habitantes (log10)",
+      Variable == "Migracion_Interior" ~ "Migración Interior (Raíz cúbica)",
+      TRUE ~ gsub("m\u00b2", "m2", Etiqueta)
+    )
+  ) %>%
+  distinct(Variable, .keep_all = TRUE) %>% 
+  arrange(match(Variable, vars_fig3))
+
+# 3. Preparación de datos: Calcular Outliers -> Transformar Valor
+df_box <- df_analisis %>%
+  # Aseguramos que log10_Habitantes esté calculada en el dataframe base
+  mutate(log10_Habitantes = log10(Habitantes)) %>%
+  select(Provincia, Periodo, all_of(vars_fig3)) %>%
+  pivot_longer(cols = c(-Provincia, -Periodo), names_to = "Variable", values_to = "Valor") %>%
   left_join(lev3, by = "Variable") %>%
-  mutate(Etiqueta = factor(Etiqueta, levels = lev3$Etiqueta), Periodo = factor(Periodo)) %>%
-  ggplot(aes(x = Periodo, y = Valor)) +
+  mutate(
+    Etiqueta = factor(Etiqueta, levels = lev3$Etiqueta),
+    Periodo = factor(Periodo)
+  ) %>%
+  filter(!is.na(Valor)) %>%
+  # Agrupamos y calculamos umbrales sobre la ESCALA ORIGINAL
+  group_by(Etiqueta, Periodo) %>%
+  mutate(
+    Q1 = quantile(Valor, 0.25),
+    Q3 = quantile(Valor, 0.75),
+    IQR_val = Q3 - Q1,
+    Lim_Inf = Q1 - 1.5 * IQR_val,
+    Lim_Sup = Q3 + 1.5 * IQR_val,
+    # Etiquetamos como outlier si supera el umbral original
+    es_outlier = Valor < Lim_Inf | Valor > Lim_Sup
+  ) %>%
+  ungroup() %>%
+  #Aplicamos la transformación matemática solo para el gráfico
+  mutate(
+    Valor = ifelse(
+      Variable == "Migracion_Interior", 
+      sign(Valor) * abs(Valor)^(1/3),   # Raíz cúbica segura para valores negativos
+      Valor
+    )
+  )
+
+# 4. Extraemos el subset de outliers con sus coordenadas Y ya transformadas
+outliers_box <- df_box %>% filter(es_outlier)
+
+# 5. Generación del gráfico
+ggplot(df_box, aes(x = Periodo, y = Valor)) +
+  geom_jitter(width = 0.03, color = "grey65", alpha = 0.5, size = 0.9, na.rm = TRUE) +
   geom_boxplot(fill = "grey90", colour = "grey30", linewidth = 0.3,
-               outlier.colour = "firebrick", outlier.size = 0.8, na.rm = TRUE) +
+               outlier.shape = NA, alpha = 0.7, na.rm = TRUE) +
+  geom_point(data = outliers_box, color = "firebrick", size = 1.3) +
+  geom_text_repel(data = outliers_box,
+                  aes(label = Provincia),
+                  size = 2.2,
+                  color = "firebrick",
+                  fontface = "bold",
+                  direction = "y",             
+                  nudge_x = 0.45,              
+                  hjust = 0,
+                  box.padding = 0.5,           
+                  force = 4,                   
+                  min.segment.length = 0,      
+                  segment.size = 0.3,
+                  segment.color = "firebrick",
+                  max.overlaps = Inf,
+                  seed = 123) +
   facet_wrap(~ Etiqueta, scales = "free_y", ncol = 3, labeller = label_wrap_gen(width = 22)) +
   scale_x_discrete(guide = guide_axis(angle = 45)) +
-  labs(y = NULL) +
-  tema_univ
+  scale_y_continuous(labels = fmt_eje) +
+  labs(
+    y = NULL, 
+    x = "Año",
+    caption = paste(
+      "Los puntos rojos indican valores atípicos evaluados mediante IQR (±1.5) sobre la escala original de los datos.",
+      "\nNota: La variable Migración Interior ha sido escalada con una transformación de raíz cúbica para su correcta visualización."
+    )
+  ) +
+  tema_univ +
+  theme(plot.caption = element_text(color = "grey40", size = 8, hjust = 0, margin = margin(t = 12)))
 ```
-
 La distribución mediante diagramas de caja (Figura 3), circunscrita al único año de observación (2019), subraya el peso que tienen los valores extremos (marcados en rojo) en la distorsión de las medias. El precio del metro cuadrado destaca por concentrar cuatro valores atípicos superiores a los $1.600$ €/m$^2$. El saldo migratorio ilustra de forma prístina la macrocefalia demográfica del país: mientras la inmensa mayoría de las provincias ven sus cajas comprimidas por debajo del cero, un atípico extremo se dispara por encima de los $12.000$ jóvenes retenidos, acompañado de un segundo valor atípico cercano a los $2.000$. En el ámbito productivo, el VAB terciario exhibe un atípico inferior por debajo del $60\%$, apuntando a la existencia de alguna provincia altamente especializada fuera de los servicios.
 
 ## Análisis Bivariante y Multivariante

@@ -216,8 +216,7 @@ Inmobiliario; R}
 \usepackage{float}
 \usepackage{colortbl}
 \usepackage{pdflscape}
-\usepackage{tabularx}
-\usepackage{xltabular}
+\usepackage{tabu}
 \usepackage{threeparttable}
 \usepackage{threeparttablex}
 \usepackage[normalem]{ulem}
@@ -346,7 +345,10 @@ Una vez tenemos los datos tratados, los juntamos haciendo uso del
 identificador único. Para evitar que se generen muchos valores perdidos,
 para la unión solamente tomaremos las instancias comunes a todos.
 
-\section{Análisis de Datos
+\section{Análisis Exploratorio de Datos
+(EDA)}\label{anuxe1lisis-exploratorio-de-datos-eda}
+
+\subsection{Análisis de Datos
 Perdidos}\label{anuxe1lisis-de-datos-perdidos}
 
 Ahora que tenemos un conjunto de datos con todas las variables de
@@ -409,21 +411,15 @@ Navarra & 2020 & NaN & 9.425 \\
 \end{longtable}
 
 Observamos que los valores faltantes afectan solamente a 5 provincias,
-además, las variables afectadas son series temporales de valores
-numéricos (valores anuales de 2015 a 2021), y en todos los casos tenemos
-al menos un registro de toda la serie, por lo que la decisión sobre los
-valores faltantes es imputarlos siguiendo la siguiente norma. Se imputan
-los valores faltantes con la media del primer valor anterior no
-faltante, y el primer valor posterior no faltante. En caso de no haber
-valores anteriores o posteriores faltantes, se imputará el dato usando
-el primer dato posterior o respectivamente anterior no faltante.
-
-\emph{Justificación de la decisión tomada: por qué se ha elegido un
-método de imputación concreto o por qué se ha descartado una variable
-con demasiados valores nulos.}
-
-\section{Análisis Exploratorio de Datos
-(EDA)}\label{anuxe1lisis-exploratorio-de-datos-eda}
+además, cada instancia tiene como mucho un valor faltante, las variables
+afectadas son series temporales de valores numéricos (valores anuales de
+2015 a 2021), y en todos los casos tenemos al menos un registro de toda
+la serie, por lo que la decisión sobre los valores faltantes es
+imputarlos siguiendo la siguiente norma. Se imputan los valores
+faltantes con la media del primer valor anterior no faltante, y el
+primer valor posterior no faltante. En caso de no haber valores
+anteriores o posteriores faltantes, se imputará el dato usando el primer
+dato posterior o respectivamente anterior no faltante.
 
 \subsection{Análisis Univariante}\label{anuxe1lisis-univariante}
 
