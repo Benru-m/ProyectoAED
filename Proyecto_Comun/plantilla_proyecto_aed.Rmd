@@ -915,7 +915,7 @@ library(RColorBrewer)
 library(tibble)
 library(tinytex)
 
-df_corte <-df_completo %>% filter(Periodo==2018)
+df_corte <-df_completo %>% filter(Periodo==2019)
 df_cluster_prep <- df_corte %>%
   filter(!is.na(Provincia)) %>%
   # Filtrar columnas numéricas válidas con varianza positiva
@@ -1061,18 +1061,15 @@ ggplot(mapa_prov_clusters) +
     legend.text = element_text(size = 9)
   )
 ```
-Aproximamos el salario medio mediante la renta bruta media y englobamos los datos de hostelería y turismo en el sector terciario. Calculamos el esfuerzo inmobiliario, el peso de cada sector, la densidad poblacional y normalizamos la migración joven (20-35 años) por cada 1.000 habitantes.
 
-```{r preparacion-bivariante}
-Anyo <- 2018
-
+```{r preparacion-bivariante, echo=FALSE}
 # Superficie provincial a partir de mapSpain (para la densidad)
 areas_prov <- esp_get_prov() %>%
   mutate(area_km2 = as.numeric(st_area(geometry)) / 1e6) %>%
   st_drop_geometry() %>%
   select(id_prov = cpro, area_km2)
 
-df_completo <- df_completo %>%
+df_analisis_bivariante <- df_corte %>%
   left_join(ine_provincias, by = c("Provincia" = "Provincia_clean")) %>% 
   left_join(areas_prov, by = "id_prov") %>%
   mutate(
@@ -1083,15 +1080,11 @@ df_completo <- df_completo %>%
     # Años de renta bruta media necesarios para una vivienda de 80 m2
     esfuerzo_vivienda = (Precio_m2 * 80) / Renta_bruta_media,
     mig_joven_1000    = (Migracion_Interior / Habitantes) * 1000,
-    log_densidad      = log10(Habitantes / area_km2)
-  ) %>%
-  group_by(Periodo) %>%
-  mutate(
+    log_densidad      = log10(Habitantes / area_km2),
     # Brecha: si es >1, la provincia genera más PIB que renta percibe vs la media nacional
     brecha_pib_renta = (PIB_per_capita / mean(PIB_per_capita, na.rm = TRUE)) /
                        (Renta_bruta_media / mean(Renta_bruta_media, na.rm = TRUE))
   ) %>%
-  ungroup() %>%
   mutate(
     nivel_terciarizacion = case_when(
       peso_terciario < 0.65 ~ "Baja (<65%)",
@@ -1100,10 +1093,7 @@ df_completo <- df_completo %>%
     ),
     nivel_terciarizacion = factor(nivel_terciarizacion, 
                                   levels = c("Baja (<65%)", "Media (65-75%)", "Alta (>75%)"))
-  )
-
-df_anio <- df_completo %>% 
-  filter(Periodo == Anyo) %>%
+  ) %>%
   mutate(
     # Filtramos el top 5 por arriba y por abajo para la Brecha PIB/Renta
     label_pib = ifelse(
@@ -1124,7 +1114,7 @@ df_anio <- df_completo %>%
 Analizamos la relación entre la riqueza generada (PIB per cápita) y la percibida (Renta Bruta Media), así como la influencia del sector terciario en la brecha entre ambas.
 
 ```{r,echo=FALSE}
-ggplot(df_anio, aes(x = PIB_per_capita, y = Renta_bruta_media)) + 
+ggplot(df_analisis_bivariante, aes(x = PIB_per_capita, y = Renta_bruta_media)) + 
   geom_point(aes(colour = peso_terciario), size = 3, alpha = 0.8) + 
   geom_smooth(method = "lm", col = "black", linetype = "dashed") + 
   geom_text_repel(aes(label = label_pib), size = 3, max.overlaps = Inf, na.rm = TRUE, box.padding = 0.5) + 
@@ -1136,10 +1126,9 @@ ggplot(df_anio, aes(x = PIB_per_capita, y = Renta_bruta_media)) +
   ) + 
   theme_minimal()
 
-# Contraste de correlación: Brecha PIB/Renta vs Peso del sector terciario
-cor.test(df_anio$brecha_pib_renta, df_anio$peso_terciario)
+# Correlación Brecha PIB/Renta vs Peso del sector terciario
 
-df_anio %>% ggplot(aes(x = brecha_pib_renta, y = peso_terciario)) + 
+df_analisis_bivariante %>% ggplot(aes(x = brecha_pib_renta, y = peso_terciario)) + 
   geom_point(colour = "steelblue") + 
   geom_smooth(method = "lm", col = "black", linetype = "dashed") +
   geom_text_repel(aes(label = label_pib), size = 3, max.overlaps = Inf, na.rm = TRUE, box.padding = 0.5) +
@@ -1150,16 +1139,21 @@ df_anio %>% ggplot(aes(x = brecha_pib_renta, y = peso_terciario)) +
     color = "Peso del\nSector Terciario"
   ) + 
   theme_minimal()
+
+Brecha_Pearson <- cor(df_analisis_bivariante$brecha_pib_renta, df_analisis_bivariante$peso_terciario, method = "pearson")
+Brecha_Spearman <- cor(df_analisis_bivariante$brecha_pib_renta, df_analisis_bivariante$peso_terciario, method = "spearman")
+
+cat("Brecha PIB/Renta vs Peso del sector terciario:\n Correlación de Pearson:", Brecha_Pearson,"; Correlación de Spearman:", Brecha_Spearman)
 ```
 
-El primer gráfico de dispersión confirma una correlación lineal positiva esperable: a mayor PIB per cápita, mayor renta bruta media. Sin embargo, la dispersión de los puntos revela importantes asimetrías regionales. Provincias como Madrid, Gipuzkoa y Bizkaia lideran ambas métricas, pero al observar la "brecha" (la proporción entre la riqueza generada y la renta percibida frente a la media nacional), el contraste estadístico revela un fenómeno contraintuitivo: existe una correlación negativa ($cor = -0.41$, $p < 0.05$) entre la brecha PIB/Renta y el peso del sector terciario. 
+El primer gráfico de dispersión confirma una correlación lineal positiva esperable: a mayor PIB per cápita, mayor renta bruta media. Sin embargo, la dispersión de los puntos revela importantes asimetrías regionales. Provincias como Madrid, Gipuzkoa y Bizkaia lideran ambas métricas, pero al observar la "brecha" (la proporción entre la riqueza generada y la renta percibida frente a la media nacional), el contraste estadístico revela un fenómeno contraintuitivo: existe una correlación negativa ($cor = -0.41$) entre la brecha PIB/Renta y el peso del sector terciario. 
 
 Para visualizar geográficamente dónde se concentra esta brecha (dónde se produce más de lo que repercute en el salario de los trabajadores), representamos los datos en un mapa a nivel provincial.
 
 ```{r,echo=FALSE}
 # Unimos los datos espaciales con nuestro dataframe
 mapa_sf <- esp_get_prov() %>%
-  inner_join(df_anio, by = c("cpro" = "id_prov"))
+  inner_join(df_analisis_bivariante, by = c("cpro" = "id_prov"))
 
 ggplot(mapa_sf) +
   geom_sf(aes(fill = brecha_pib_renta), color = "white", size = 0.1) +
@@ -1180,7 +1174,7 @@ Como se aprecia en el mapa y en el gráfico de dispersión de la brecha, las pro
 Pasamos a evaluar cómo la dependencia del sector terciario presiona el coste de la vivienda y cómo afecta a la expulsión de población joven.
 
 ```{r,echo=FALSE}
-ggplot(df_anio, aes(x = emp_terciario, y = esfuerzo_vivienda)) +
+ggplot(df_analisis_bivariante, aes(x = emp_terciario, y = esfuerzo_vivienda)) +
   geom_point(alpha = 0.7, color = "darkred", size = 3) +
   geom_smooth(method = "lm", se = TRUE, color = "black") +
   geom_text_repel(aes(label = label_trampa), size = 3, max.overlaps = Inf, na.rm = TRUE, box.padding = 0.5) +
@@ -1192,18 +1186,16 @@ ggplot(df_anio, aes(x = emp_terciario, y = esfuerzo_vivienda)) +
   ) +
   theme_minimal()
 
-# Contraste: Empleo terciario y esfuerzo inmobiliario
-cor.test(df_anio$emp_terciario, df_anio$esfuerzo_vivienda)
+Esfuerzo_Pearson <- cor(df_analisis_bivariante$emp_terciario, df_analisis_bivariante$esfuerzo_vivienda, method = "pearson")
+Esfuerzo_Spearman <- cor(df_analisis_bivariante$emp_terciario, df_analisis_bivariante$esfuerzo_vivienda, method = "spearman")
 
-# Contraste: Empleo terciario y migración joven (expulsión)
-cor.test(df_anio$emp_terciario, df_anio$mig_joven_1000)
-
+cat("Empleo en el Sector Terciario vs Esfuerzo Inmobiliario:\n Correlación de Pearson:", Esfuerzo_Pearson,"; Correlación de Spearman:", Esfuerzo_Spearman)
 ```
 
 Para contrastar de forma más robusta si el modelo productivo discrimina el acceso a la vivienda, agrupamos las provincias por su sector económico predominante mediante un boxplot.
 
 ```{r,echo=FALSE}
-ggplot(df_anio, aes(x = nivel_terciarizacion, y = esfuerzo_vivienda, fill = nivel_terciarizacion)) +
+ggplot(df_analisis_bivariante, aes(x = nivel_terciarizacion, y = esfuerzo_vivienda, fill = nivel_terciarizacion)) +
   geom_boxplot(alpha = 0.7, outlier.color = "red", outlier.size = 2) +
   geom_jitter(width = 0.15, alpha = 0.5, color = "darkslategrey") +
   scale_fill_brewer(palette = "Oranges") +
@@ -1225,7 +1217,7 @@ Esta realidad se hace aún más evidente en el diagrama de cajas: al categorizar
 Buscamos evidenciar si el endurecimiento del mercado inmobiliario (esfuerzo para acceder a una vivienda) retrasa la edad media a la maternidad.
 
 ```{r,echo=FALSE}
-ggplot(df_anio, aes(x = esfuerzo_vivienda, y = Edad_Media_Maternidad)) +
+ggplot(df_analisis_bivariante, aes(x = esfuerzo_vivienda, y = Edad_Media_Maternidad)) +
   geom_point(aes(size = Habitantes), alpha = 0.6, color = "steelblue") +
   geom_smooth(method = "loess", color = "darkorange", fill = "lightgray") +
   labs(
@@ -1236,8 +1228,10 @@ ggplot(df_anio, aes(x = esfuerzo_vivienda, y = Edad_Media_Maternidad)) +
   ) + scale_size_continuous(labels = scales::comma) +
   theme_minimal()
 
-# Contraste de correlación lineal
-cor.test(df_anio$esfuerzo_vivienda, df_anio$Edad_Media_Maternidad)
+Maternidad_Pearson <- cor(df_analisis_bivariante$esfuerzo_vivienda, df_analisis_bivariante$Edad_Media_Maternidad, method = "pearson")
+Maternidad_Spearman <- cor(df_analisis_bivariante$esfuerzo_vivienda, df_analisis_bivariante$Edad_Media_Maternidad, method = "spearman")
+
+cat("Esfuerzo Inmobiliario vs Edad de Maternidad:\n Correlación de Pearson:", Maternidad_Pearson,"; Correlación de Spearman:", Maternidad_Spearman)
 ```
 
 El análisis cruza el esfuerzo inmobiliario con la demografía vital, evidenciando una correlación positiva y significativa ($cor = 0.55$, $p < 0.001$). A medida que aumentan los años de renta necesarios para adquirir una vivienda, la edad media a la maternidad se retrasa.
@@ -1249,7 +1243,7 @@ La curva de ajuste local (LOESS) es particularmente reveladora: muestra una fase
 Comprobamos si el tejido industrial funciona como fijador de población joven y si se correlaciona con una densidad demográfica más equilibrada.
 
 ```{r,echo=FALSE}
-ggplot(df_anio, aes(x = peso_secundario, y = mig_joven_1000)) +
+ggplot(df_analisis_bivariante, aes(x = peso_secundario, y = mig_joven_1000)) +
   geom_point(color = "forestgreen", size = 3, alpha = 0.7) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
   geom_smooth(method = "lm", color = "black") +
@@ -1261,17 +1255,21 @@ ggplot(df_anio, aes(x = peso_secundario, y = mig_joven_1000)) +
   ) +
   theme_minimal()
 
-# Contraste: Industrialización vs retención de jóvenes
-cor.test(df_anio$peso_secundario, df_anio$mig_joven_1000)
+Migracion_Pearson <- cor(df_analisis_bivariante$peso_secundario, df_analisis_bivariante$mig_joven_1000, method = "pearson")
+Migracion_Spearman <- cor(df_analisis_bivariante$peso_secundario, df_analisis_bivariante$mig_joven_1000, method = "spearman")
 
-# Contraste: Industrialización vs Densidad poblacional
-cor.test(df_anio$peso_secundario, df_anio$log_densidad)
+cat("Peso del Sector Industrial vs Saldo Migratorio Joven:\n Correlación de Pearson:", Migracion_Pearson,"; Correlación de Spearman:", Migracion_Spearman)
+
+Densidad_Pearson <- cor(df_analisis_bivariante$peso_secundario, df_analisis_bivariante$log_densidad, method = "pearson")
+Densidad_Spearman <- cor(df_analisis_bivariante$peso_secundario, df_analisis_bivariante$log_densidad, method = "spearman")
+
+cat("\nPeso del Sector Industrial vs Densidad poblacional:\n Correlación de Pearson:", Densidad_Pearson,"; Correlación de Spearman:", Densidad_Spearman)
 ```
 
 Para observar con claridad cuáles son las provincias que lideran la atracción y expulsión de jóvenes, generamos un barplot divergente aislando el top 10 y bottom 10.
 
 ```{r,echo=FALSE}
-df_anio %>%
+df_analisis_bivariante %>%
   arrange(desc(mig_joven_1000)) %>%
   # Seleccionamos las 10 con mayor saldo positivo y las 10 con mayor saldo negativo
   filter(row_number() <= 10 | row_number() >= (n() - 9)) %>%
@@ -1299,7 +1297,7 @@ Para resumir las dinámicas conjuntas, comenzamos con una matriz de correlación
 
 ```{r,echo=FALSE}
 # Seleccionamos las variables continuas de interés
-var_corr <- df_anio %>%
+var_corr <- df_analisis_bivariante %>%
   select(
     PIB_per_capita, Renta_bruta_media, brecha_pib_renta, 
     peso_primario, peso_secundario, peso_terciario,
@@ -1326,7 +1324,7 @@ Finalmente, para crear un perfil multidimensional sintético de las tensiones so
 
 ```{r,echo=FALSE}
 # Estandarizamos (Z-score) las variables para poder compararlas visualmente en la misma escala
-df_heat <- df_anio %>%
+df_heat <- df_analisis_bivariante %>%
   slice_max(Habitantes, n = 15) %>%
   select(Provincia, 
          `PIB per cápita` = PIB_per_capita, 
