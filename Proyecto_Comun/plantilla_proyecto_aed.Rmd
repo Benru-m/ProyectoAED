@@ -960,7 +960,91 @@ ggplot(df_box, aes(x = Periodo, y = Valor)) +
   theme(plot.caption = element_text(color = "grey40", size = 8, hjust = 0, margin = margin(t = 12)))
 ```
 La distribución mediante diagramas de caja (Figura 3), circunscrita al único año de observación (2019), subraya el peso que tienen los valores extremos (marcados en rojo) en la distorsión de las medias. El precio del metro cuadrado destaca por concentrar cuatro valores atípicos superiores a los $1.600$ €/m$^2$. El saldo migratorio ilustra de forma prístina la macrocefalia demográfica del país: mientras la inmensa mayoría de las provincias ven sus cajas comprimidas por debajo del cero, un atípico extremo se dispara por encima de los $12.000$ jóvenes retenidos, acompañado de un segundo valor atípico cercano a los $2.000$. En el ámbito productivo, el VAB terciario exhibe un atípico inferior por debajo del $60\%$, apuntando a la existencia de alguna provincia altamente especializada fuera de los servicios.
+```{r,echo=FALSE}
+# 1. Definimos las 6 variables sectoriales
+vars_sectores <- c(
+  "pct_Ocupados_Primario", "pct_Ocupados_Secundario", "pct_Ocupados_Terciario",
+  "pct_VAB_Primario", "pct_VAB_Secundario", "pct_VAB_Terciario"
+)
 
+# 2. Preparación de datos: Extraemos Magnitud y Sector del propio nombre de la variable
+df_sectores <- df_analisis %>% # O df_analisis %>% filter(Periodo == 2022)
+  select(Provincia, all_of(vars_sectores)) %>%
+  pivot_longer(cols = -Provincia, names_to = "Variable", values_to = "Valor") %>%
+  mutate(
+    # A. Creamos la variable que definirá las 2 filas (Facets)
+    Magnitud = ifelse(grepl("Ocupados", Variable), "Mercado Laboral (% Ocupados)", "Estructura Económica (% VAB)"),
+    
+    # B. Creamos la variable que definirá los 3 boxplots por fila (Eje Y)
+    Sector = case_when(
+      grepl("Primario", Variable) ~ "Primario",
+      grepl("Secundario", Variable) ~ "Secundario",
+      grepl("Terciario", Variable) ~ "Terciario"
+    ),
+    
+    # Factorizamos. Ojo: ggplot dibuja el eje Y de abajo hacia arriba.
+    # Ponemos el Terciario primero para que en el gráfico salga abajo y el Primario arriba.
+    Sector = factor(Sector, levels = c("Terciario", "Secundario", "Primario")),
+    Magnitud = factor(Magnitud, levels = c("Mercado Laboral (% Ocupados)", "Estructura Económica (% VAB)"))
+  )
+
+# 3. Calculamos Outliers agrupando por las dos nuevas dimensiones (Magnitud y Sector)
+outliers_sectores <- df_sectores %>%
+  filter(!is.na(Valor)) %>%
+  group_by(Magnitud, Sector) %>%
+  mutate(
+    Q1 = quantile(Valor, 0.25),
+    Q3 = quantile(Valor, 0.75),
+    IQR_val = Q3 - Q1,
+    Lim_Inf = Q1 - 1.5 * IQR_val,
+    Lim_Sup = Q3 + 1.5 * IQR_val
+  ) %>%
+  filter(Valor < Lim_Inf | Valor > Lim_Sup) %>%
+  ungroup()
+
+# 4. Generación del gráfico con orientación horizontal
+ggplot(df_sectores, aes(x = Valor, y = Sector)) +
+  
+  # A. Puntos grises: al ser boxplots horizontales, dispersamos en altura (height) y no en anchura
+  geom_jitter(height = 0.15, color = "grey65", alpha = 0.5, size = 0.9, na.rm = TRUE) +
+  
+  # B. Boxplots
+  geom_boxplot(fill = "grey90", colour = "grey30", linewidth = 0.3,
+               outlier.shape = NA, alpha = 0.7, na.rm = TRUE) +
+  
+  # C. Puntos atípicos en rojo
+  geom_point(data = outliers_sectores, color = "firebrick", size = 1.3) +
+  
+  # D. Etiquetas repelidas
+  geom_text_repel(data = outliers_sectores,
+                  aes(label = Provincia),
+                  size = 2.2,
+                  color = "firebrick",
+                  fontface = "bold",
+                  direction = "x",             # Que se distribuyan a lo largo del eje X si chocan
+                  nudge_y = 0.35,              # Empujamos el texto hacia ARRIBA del boxplot
+                  hjust = 0.5,
+                  box.padding = 0.3,
+                  force = 3,
+                  min.segment.length = 0,
+                  segment.size = 0.3,
+                  segment.color = "firebrick",
+                  max.overlaps = Inf,
+                  seed = 123) +
+                  
+  # E. Dividimos en 2 filas (Ocupados arriba, VAB abajo)
+  facet_wrap(~ Magnitud, ncol = 1, scales = "free_x") +
+  
+  # Aplicamos el formato numérico español a tu eje (ahora el X)
+  scale_x_continuous(labels = fmt_eje) +
+  
+  labs(
+    x = "Porcentaje provincial (%)",
+    y = "Sector Económico",
+    caption = "Los puntos rojos indican valores atípicos evaluados mediante la regla IQR (±1.5) calculada por sector."
+  ) +
+  tema_univ
+``` 
 ## Análisis Bivariante y Multivariante
 
 En esta sección cruzamos las variables para dar respuesta a las preguntas planteadas en la introducción. Para ello, fijamos el análisis en el año 2019. 
