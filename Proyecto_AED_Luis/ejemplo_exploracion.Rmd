@@ -1,0 +1,395 @@
+---
+title: "ejemplo_exploración"
+author: "Luis Molina Villar"
+date: "2026-10-30"
+output:
+  html_document: default
+  pdf_document: default
+---
+* **1. Introducción y Pregunta de Investigación:** Contexto del problema y formulación de objetivos[cite: 1, 3].
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyr)
+library(ggplot2)
+library(readr)
+library(knitr)
+library(kableExtra)
+library(mapSpain)
+library(sf)
+library(corrplot)
+library(scales)
+library(dplyr)
+library(stringr)
+library(ggrepel) # Recomendado para evitar que las etiquetas se solapen
+
+# Mapeo entre nombre de provincias y códigos, todos los oficiales y usados por el INE
+ine_provincias <- tibble::tribble(
+  ~Cod_Provincia, ~Nom_Provincia,
+  "01", "Araba/Álava",
+  "02", "Albacete",
+  "03", "Alicante/Alacant",
+  "04", "Almería",
+  "05", "Ávila",
+  "06", "Badajoz",
+  "07", "Balears, Illes",
+  "08", "Barcelona",
+  "09", "Burgos",
+  "10", "Cáceres",
+  "11", "Cádiz",
+  "12", "Castellón/Castelló",
+  "13", "Ciudad Real",
+  "14", "Córdoba",
+  "15", "Coruña, A",
+  "16", "Cuenca",
+  "17", "Girona",
+  "18", "Granada",
+  "19", "Guadalajara",
+  "20", "Gipuzkoa",
+  "21", "Huelva",
+  "22", "Huesca",
+  "23", "Jaén",
+  "24", "León",
+  "25", "Lleida",
+  "26", "Rioja, La",
+  "27", "Lugo",
+  "28", "Madrid",
+  "29", "Málaga",
+  "30", "Murcia",
+  "31", "Navarra",
+  "32", "Ourense",
+  "33", "Asturias",
+  "34", "Palencia",
+  "35", "Palmas, Las",
+  "36", "Pontevedra",
+  "37", "Salamanca",
+  "38", "Santa Cruz de Tenerife",
+  "39", "Cantabria",
+  "40", "Segovia",
+  "41", "Sevilla",
+  "42", "Soria",
+  "43", "Tarragona",
+  "44", "Teruel",
+  "45", "Toledo",
+  "46", "Valencia/València",
+  "47", "Valladolid",
+  "48", "Bizkaia",
+  "49", "Zamora",
+  "50", "Zaragoza",
+  "51", "Ceuta",
+  "52", "Melilla"
+)
+
+```
+En este archivo se desarrolla una exploración del conjunto de datos `datos_SocioEcon_ESP` para un corte de un único año. Los resultados son reproducibles para cualquier año seleccionado del conjunto de datos.
+```{r}
+
+load("./data/Datos_SocioEcon.Rdata")
+load("./data/Datos_Laborales.Rdata")
+
+# Juntamos los datos en formato tidy. Para lo cual separamos los datos laborales en las columnas correspondientes, los unimos y deshacemos la variable id en provincia y año.
+
+laborales_tidy <- datos_laborales_ESP %>%
+  pivot_wider(
+    names_from = Sector,
+    values_from = c(Personas_Ocupadas, VAB),
+    # Modificamos el nombre para que quede claro, ej: "Personas_Ocupadas_Primario"
+    names_glue = "{.value}_{Sector}" 
+  ) 
+
+df_completo <- datos_socioecon_ESP %>%
+  full_join(laborales_tidy,by = "id") %>%
+  separate(id, into = c("Periodo", "Cod_Provincia"), sep = "_", convert = FALSE) %>%
+  mutate(Periodo = as.integer(Periodo)) %>% 
+  left_join(ine_provincias,by = "Cod_Provincia") %>%
+  rename(Provincia = Nom_Provincia) %>%
+  select(-Cod_Provincia)
+
+# 1. Selección de un único año para el análisis de sección cruzada
+anio_objetivo <- 2022
+df_corte <- df_completo %>%
+  filter(Periodo == anio_objetivo) %>%
+  select(-Periodo)
+
+``` 
+* **2. Resumen y Calidad de los Datos:** Diagnóstico de dimensiones, tipos de datos, valores nulos y limpieza realizada[cite: 1, 3, 4].
+```{r,echo=F}
+conteo_nas <- sapply(df_corte, function(x) sum(is.na(x)))
+print(paste("Resumen de valores faltantes para el año", anio_objetivo))
+print(conteo_nas[conteo_nas > 0]) # Muestra solo las variables que tienen algún NA
+```
+* **3. Análisis Univariado:** Evaluación de distribuciones, formas y métricas resistentes (mediana, IQR)[cite: 1, 2, 5].
+
+Ahora que sabemos que no hay valores faltantes, vamos a realizar un estudio univariante de cada una de las variables de los datos.
+```{r}
+resumen_cuant_loc <- function(df, digits = 2, trim_pct = 0.05) {
+  df %>%
+    select(where(is.numeric)) %>%
+    pivot_longer(cols = everything(), names_to = "Variable", values_to = "Valor") %>%
+    group_by(Variable) %>%
+    summarise(
+      N_Obs       = n(),
+      N_NA        = sum(is.na(Valor)),
+
+      # Tendencia Central / Localización
+      Media       = round(mean(Valor, na.rm = TRUE), digits),
+      Media_Trim  = round(mean(Valor, trim = trim_pct, na.rm = TRUE), digits),
+      Mediana     = round(median(Valor, na.rm = TRUE), digits),
+      
+      # Posición / Cuantiles
+      Min         = round(min(Valor, na.rm = TRUE), digits),
+      P10         = round(quantile(Valor, 0.10, na.rm = TRUE), digits),
+      P90         = round(quantile(Valor, 0.90, na.rm = TRUE), digits),
+      Max         = round(max(Valor, na.rm = TRUE), digits),
+      
+      .groups     = "drop"
+    )
+}
+
+resumen_cuant_disp <- function(df, digits = 3) {
+  df %>%
+    select(where(is.numeric)) %>%
+    pivot_longer(cols = everything(), names_to = "Variable", values_to = "Valor") %>%
+    group_by(Variable) %>%
+    summarise(
+
+      # Dispersión Paramétrica
+      Varianza    = round(var(Valor, na.rm = TRUE), digits),
+      SD          = round(sd(Valor, na.rm = TRUE), digits),
+      Rango       = round(max(Valor, na.rm = TRUE) - min(Valor, na.rm = TRUE), digits),
+      
+      # Dispersión Robusta (Inmune a outliers)
+      IQR         = round(IQR(Valor, na.rm = TRUE), digits),
+      MAD         = round(mad(Valor, na.rm = TRUE), digits),
+      
+      # Dispersión Relativa (%)
+      CV_Pct      = round((sd(Valor, na.rm = TRUE) / mean(Valor, na.rm = TRUE)) * 100, digits),
+      
+      .groups     = "drop"
+    )
+}
+```
+
+
+```{r,fig.width = 10, fig.height = 6}
+
+res_loc <- df_corte %>% 
+  select(-paste("VAB_",c("Primario","Secundario","Terciario"),sep=""),
+         -paste("Personas_Ocupadas_",c("Primario","Secundario","Terciario"),sep=""))  %>%resumen_cuant_loc()
+
+print(res_loc)
+```
+
+```{r, fig.width = 10, fig.height = 6}
+res_disp <- df_corte %>% 
+  select(-paste("VAB_",c("Primario","Secundario","Terciario"),sep=""),
+         -paste("Personas_Ocupadas_",c("Primario","Secundario","Terciario"),sep=""))  %>%resumen_cuant_disp()
+
+print(res_disp)
+``` 
+Para observar un mayor detalle en la distribución completa de los datos continuos socioeconómicos, resulta útil visualizar su histograma. Reestructuramos la tabla para generar múltiples paneles simultáneos.
+```{r fig.width = 10, fig.height = 6}
+# Seleccionamos y reestructuramos las variables socioeconómicas a formato largo
+df_socio <- df_corte %>%
+  select(Provincia, Habitantes, Edad_Media_Maternidad, Migracion_Interior, 
+         PIB_per_capita, RentaBrutaMedia, Precio_m2) %>%
+  gather(Variable, Valor,-Provincia) #[cite: 1]
+
+# Visualización mediante histogramas iterados
+ggplot(df_socio, aes(x = Valor)) +
+  geom_histogram(fill = "green", color = "black", bins = 20, na.rm = TRUE) + #[cite: 3]
+  facet_wrap(~Variable, scales = "free") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 10)) + #[cite: 1]
+  labs(
+    title = sprintf("Distribución de Variables Socioeconómicas (%d)", anio_objetivo),
+    x = "", 
+    y = "Frecuencia"
+  )
+```
+Parece que hay valores atípicos; utilizaremos la regla intercuartílica para detectarlos.
+```{r, fig.width = 10, fig.height = 6}
+obtener_outliers_iqr <- function(df, variable, k = 1.5) {
+  v <- df[[variable]]
+  
+  q1 <- quantile(v, 0.25, na.rm = TRUE)
+  q3 <- quantile(v, 0.75, na.rm = TRUE)
+  iqr_val <- IQR(v, na.rm = TRUE)
+  
+  # No hay límites útiles si la variable no presenta variación.
+  if (iqr_val == 0) {
+    return(df[0, , drop = FALSE])
+  }
+  
+  limite_inferior <- q1 - k * iqr_val
+  limite_superior <- q3 + k * iqr_val
+  
+  df <- df %>%
+    filter(!is.na(.data[[variable]])) %>%
+    filter(.data[[variable]] < limite_inferior | .data[[variable]] > limite_superior) %>%
+    select(Provincia, all_of(variable)) %>%
+    mutate(
+      IQR_Ref      = round(iqr_val, 2),
+      Diferencia   = round(abs(.data[[variable]] - q1), 2),
+      Tipo_Outlier = if_else(.data[[variable]] < limite_inferior, "Inferior", "Superior")
+    )
+  return(df)
+}
+
+outliers_socio <- df_socio %>%
+  group_by(Variable) %>%
+  group_modify(~ obtener_outliers_iqr(.x, variable = "Valor")) %>%
+  ungroup()
+
+df_socio <- df_socio %>% mutate(es_outlier = Provincia %in% outliers_socio$Provincia)
+
+# 3. Visualización mediante histogramas iterados con outliers etiquetados
+ggplot(df_socio, aes(x = Valor, fill = "steelblue")) +
+  geom_histogram(color = "black", bins = 20, na.rm = TRUE) +
+geom_point(
+    data = outliers_socio,
+    aes(x = Valor, y = 0),
+    color = "firebrick",
+    size = 3,
+    shape = 18
+  ) +
+  # Etiquetado de provincias atípicas
+  geom_text_repel(
+    data        = outliers_socio,
+    aes(x = Valor, y = 5, label = Provincia),
+    inherit.aes = FALSE, # Evita conflicto con el 'fill' global
+    color       = "firebrick",
+    fontface    = "bold",
+    size        = 2.8,
+    nudge_y     = 0.5,   # Posiciona el texto justo sobre la base del eje X
+    direction   = "x",
+    angle       = 45,
+    box.padding = 0.3,
+    max.overlaps = Inf
+  ) +
+  facet_wrap(~ Variable, scales = "free") +
+  theme_minimal() +
+  theme(
+    axis.text.x      = element_text(angle = 45, hjust = 1, size = 10),
+    strip.background = element_rect(fill = "grey92", color = NA),
+    strip.text       = element_text(face = "bold")
+  ) +
+  labs(
+    title = sprintf("Distribución de Variables Socioeconómicas con Outliers (%d)", anio_objetivo),
+    x     = "", 
+    y     = "Frecuencia"
+  )
+```
+
+```{r}
+df_socio <- df_corte %>%
+  select( Provincia, Habitantes, Edad_Media_Maternidad, Migracion_Interior, 
+         PIB_per_capita, RentaBrutaMedia, Precio_m2) %>%
+  pivot_longer(
+    cols = -c(Provincia), 
+    names_to = "Variable", 
+    values_to = "Valor"
+  ) %>%
+  filter(!is.na(Valor)) %>%
+  group_by(Variable) %>%
+  mutate(
+    es_outlier = Provincia %in% outliers_socio$Provincia
+  ) %>%
+  ungroup()
+
+# 2. Visualización con Boxplots Facetados
+ggplot(df_socio, aes(x = Variable, y = Valor)) +
+  # Boxplot base (outlier.shape = NA evita duplicar los puntos atípicos nativos)
+  geom_boxplot(fill = "aliceblue", color = "steelblue", outlier.shape = NA, alpha = 0.8) +
+  
+  # Destacar puntos atípicos identificados
+  geom_point(
+    data = outliers_socio,
+    aes(x = Variable, y = Valor),
+    color = "firebrick",
+    size = 2.5
+  ) +
+  
+  # Etiquetar provincias con repulsión de texto
+  geom_text_repel(
+    data = outliers_socio,
+    aes(x = Variable, y = Valor, label = Provincia),
+    color = "firebrick",
+    fontface = "bold",
+    size = 3,
+    box.padding = 0.4,
+    point.padding = 0.3,
+    max.overlaps = Inf
+  ) +
+  
+  # Facetas con escalas independientes por variable
+  facet_wrap(~ Variable, scales = "free") +
+  
+  theme_minimal() +
+  theme(
+    axis.text.x      = element_blank(), # Ocultamos texto del eje X al estar en el título de faceta
+    axis.ticks.x     = element_blank(),
+    strip.background = element_rect(fill = "grey92", color = NA),
+    strip.text       = element_text(face = "bold")
+  ) +
+  labs(
+    title = sprintf("Distribución y Outliers Socioeconómicos mediante Boxplots (%d)", anio_objetivo),
+    x     = "",
+    y     = "Valor Observado"
+  )
+```
+Trazar la distribución es fundamental para observar si existe una distribución sesgada en las categorías[cite: 1]. Al utilizar gather() para agrupar los distintos sectores en una única columna de variables y otra de valores, podemos analizar comparativamente la ocupación y el valor agregado bruto[cite: 1].
+```{r}
+# 1. Reestructuración Tidy del dataset
+df_laboral_long <- df_corte %>%
+  rename_with(~ str_replace(., "Personas_Ocupadas", "Ocupacion"), starts_with("Personas_Ocupadas")) %>%
+  select(Provincia, ends_with("Primario"), ends_with("Secundario"), ends_with("Terciario")) %>%
+  pivot_longer(-Provincia, names_to = "Clave", values_to = "Valor") %>%
+  separate(Clave, into = c("Metrica", "Sector"), sep = "_") %>%
+  filter(!is.na(Valor))
+
+# 2. Extracción de outliers agrupados mediante la regla 1.5 x IQR
+outliers_laboral <- df_laboral_long %>%
+  group_by(Metrica, Sector) %>%
+  group_modify(~ obtener_outliers_iqr(.x, variable = "Valor")) %>%
+  ungroup()
+
+# 3. Visualización con Boxplots Facetados y Outliers Etiquetados
+ggplot(df_laboral_long, aes(x = Sector, y = Valor, fill = Sector)) +
+  # Ocultamos los puntos nativos del boxplot para no duplicar marcas
+  geom_boxplot(na.rm = TRUE, alpha = 0.8, outlier.shape = NA) +
+  
+  # Puntos destacados mediante la regla intercuartílica
+  geom_point(
+    data  = outliers_laboral,
+    aes(x = Sector, y = Valor),
+    color = "firebrick",
+    size  = 2.5
+  ) +
+  
+  # Etiquetas de las provincias detectadas como outliers
+  geom_text_repel(
+    data          = outliers_laboral,
+    aes(x = Sector, y = Valor, label = Provincia),
+    color         = "firebrick",
+    fontface      = "bold",
+    size          = 3,
+    box.padding   = 0.4,
+    point.padding = 0.3,
+    max.overlaps  = Inf
+  ) +
+  
+  scale_y_log10(labels = comma) +
+  coord_flip() + 
+  facet_wrap(~ Metrica, ncol = 1, scales = "free_x") + 
+  labs(
+    title    = sprintf("Distribución Sectorial: Ocupación y VAB (%d)", anio_objetivo),
+    subtitle = "Outliers detectados mediante la regla 1.5 x IQR",
+    x        = "Sector Económico", 
+    y        = "Valor (Escala Logarítmica)"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+* **4. Análisis Bivariado y Multivariado:** Identificación de tendencias, correlaciones y agrupaciones[cite: 1, 2].
+* **5. Hallazgos Principales y Próximos Pasos:** Conclusiones, limitaciones de los datos e hipótesis generadas para posibles modelos[cite: 1, 2].Empezamos verificando si en alguna columna hay datos faltantes.
