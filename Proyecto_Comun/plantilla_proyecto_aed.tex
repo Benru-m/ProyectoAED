@@ -188,47 +188,6 @@ Inmobiliario; R}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Pandoc syntax highlighting
-\usepackage{color}
-\usepackage{fancyvrb}
-\newcommand{\VerbBar}{|}
-\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
-\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
-% Add ',fontsize=\small' for more characters per line
-\usepackage{framed}
-\definecolor{shadecolor}{RGB}{248,248,248}
-\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
-\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
-\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
-\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
-\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
-\newcommand{\BuiltInTok}[1]{#1}
-\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
-\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
-\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
-\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
-\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
-\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
-\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
-\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
-\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
-\newcommand{\ExtensionTok}[1]{#1}
-\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
-\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
-\newcommand{\ImportTok}[1]{#1}
-\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
-\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
-\newcommand{\NormalTok}[1]{#1}
-\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
-\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
-\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
-\newcommand{\RegionMarkerTok}[1]{#1}
-\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
-\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
-\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
-\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
-\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
-\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
 
 % tightlist command for lists without linebreak
 \providecommand{\tightlist}{%
@@ -247,6 +206,8 @@ Inmobiliario; R}
 \makesavenoteenv{longtable}
 
 
+\usepackage{geometry}
+\geometry{left=5.85cm,right=1.9cm}
 \usepackage{booktabs}
 \usepackage{longtable}
 \usepackage{array}
@@ -268,7 +229,7 @@ Inmobiliario; R}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\section{1. Introducción y Planteamiento de
+\section{Introducción y Planteamiento de
 Preguntas}\label{introducciuxf3n-y-planteamiento-de-preguntas}
 
 El objetivo de este proyecto es realizar un análisis exploratorio de
@@ -303,7 +264,7 @@ preguntas de investigación:
   positivo) frente a aquellas con modelos primarios?
 \end{enumerate}
 
-\section{2. Importación y Acondicionamiento de
+\section{Importación y Acondicionamiento de
 Datos}\label{importaciuxf3n-y-acondicionamiento-de-datos}
 
 El primer paso para el análisis es cargar los conjuntos de datos
@@ -384,7 +345,7 @@ Una vez tenemos los datos tratados, los juntamos haciendo uso del
 identificador único. Para evitar que se generen muchos valores perdidos,
 para la unión solamente tomaremos las instancias comunes a todos.
 
-\section{3. Análisis de Datos Perdidos (NAs) e
+\section{Análisis de Datos Perdidos (NAs) e
 Imputación}\label{anuxe1lisis-de-datos-perdidos-nas-e-imputaciuxf3n}
 
 Ahora que tenemos un conjunto de datos con todas las variables de
@@ -460,24 +421,7 @@ el primer dato posterior o respectivamente anterior no faltante.
 método de imputación concreto o por qué se ha descartado una variable
 con demasiados valores nulos.}
 
-\section{4. Análisis de Valores Atípicos
-(Outliers)}\label{anuxe1lisis-de-valores-atuxedpicos-outliers}
-
-Algunas provincias (como Madrid, Barcelona o regiones insulares) pueden
-presentar comportamientos extremos que distorsionen el análisis general.
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\CommentTok{\# Código para visualizar outliers mediante boxplots}
-\CommentTok{\# Métodos aplicados (ej. Rango Intercuartílico {-} IQR) para filtrar o transformar variables.}
-\end{Highlighting}
-\end{Shaded}
-
-\emph{Explicación del tratamiento de los outliers. Se debe justificar si
-se mantienen en el dataset porque representan información real valiosa o
-si se aplican transformaciones logarítmicas para suavizar su impacto.}
-
-\section{5. Análisis Exploratorio de Datos
+\section{Análisis Exploratorio de Datos
 (EDA)}\label{anuxe1lisis-exploratorio-de-datos-eda}
 
 \subsection{Análisis Univariante}\label{anuxe1lisis-univariante}
@@ -708,7 +652,7 @@ retenidos, acompañado de un segundo valor atípico cercano a los
 inferior por debajo del \(60\%\), apuntando a la existencia de alguna
 provincia altamente especializada fuera de los servicios.
 
-\subsection{5.2 Análisis Bivariante y
+\subsection{Análisis Bivariante y
 Multivariante}\label{anuxe1lisis-bivariante-y-multivariante}
 
 En esta sección cruzamos las variables para dar respuesta a las
@@ -919,7 +863,7 @@ proyecto: el esfuerzo para acceder a la vivienda está fuertemente
 acoplado a la terciarización de la economía (\(0.60\)) y empuja al alza
 la edad de maternidad (\(0.55\)).
 
-\section{6. Conclusiones Finales}\label{conclusiones-finales}
+\section{Conclusiones Finales}\label{conclusiones-finales}
 
 A partir del análisis exploratorio realizado, podemos extraer las
 siguientes conclusiones:

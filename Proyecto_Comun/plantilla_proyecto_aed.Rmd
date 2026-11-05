@@ -22,6 +22,9 @@ abstract: |
   El presente trabajo desarrolla un Análisis Exploratorio de Datos (AED) cruzando dimensiones económicas, inmobiliarias y sociodemográficas a nivel provincial en España. Se emplean datos del Instituto Nacional de Estadística (INE) para analizar cómo la hiperdependencia de ciertos sectores tensiona el mercado inmobiliario, afectando a los saldos migratorios y al ciclo vital. El análisis cubre la importación y limpieza de datos, el tratamiento de valores perdidos y atípicos, y un análisis univariante y bivariante para dar respuesta a las preguntas planteadas.
 keywords: "Análisis Exploratorio de Datos; Demografía; Mercado Inmobiliario; R"
 output: rticles::mdpi_article
+header-includes:
+  - \usepackage{geometry}
+  - \geometry{left=5.85cm,right=1.9cm} 
 ---
 
 ```{r setup, include=FALSE}
@@ -113,7 +116,7 @@ ine_provincias <- tibble::tribble(
 remove(list=c("paquetes","paquetes_faltantes"))
 ```
 
-# 1. Introducción y Planteamiento de Preguntas
+#  Introducción y Planteamiento de Preguntas
 
 El objetivo de este proyecto es realizar un análisis exploratorio de distintos indicadores socioeconómicos a nivel provincial en España, y sus posibles relaciones. En particular, los indicadores estudiados corresponden a el modelo productivo de las diferentes provincias, sus mercados laborales e inmobiliarios, y el ciclo vital y demográfico de sus habitantes.
 
@@ -127,7 +130,7 @@ A partir del cruce de datos, nos planteamos responder a las siguientes preguntas
 
 4. **El refugio industrial:** ¿Logran las provincias con un tejido industrial fuerte retener mejor a la población joven (saldo migratorio positivo) frente a aquellas con modelos primarios?
 
-# 2. Importación y Acondicionamiento de Datos
+#  Importación y Acondicionamiento de Datos
 
 El primer paso para el análisis es cargar los conjuntos de datos obtenidos del [INE](https://ine.es/dyngs/INEbase/listaoperaciones.htm). Los ficheros originales se encuentran almacenados en la carpeta local `data/raw`.
 
@@ -544,7 +547,7 @@ remove(list = c("datos_laborales_ESP",
                 "generar_id_obs"))
 ```
 
-# 3. Análisis de Datos Perdidos (NAs) e Imputación
+#  Análisis de Datos Perdidos (NAs) e Imputación
 
 Ahora que tenemos un conjunto de datos con todas las variables de interés, y las instancias adecuadamente identificadas, podemos proceder al análisis exploratorio propiamente dicho. Para empezar observamos en qué variables hay valores faltantes.
 
@@ -596,19 +599,7 @@ remove(list=c("imputation_value"))
 
 *Justificación de la decisión tomada: por qué se ha elegido un método de imputación concreto o por qué se ha descartado una variable con demasiados valores nulos.*
 
-# 4. Análisis de Valores Atípicos (Outliers)
-
-Algunas provincias (como Madrid, Barcelona o regiones insulares) pueden presentar comportamientos extremos que distorsionen el análisis general. 
-
-```{r analisis-outliers}
-# Código para visualizar outliers mediante boxplots
-# Métodos aplicados (ej. Rango Intercuartílico - IQR) para filtrar o transformar variables.
-```
-
-*Explicación del tratamiento de los outliers. Se debe justificar si se mantienen en el dataset porque representan información real valiosa o si se aplican transformaciones logarítmicas para suavizar su impacto.*
-
-# 5. Análisis Exploratorio de Datos (EDA)
-
+#  Análisis Exploratorio de Datos (EDA)
 
 ## Análisis Univariante
 
@@ -856,7 +847,7 @@ df_analisis %>%
 
 La distribución mediante diagramas de caja (Figura 3), circunscrita al único año de observación (2019), subraya el peso que tienen los valores extremos (marcados en rojo) en la distorsión de las medias. El precio del metro cuadrado destaca por concentrar cuatro valores atípicos superiores a los $1.600$ €/m$^2$. El saldo migratorio ilustra de forma prístina la macrocefalia demográfica del país: mientras la inmensa mayoría de las provincias ven sus cajas comprimidas por debajo del cero, un atípico extremo se dispara por encima de los $12.000$ jóvenes retenidos, acompañado de un segundo valor atípico cercano a los $2.000$. En el ámbito productivo, el VAB terciario exhibe un atípico inferior por debajo del $60\%$, apuntando a la existencia de alguna provincia altamente especializada fuera de los servicios.
 
-## 5.2 Análisis Bivariante y Multivariante
+## Análisis Bivariante y Multivariante
 
 En esta sección cruzamos las variables para dar respuesta a las preguntas planteadas en la introducción. Para ello, fijamos el análisis en el año 2019. 
 
@@ -1311,7 +1302,7 @@ corrplot(matriz_cor,
 
 La matriz de correlaciones consolida matemáticamente la narrativa del proyecto: el esfuerzo para acceder a la vivienda está fuertemente acoplado a la terciarización de la economía ($0.60$) y empuja al alza la edad de maternidad ($0.55$).
 
-# 6. Conclusiones Finales
+# Conclusiones Finales
 
 A partir del análisis exploratorio realizado, podemos extraer las siguientes conclusiones:
 

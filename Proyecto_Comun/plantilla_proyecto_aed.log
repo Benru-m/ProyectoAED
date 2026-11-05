@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.11.5)  5 NOV 2026 17:06
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.11.5)  5 NOV 2026 17:31
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -839,49 +839,33 @@ Package: seqsplit 2006/08/07 v0.1 Splitting long sequences (DNA, RNA, proteins, 
 \cellWidthX=\skip188
 \cellWidthY=\skip189
 \cellWidthZ=\skip190
-) (c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/fancyvrb/fancyvrb.sty
-Package: fancyvrb 2026/10/20 4.8 verbatim text (tvz,hv)
-\c@FV@Env=\count390
-\FV@CodeLineNo=\count391
-\FV@InFile=\read3
-\FV@TabBox=\box78
-\c@FancyVerbLine=\count392
-\FV@StepNumber=\count393
-\FV@OutFile=\write4
-) (c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/framed/framed.sty
-Package: framed 2011/10/22 v 0.96: framed or shaded text with page breaks
-\OuterFrameSep=\skip191
-\fb@frw=\dimen343
-\fb@frh=\dimen344
-\FrameRule=\dimen345
-\FrameSep=\dimen346
 ) (c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/tools/longtable.sty
 Package: longtable 2026-10-05 v4.28 Multi-page Table package (DPC)
-\LTleft=\skip192
-\LTright=\skip193
-\LTpre=\skip194
-\LTpost=\skip195
-\LTchunksize=\count394
-\LTcapwidth=\dimen347
-\LT@head=\box79
-\LT@firsthead=\box80
-\LT@foot=\box81
-\LT@lastfoot=\box82
-\LT@gbox=\box83
-\LT@cols=\count395
-\LT@rows=\count396
-\c@LT@tables=\count397
-\c@LT@chunks=\count398
+\LTleft=\skip191
+\LTright=\skip192
+\LTpre=\skip193
+\LTpost=\skip194
+\LTchunksize=\count390
+\LTcapwidth=\dimen343
+\LT@head=\box78
+\LT@firsthead=\box79
+\LT@foot=\box80
+\LT@lastfoot=\box81
+\LT@gbox=\box82
+\LT@cols=\count391
+\LT@rows=\count392
+\c@LT@tables=\count393
+\c@LT@chunks=\count394
 \LT@p@ftn=\toks62
 ) (c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/mdwtools/footnote.sty
 Package: footnote 1997/01/28 1.13 Save footnotes around boxes
-\fn@notes=\box84
-\fn@width=\dimen348
+\fn@notes=\box83
+\fn@width=\dimen344
 ) (c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/wrapfig/wrapfig.sty
-\wrapoverhang=\dimen349
-\WF@size=\dimen350
-\c@WF@wrappedlines=\count399
-\WF@box=\box85
+\wrapoverhang=\dimen345
+\WF@size=\dimen346
+\c@WF@wrappedlines=\count395
+\WF@box=\box84
 \WF@everypar=\toks63
 Package: wrapfig 2003/01/31  v 3.6
 ) (c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/pdflscape/pdflscape.sty
@@ -894,37 +878,37 @@ Package: lscape 2020/05/28 v3.02 Landscape Pages (DPC)
 Package: tabu 2019/01/11 v2.9 - flexible LaTeX tabulars (FC+tabu-fixed)
 (c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/varwidth/varwidth.sty
 Package: varwidth 2009/03/30 ver 0.92;  Variable-width minipages
-\@vwid@box=\box86
-\sift@deathcycles=\count400
-\@vwid@loff=\dimen351
-\@vwid@roff=\dimen352
+\@vwid@box=\box85
+\sift@deathcycles=\count396
+\@vwid@loff=\dimen347
+\@vwid@roff=\dimen348
 )
 ==> First Aid for varwidth.sty applied!
-\c@taburow=\count401
-\tabu@nbcols=\count402
-\tabu@cnt=\count403
-\tabu@Xcol=\count404
-\tabu@alloc=\count405
-\tabu@nested=\count406
-\tabu@target=\dimen353
-\tabu@spreadtarget=\dimen354
-\tabu@naturalX=\dimen355
-\tabucolX=\dimen356
-\tabu@Xsum=\dimen357
-\extrarowdepth=\dimen358
-\abovetabulinesep=\dimen359
-\belowtabulinesep=\dimen360
-\tabustrutrule=\dimen361
+\c@taburow=\count397
+\tabu@nbcols=\count398
+\tabu@cnt=\count399
+\tabu@Xcol=\count400
+\tabu@alloc=\count401
+\tabu@nested=\count402
+\tabu@target=\dimen349
+\tabu@spreadtarget=\dimen350
+\tabu@naturalX=\dimen351
+\tabucolX=\dimen352
+\tabu@Xsum=\dimen353
+\extrarowdepth=\dimen354
+\abovetabulinesep=\dimen355
+\belowtabulinesep=\dimen356
+\tabustrutrule=\dimen357
 \tabu@thebody=\toks64
 \tabu@footnotes=\toks65
-\tabu@box=\box87
-\tabu@arstrutbox=\box88
-\tabu@hleads=\box89
-\tabu@vleads=\box90
-\tabu@cellskip=\skip196
+\tabu@box=\box86
+\tabu@arstrutbox=\box87
+\tabu@hleads=\box88
+\tabu@vleads=\box89
+\tabu@cellskip=\skip195
 ) (c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/threeparttable/threeparttable.sty
 Package: threeparttable 2003/06/13  v 3.0
-\@tempboxb=\box91
+\@tempboxb=\box90
 ) (c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/threeparttablex/threeparttablex.sty
 Package: threeparttablex 2013/07/23 v0.3 by daleif
 (c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/environ/environ.sty
@@ -932,25 +916,25 @@ Package: environ 2014/05/04 v0.3 A new way to define environments
 (c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/trimspaces/trimspaces.sty
 Package: trimspaces 2009/09/17 v1.1 Trim spaces around a token list
 ))
-\TPTL@width=\skip197
+\TPTL@width=\skip196
 ) (c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/tex/generic/ulem/ulem.sty
-\UL@box=\box92
-\UL@hyphenbox=\box93
-\UL@skip=\skip198
+\UL@box=\box91
+\UL@hyphenbox=\box92
+\UL@skip=\skip197
 \UL@hook=\toks66
-\UL@height=\dimen362
-\UL@pe=\count407
-\UL@pixel=\dimen363
-\ULC@box=\box94
+\UL@height=\dimen358
+\UL@pe=\count403
+\UL@pixel=\dimen359
+\ULC@box=\box93
 Package: ulem 2019/11/18
-\ULdepth=\dimen364
+\ULdepth=\dimen360
 ) (c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/makecell/makecell.sty
 Package: makecell 2009/08/03 V0.1e Managing of Tab Column Heads and Cells
-\rotheadsize=\dimen365
-\c@nlinenum=\count408
+\rotheadsize=\dimen361
+\c@nlinenum=\count404
 \TeXr@lab=\toks67
 )
-Package translations Info: No language package found. I am going to use `english' as default language. on input line 265.
+Package translations Info: No language package found. I am going to use `english' as default language. on input line 226.
 (c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/hyperref/hyperref.sty
 Package: hyperref 2026-11-03 v7.01t Hypertext links for LaTeX
 (c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/tex/generic/pdfescape/pdfescape.sty
@@ -964,13 +948,13 @@ Package: refcount 2019/12/15 v3.6 Data extraction from label references (HO)
 ) (c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/tex/generic/gettitlestring/gettitlestring.sty
 Package: gettitlestring 2019/12/15 v1.6 Cleanup title references (HO)
 )
-\c@section@level=\count409
+\c@section@level=\count405
 ) (c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/tex/generic/stringenc/stringenc.sty
 Package: stringenc 2019/11/29 v1.12 Convert strings between diff. encodings (HO)
 )
-\@linkdim=\dimen366
-\Hy@linkcounter=\count410
-\Hy@pagecounter=\count411
+\@linkdim=\dimen362
+\Hy@linkcounter=\count406
+\Hy@pagecounter=\count407
 (c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/hyperref/pd1enc.def
 File: pd1enc.def 2026-11-03 v7.01t Hyperref: PDFDocEncoding definition (HO)
 Now handling font encoding PD1 ...
@@ -978,7 +962,7 @@ Now handling font encoding PD1 ...
 ) (c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/tex/generic/intcalc/intcalc.sty
 Package: intcalc 2019/12/15 v1.3 Expandable calculations with integers (HO)
 )
-\Hy@SavedSpaceFactor=\count412
+\Hy@SavedSpaceFactor=\count408
 (c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/hyperref/puenc.def
 File: puenc.def 2026-11-03 v7.01t Hyperref: PDF Unicode definition (HO)
 Now handling font encoding PU ...
@@ -996,17 +980,17 @@ Package hyperref Info: Plain pages OFF on input line 4214.
 Package hyperref Info: Backreferencing OFF on input line 4219.
 Package hyperref Info: Implicit mode ON; LaTeX internals redefined.
 Package hyperref Info: Bookmarks ON on input line 4466.
-\c@Hy@tempcnt=\count413
+\c@Hy@tempcnt=\count409
 LaTeX Info: Redefining \url on input line 4805.
-\XeTeXLinkMargin=\dimen367
+\XeTeXLinkMargin=\dimen363
 (c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/tex/generic/bitset/bitset.sty
 Package: bitset 2019/12/09 v1.3 Handle bit-vector datatype (HO)
 (c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/tex/generic/bigintcalc/bigintcalc.sty
 Package: bigintcalc 2019/12/15 v1.5 Expandable calculations on big integers (HO)
 ))
-\Fld@menulength=\count414
-\Field@Width=\dimen368
-\Fld@charsize=\dimen369
+\Fld@menulength=\count410
+\Field@Width=\dimen364
+\Fld@charsize=\dimen365
 Package hyperref Info: Hyper figures OFF on input line 6091.
 Package hyperref Info: Link nesting OFF on input line 6096.
 Package hyperref Info: Hyper index ON on input line 6099.
@@ -1014,15 +998,15 @@ Package hyperref Info: backreferencing OFF on input line 6106.
 Package hyperref Info: Link coloring ON on input line 6109.
 Package hyperref Info: Link coloring with OCG OFF on input line 6116.
 Package hyperref Info: PDF/A mode OFF on input line 6121.
-\Hy@abspage=\count415
-\c@Item=\count416
-\c@Hfootnote=\count417
+\Hy@abspage=\count411
+\c@Item=\count412
+\c@Hfootnote=\count413
 )
 Package hyperref Info: Driver: hpdftex.
 (c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/hyperref/hpdftex.def
 File: hpdftex.def 2026-11-03 v7.01t Hyperref driver for pdfTeX
-\Fld@listcount=\count418
-\c@bookmark@seq@number=\count419
+\Fld@listcount=\count414
+\c@bookmark@seq@number=\count415
 (c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/rerunfilecheck/rerunfilecheck.sty
 Package: rerunfilecheck 2025-06-21 v1.11 Rerun checks for auxiliary files (HO)
 (c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/tex/generic/uniquecounter/uniquecounter.sty
@@ -1030,7 +1014,7 @@ Package: uniquecounter 2019/12/15 v1.4 Provide unlimited unique counter (HO)
 )
 Package uniquecounter Info: New unique counter `rerunfilecheck' on input line 284.
 )
-\Hy@SectionHShift=\skip199
+\Hy@SectionHShift=\skip198
 ) (c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/cleveref/cleveref.sty
 Package: cleveref 2018/03/27 v0.21.4 Intelligent cross-referencing
 Package cleveref Info: `hyperref' support loaded on input line 2370.
@@ -1048,7 +1032,7 @@ Package cleveref Info: `amsthm' support loaded on input line 3026.
 ) (c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/firstaid/latex-firstaid-pkg-cleveref.ltx
 ==> First Aid for cleveref.sty applied!
 )
-LaTeX Font Info:    Trying to load font information for T1+ppl on input line 265.
+LaTeX Font Info:    Trying to load font information for T1+ppl on input line 226.
 (c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/psnfss/t1ppl.fd
 File: t1ppl.fd 2001/06/04 font definitions for T1/ppl.
 ) (./plantilla_proyecto_aed.aux
@@ -1061,34 +1045,34 @@ LaTeX Warning: Label `tab:unnamed-chunk-6@cref' multiply defined.
 )
 \openout1 = `plantilla_proyecto_aed.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 265.
-LaTeX Font Info:    ... okay on input line 265.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 265.
-LaTeX Font Info:    ... okay on input line 265.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 265.
-LaTeX Font Info:    ... okay on input line 265.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 265.
-LaTeX Font Info:    ... okay on input line 265.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 265.
-LaTeX Font Info:    ... okay on input line 265.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 265.
-LaTeX Font Info:    ... okay on input line 265.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 265.
-LaTeX Font Info:    ... okay on input line 265.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 265.
-LaTeX Font Info:    ... okay on input line 265.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 265.
-LaTeX Font Info:    ... okay on input line 265.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 226.
+LaTeX Font Info:    ... okay on input line 226.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 226.
+LaTeX Font Info:    ... okay on input line 226.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 226.
+LaTeX Font Info:    ... okay on input line 226.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 226.
+LaTeX Font Info:    ... okay on input line 226.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 226.
+LaTeX Font Info:    ... okay on input line 226.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 226.
+LaTeX Font Info:    ... okay on input line 226.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 226.
+LaTeX Font Info:    ... okay on input line 226.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 226.
+LaTeX Font Info:    ... okay on input line 226.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 226.
+LaTeX Font Info:    ... okay on input line 226.
 Package microtype Info: Patching varwidth to enable character protrusion.
-\MT@vwid@leftmargin=\dimen370
-\MT@vwid@rightmargin=\dimen371
-LaTeX Info: Redefining \microtypecontext on input line 265.
-Package microtype Info: Applying patch `item' on input line 265.
-Package microtype Info: Applying patch `toc' on input line 265.
-Package microtype Info: Applying patch `eqnum' on input line 265.
-Package microtype Info: Applying patch `footnote' on input line 265.
-Package microtype Info: Applying patch `verbatim' on input line 265.
-LaTeX Info: Redefining \microtypesetup on input line 265.
+\MT@vwid@leftmargin=\dimen366
+\MT@vwid@rightmargin=\dimen367
+LaTeX Info: Redefining \microtypecontext on input line 226.
+Package microtype Info: Applying patch `item' on input line 226.
+Package microtype Info: Applying patch `toc' on input line 226.
+Package microtype Info: Applying patch `eqnum' on input line 226.
+Package microtype Info: Applying patch `footnote' on input line 226.
+Package microtype Info: Applying patch `verbatim' on input line 226.
+LaTeX Info: Redefining \microtypesetup on input line 226.
 Package microtype Info: Generating PDF output.
 Package microtype Info: Character protrusion enabled (level 2).
 Package microtype Info: Using default protrusion set `alltext'.
@@ -1104,7 +1088,7 @@ File: mt-ppl.cfg 2005/11/16 v1.6 microtype config. file: Palatino (RS)
 ) (c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/translations/translations-basic-dictionary-english.trsl
 File: translations-basic-dictionary-english.trsl (english translation file `translations-basic-dictionary')
 )
-Package translations Info: loading dictionary `translations-basic-dictionary' for `english'. on input line 265.
+Package translations Info: loading dictionary `translations-basic-dictionary' for `english'. on input line 226.
 *geometry* detected driver: pdftex
 *geometry* verbose mode - [ preamble ] result:
 * driver: pdftex
@@ -1112,14 +1096,14 @@ Package translations Info: loading dictionary `translations-basic-dictionary' fo
 * layout: <same size as paper>
 * layoutoffset:(h,v)=(0.0pt,0.0pt)
 * modes: includehead includefoot 
-* h-part:(L,W,R)=(167.01753pt, 394.35522pt, 36.13512pt)
+* h-part:(L,W,R)=(166.44879pt, 376.99902pt, 54.06006pt)
 * v-part:(T,H,B)=(51.21504pt, 772.49225pt, 21.33955pt)
 * \paperwidth=597.50787pt
 * \paperheight=845.04684pt
-* \textwidth=394.35522pt
+* \textwidth=376.99902pt
 * \textheight=688.49225pt
-* \oddsidemargin=94.74754pt
-* \evensidemargin=94.74754pt
+* \oddsidemargin=94.1788pt
+* \evensidemargin=94.1788pt
 * \topmargin=-21.05495pt
 * \headheight=12.0pt
 * \headsep=24.0pt
@@ -1149,54 +1133,54 @@ Package: ltcaption 2021/01/08 v1.4c longtable captions (AR)
 Package caption Info: threeparttable package is loaded.
 Package caption Info: wrapfig package is loaded.
 Package caption Info: End \AtBeginDocument code.
-Package hyperref Info: Link coloring ON on input line 265.
+Package hyperref Info: Link coloring ON on input line 226.
 (./plantilla_proyecto_aed.out) (./plantilla_proyecto_aed.out)
-\@outlinefile=\write5
-\openout5 = `plantilla_proyecto_aed.out'.
+\@outlinefile=\write4
+\openout4 = `plantilla_proyecto_aed.out'.
 
-LaTeX Font Info:    Trying to load font information for TS1+ppl on input line 265.
+LaTeX Font Info:    Trying to load font information for TS1+ppl on input line 226.
 (c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/psnfss/ts1ppl.fd
 File: ts1ppl.fd 2001/06/04 font definitions for TS1/ppl.
 )
-Underfull \hbox (badness 10000) in paragraph at lines 265--265
+Underfull \hbox (badness 10000) in paragraph at lines 226--226
 [][]\T1/ppl/m/n/7 (+20) creativecommons.org/licenses/by/[][]
  []
 
-LaTeX Font Info:    Trying to load font information for OT1+ppl on input line 265.
+LaTeX Font Info:    Trying to load font information for OT1+ppl on input line 226.
 (c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/psnfss/ot1ppl.fd
 File: ot1ppl.fd 2001/06/04 font definitions for OT1/ppl.
 )
-LaTeX Font Info:    Trying to load font information for OML+zplm on input line 265.
+LaTeX Font Info:    Trying to load font information for OML+zplm on input line 226.
 (c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/psnfss/omlzplm.fd
 File: omlzplm.fd 2002/09/08 Fontinst v1.914 font definitions for OML/zplm.
 )
-LaTeX Font Info:    Trying to load font information for OMS+zplm on input line 265.
+LaTeX Font Info:    Trying to load font information for OMS+zplm on input line 226.
 (c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/psnfss/omszplm.fd
 File: omszplm.fd 2002/09/08 Fontinst v1.914 font definitions for OMS/zplm.
 )
-LaTeX Font Info:    Trying to load font information for OMX+zplm on input line 265.
+LaTeX Font Info:    Trying to load font information for OMX+zplm on input line 226.
 (c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/psnfss/omxzplm.fd
 File: omxzplm.fd 2002/09/08 Fontinst v1.914 font definitions for OMX/zplm.
 )
 LaTeX Font Info:    Font shape `U/msa/m/n' will be
-(Font)              scaled to size 10.42007pt on input line 265.
+(Font)              scaled to size 10.42007pt on input line 226.
 (c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/microtype/mt-msa.cfg
 File: mt-msa.cfg 2006/02/04 v1.1 microtype config. file: AMS symbols (a) (RS)
 )
 LaTeX Font Info:    Font shape `U/msa/m/n' will be
-(Font)              scaled to size 7.91925pt on input line 265.
+(Font)              scaled to size 7.91925pt on input line 226.
 LaTeX Font Info:    Font shape `U/msa/m/n' will be
-(Font)              scaled to size 6.25204pt on input line 265.
+(Font)              scaled to size 6.25204pt on input line 226.
 LaTeX Font Info:    Font shape `U/msb/m/n' will be
-(Font)              scaled to size 10.42007pt on input line 265.
+(Font)              scaled to size 10.42007pt on input line 226.
 (c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/microtype/mt-msb.cfg
 File: mt-msb.cfg 2005/06/01 v1.0 microtype config. file: AMS symbols (b) (RS)
 )
 LaTeX Font Info:    Font shape `U/msb/m/n' will be
-(Font)              scaled to size 7.91925pt on input line 265.
+(Font)              scaled to size 7.91925pt on input line 226.
 LaTeX Font Info:    Font shape `U/msb/m/n' will be
-(Font)              scaled to size 6.25204pt on input line 265.
-LaTeX Font Info:    Trying to load font information for OT1+zplm on input line 265.
+(Font)              scaled to size 6.25204pt on input line 226.
+LaTeX Font Info:    Trying to load font information for OT1+zplm on input line 226.
 (c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/psnfss/ot1zplm.fd
 File: ot1zplm.fd 2002/09/08 Fontinst v1.914 font definitions for OT1/zplm.
 )
@@ -1207,19 +1191,19 @@ Package microtype Info: Loading generic protrusion settings for font family
 (c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/microtype/mt-eur.cfg
 File: mt-eur.cfg 2006/07/31 v1.1 microtype config. file: AMS Euler Roman (RS)
 )
-LaTeX Font Info:    Redeclaring symbol font `AMSb' on input line 265.
+LaTeX Font Info:    Redeclaring symbol font `AMSb' on input line 226.
 LaTeX Font Info:    Overwriting symbol font `AMSb' in version `normal'
-(Font)                  U/msb/m/n --> U/msb/m/n on input line 265.
+(Font)                  U/msb/m/n --> U/msb/m/n on input line 226.
 LaTeX Font Info:    Overwriting symbol font `AMSb' in version `bold'
-(Font)                  U/msb/m/n --> U/msb/m/n on input line 265.
-Package marginnote Info: Margin note 1.1 is on absolute page 1 on input line 265.
-Package marginnote Info: right page because not two side mode on input line 265.
+(Font)                  U/msb/m/n --> U/msb/m/n on input line 226.
+Package marginnote Info: Margin note 1.1 is on absolute page 1 on input line 226.
+Package marginnote Info: right page because not two side mode on input line 226.
 
-Underfull \hbox (badness 10000) in paragraph at lines 265--265
+Underfull \hbox (badness 10000) in paragraph at lines 226--226
 [][]\T1/ppl/m/n/7 (+20) creativecommons.org/licenses/by/[][]
  []
 
-Package marginnote Info: xpos seems to be 167.01753pt on input line 265.
+Package marginnote Info: xpos seems to be 166.44879pt on input line 226.
 Package epstopdf Info: Source file: <Definitions/logo-mdpi.eps>
 (epstopdf)                    date: 2026-11-05 01:11:59
 (epstopdf)                    size: 736802 bytes
@@ -1227,21 +1211,26 @@ Package epstopdf Info: Source file: <Definitions/logo-mdpi.eps>
 (epstopdf)                    date: 2026-11-05 01:12:11
 (epstopdf)                    size: 43907 bytes
 (epstopdf)             Command: <repstopdf --outfile=Definitions/logo-mdpi-eps-converted-to.pdf Definitions/logo-mdpi.eps>
-(epstopdf)             \includegraphics on input line 265.
+(epstopdf)             \includegraphics on input line 226.
 Package epstopdf Info: Output file is already uptodate.
-<Definitions/logo-mdpi-eps-converted-to.pdf, id=70, 88.33pt x 58.2175pt>
+<Definitions/logo-mdpi-eps-converted-to.pdf, id=66, 88.33pt x 58.2175pt>
 File: Definitions/logo-mdpi-eps-converted-to.pdf Graphic file (type pdf)
 <use Definitions/logo-mdpi-eps-converted-to.pdf>
-Package pdftex.def Info: Definitions/logo-mdpi-eps-converted-to.pdf  used on input line 265.
+Package pdftex.def Info: Definitions/logo-mdpi-eps-converted-to.pdf  used on input line 226.
 (pdftex.def)             Requested size: 43.16885pt x 28.45274pt.
+
+Overfull \hbox (17.0714pt too wide) in paragraph at lines 226--226
+[][]  
+ []
+
 LaTeX Font Info:    Font shape `U/msa/m/n' will be
-(Font)              scaled to size 8.33606pt on input line 265.
+(Font)              scaled to size 8.33606pt on input line 226.
 LaTeX Font Info:    Font shape `U/msa/m/n' will be
-(Font)              scaled to size 5.21004pt on input line 265.
+(Font)              scaled to size 5.21004pt on input line 226.
 LaTeX Font Info:    Font shape `U/msb/m/n' will be
-(Font)              scaled to size 8.33606pt on input line 265.
+(Font)              scaled to size 8.33606pt on input line 226.
 LaTeX Font Info:    Font shape `U/msb/m/n' will be
-(Font)              scaled to size 5.21004pt on input line 265.
+(Font)              scaled to size 5.21004pt on input line 226.
 Package microtype Info: Loading generic protrusion settings for font family
 (microtype)             `cmss' (encoding: T1).
 (microtype)             For optimal results, create family-specific settings.
@@ -1260,6 +1249,15 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 [1
 
 {c:/Users/luis/AppData/Roaming/TinyTeX/texmf-var/fonts/map/pdftex/updmap/pdftex.map}{c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/fonts/enc/dvips/base/8r.enc} <./Definitions/logo-mdpi-eps-converted-to.pdf>]
+Overfull \hbox (17.0714pt too wide) has occurred while \output is active
+[][]|  
+ []
+
+
+Overfull \hbox (17.0714pt too wide) has occurred while \output is active
+ [][]|
+ []
+
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 16.18796pt, for example:
@@ -1268,8 +1266,13 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-4.18796pt}.
 
 [2]
-Overfull \hbox (85.01382pt too wide) detected at line 472
-[][]\T1/cmtt/m/it/10 # Métodos aplicados (ej. Rango Intercuartílico - IQR) para filtrar o transformar variables.[] 
+Overfull \hbox (17.0714pt too wide) has occurred while \output is active
+[][]|  
+ []
+
+
+Overfull \hbox (17.0714pt too wide) has occurred while \output is active
+ [][]|
  []
 
 
@@ -1280,18 +1283,33 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-4.18796pt}.
 
 [3]
-Overfull \hbox (3.0111pt too wide) in paragraph at lines 542--547
-[]\T1/cmtt/m/n/10 % Ocupados (Primario, Secundario, Terciario)\T1/ppl/m/n/10 (-20) : Por-centaje de per-sonas ocu-
+Overfull \hbox (1.25273pt too wide) in paragraph at lines 486--491
+[]\T1/cmtt/m/n/10 % Ocupados (Primario, Secundario, Terciario)\T1/ppl/m/n/10 (-20) : Por-centaje de per-sonas
+ []
+
+
+Overfull \hbox (2.57635pt too wide) in paragraph at lines 491--494
+[]\T1/cmtt/m/n/10 % VAB (Primario, Secundario, Terciario)\T1/ppl/m/n/10 (-20) : Por-centaje del Valor Aña-dido
  []
 
 LaTeX Font Info:    Font shape `U/msa/m/n' will be
-(Font)              scaled to size 9.37807pt on input line 584.
+(Font)              scaled to size 9.37807pt on input line 528.
 LaTeX Font Info:    Font shape `U/msa/m/n' will be
-(Font)              scaled to size 7.29405pt on input line 584.
+(Font)              scaled to size 7.29405pt on input line 528.
 LaTeX Font Info:    Font shape `U/msb/m/n' will be
-(Font)              scaled to size 9.37807pt on input line 584.
+(Font)              scaled to size 9.37807pt on input line 528.
 LaTeX Font Info:    Font shape `U/msb/m/n' will be
-(Font)              scaled to size 7.29405pt on input line 584.
+(Font)              scaled to size 7.29405pt on input line 528.
+
+Overfull \hbox (17.0714pt too wide) has occurred while \output is active
+[][]|  
+ []
+
+
+Overfull \hbox (17.0714pt too wide) has occurred while \output is active
+ [][]|
+ []
+
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 16.18796pt, for example:
@@ -1300,11 +1318,21 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-4.18796pt}.
 
 [4]
-<plantilla_proyecto_aed_files/figure-latex/fig-univ-1-1.pdf, id=116, 425.59pt x 307.1475pt>
+<plantilla_proyecto_aed_files/figure-latex/fig-univ-1-1.pdf, id=109, 425.59pt x 307.1475pt>
 File: plantilla_proyecto_aed_files/figure-latex/fig-univ-1-1.pdf Graphic file (type pdf)
 <use plantilla_proyecto_aed_files/figure-latex/fig-univ-1-1.pdf>
-Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/fig-univ-1-1.pdf  used on input line 654.
-(pdftex.def)             Requested size: 394.35522pt x 284.62251pt.
+Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/fig-univ-1-1.pdf  used on input line 598.
+(pdftex.def)             Requested size: 376.99902pt x 272.095pt.
+
+Overfull \hbox (17.0714pt too wide) has occurred while \output is active
+[][]|  
+ []
+
+
+Overfull \hbox (17.0714pt too wide) has occurred while \output is active
+ [][]|
+ []
+
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 16.18796pt, for example:
@@ -1313,11 +1341,21 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-4.18796pt}.
 
 [5]
-<plantilla_proyecto_aed_files/figure-latex/fig-univ-2-1.pdf, id=122, 425.59pt x 260.975pt>
+<plantilla_proyecto_aed_files/figure-latex/fig-univ-2-1.pdf, id=115, 425.59pt x 260.975pt>
 File: plantilla_proyecto_aed_files/figure-latex/fig-univ-2-1.pdf Graphic file (type pdf)
 <use plantilla_proyecto_aed_files/figure-latex/fig-univ-2-1.pdf>
-Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/fig-univ-2-1.pdf  used on input line 676.
-(pdftex.def)             Requested size: 394.35522pt x 241.83614pt.
+Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/fig-univ-2-1.pdf  used on input line 620.
+(pdftex.def)             Requested size: 376.99902pt x 231.19183pt.
+
+Overfull \hbox (17.0714pt too wide) has occurred while \output is active
+[][]|  
+ []
+
+
+Overfull \hbox (17.0714pt too wide) has occurred while \output is active
+ [][]|
+ []
+
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 16.18796pt, for example:
@@ -1326,11 +1364,21 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-4.18796pt}.
 
 [6 <./plantilla_proyecto_aed_files/figure-latex/fig-univ-1-1.pdf>]
-<plantilla_proyecto_aed_files/figure-latex/fig-univ-3-1.pdf, id=136, 425.59pt x 303.1325pt>
+<plantilla_proyecto_aed_files/figure-latex/fig-univ-3-1.pdf, id=129, 425.59pt x 303.1325pt>
 File: plantilla_proyecto_aed_files/figure-latex/fig-univ-3-1.pdf Graphic file (type pdf)
 <use plantilla_proyecto_aed_files/figure-latex/fig-univ-3-1.pdf>
-Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/fig-univ-3-1.pdf  used on input line 691.
-(pdftex.def)             Requested size: 394.35522pt x 280.90196pt.
+Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/fig-univ-3-1.pdf  used on input line 635.
+(pdftex.def)             Requested size: 376.99902pt x 268.53821pt.
+
+Overfull \hbox (17.0714pt too wide) has occurred while \output is active
+[][]|  
+ []
+
+
+Overfull \hbox (17.0714pt too wide) has occurred while \output is active
+ [][]|
+ []
+
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 16.18796pt, for example:
@@ -1339,22 +1387,33 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-4.18796pt}.
 
 [7 <./plantilla_proyecto_aed_files/figure-latex/fig-univ-2-1.pdf> <./plantilla_proyecto_aed_files/figure-latex/fig-univ-3-1.pdf>]
-<plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-5-1.pdf, id=160, 430.60875pt x 501.875pt>
+Overfull \hbox (3.50363pt too wide) in paragraph at lines 658--661
+[]\T1/ppl/m/n/10 (-20) En esta sec-ción cruzamos las vari-ables para dar re-spuesta a las pre-gun-tas planteadas
+ []
+
+<plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-5-1.pdf, id=153, 430.60875pt x 501.875pt>
 File: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-5-1.pdf Graphic file (type pdf)
 <use plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-5-1.pdf>
-Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-5-1.pdf  used on input line 718.
-(pdftex.def)             Requested size: 394.35522pt x 459.63231pt.
+Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-5-1.pdf  used on input line 662.
+(pdftex.def)             Requested size: 376.99902pt x 439.3999pt.
 
 LaTeX Warning: `!h' float specifier changed to `!ht'.
 
-
-LaTeX Warning: `!h' float specifier changed to `!ht'.
-
-<plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-7-1.pdf, id=161, 417.56pt x 289.08pt>
+<plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-7-1.pdf, id=154, 417.56pt x 289.08pt>
 File: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-7-1.pdf Graphic file (type pdf)
 <use plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-7-1.pdf>
-Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-7-1.pdf  used on input line 756.
-(pdftex.def)             Requested size: 394.35522pt x 273.03206pt.
+Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-7-1.pdf  used on input line 700.
+(pdftex.def)             Requested size: 376.99902pt x 261.0165pt.
+
+Overfull \hbox (17.0714pt too wide) has occurred while \output is active
+[][]|  
+ []
+
+
+Overfull \hbox (17.0714pt too wide) has occurred while \output is active
+ [][]|
+ []
+
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 16.18796pt, for example:
@@ -1363,11 +1422,26 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-4.18796pt}.
 
 [8 <./plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-5-1.pdf>]
-<plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-8-1.pdf, id=175, 420.57124pt x 280.04625pt>
+<plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-8-1.pdf, id=169, 420.57124pt x 280.04625pt>
 File: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-8-1.pdf Graphic file (type pdf)
 <use plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-8-1.pdf>
-Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-8-1.pdf  used on input line 764.
-(pdftex.def)             Requested size: 394.35522pt x 262.59396pt.
+Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-8-1.pdf  used on input line 708.
+(pdftex.def)             Requested size: 376.99902pt x 251.03508pt.
+<plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-8-2.pdf, id=170, 426.59375pt x 280.04625pt>
+File: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-8-2.pdf Graphic file (type pdf)
+<use plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-8-2.pdf>
+Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-8-2.pdf  used on input line 710.
+(pdftex.def)             Requested size: 376.99902pt x 247.50546pt.
+
+Overfull \hbox (17.0714pt too wide) has occurred while \output is active
+[][]|  
+ []
+
+
+Overfull \hbox (17.0714pt too wide) has occurred while \output is active
+ [][]|
+ []
+
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 16.18796pt, for example:
@@ -1375,53 +1449,82 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-4.18796pt}.
 
-[9 <./plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-7-1.pdf>]
-<plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-8-2.pdf, id=190, 426.59375pt x 280.04625pt>
-File: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-8-2.pdf Graphic file (type pdf)
-<use plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-8-2.pdf>
-Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-8-2.pdf  used on input line 766.
-(pdftex.def)             Requested size: 394.35522pt x 258.89769pt.
-
-Overfull \hbox (4.54736pt too wide) in paragraph at lines 771--771
+[9 <./plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-7-1.pdf> <./plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-8-1.pdf>]
+Overfull \hbox (21.90356pt too wide) in paragraph at lines 715--715
 []\T1/cmtt/m/n/10 ##  Correlación de Pearson: -0.4077368 ; Correlación de Spearman: -0.5093486[] 
  []
 
-
-Package fancyhdr Warning: \headheight is too small (12.0pt): 
-(fancyhdr)                Make it at least 16.18796pt, for example:
-(fancyhdr)                \setlength{\headheight}{16.18796pt}.
-(fancyhdr)                You might also make \topmargin smaller:
-(fancyhdr)                \addtolength{\topmargin}{-4.18796pt}.
-
-[10 <./plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-8-1.pdf> <./plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-8-2.pdf>]
-<plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-9-1.pdf, id=217, 432.61626pt x 273.02pt>
+<plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-9-1.pdf, id=196, 432.61626pt x 273.02pt>
 File: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-9-1.pdf Graphic file (type pdf)
 <use plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-9-1.pdf>
-Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-9-1.pdf  used on input line 787.
-(pdftex.def)             Requested size: 394.35522pt x 248.88602pt.
-<plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-10-1.pdf, id=218, 420.57124pt x 280.04625pt>
+Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-9-1.pdf  used on input line 731.
+(pdftex.def)             Requested size: 376.99902pt x 237.92958pt.
+
+Overfull \hbox (17.0714pt too wide) has occurred while \output is active
+[][]|  
+ []
+
+
+Overfull \hbox (17.0714pt too wide) has occurred while \output is active
+ [][]|
+ []
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 16.18796pt, for example:
+(fancyhdr)                \setlength{\headheight}{16.18796pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-4.18796pt}.
+
+[10 <./plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-8-2.pdf> <./plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-9-1.pdf>]
+<plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-10-1.pdf, id=219, 420.57124pt x 280.04625pt>
 File: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-10-1.pdf Graphic file (type pdf)
 <use plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-10-1.pdf>
-Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-10-1.pdf  used on input line 805.
-(pdftex.def)             Requested size: 394.35522pt x 262.59396pt.
+Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-10-1.pdf  used on input line 749.
+(pdftex.def)             Requested size: 376.99902pt x 251.03508pt.
 
-Package fancyhdr Warning: \headheight is too small (12.0pt): 
-(fancyhdr)                Make it at least 16.18796pt, for example:
-(fancyhdr)                \setlength{\headheight}{16.18796pt}.
-(fancyhdr)                You might also make \topmargin smaller:
-(fancyhdr)                \addtolength{\topmargin}{-4.18796pt}.
+Overfull \hbox (6.15741pt too wide) in paragraph at lines 754--754
+[]\T1/cmtt/m/n/10 ##  Correlación de Pearson: 0.622335 ; Correlación de Spearman: 0.5345343[] 
+ []
 
-[11 <./plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-9-1.pdf>]
-<plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-11-1.pdf, id=231, 426.59375pt x 280.04625pt>
+<plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-11-1.pdf, id=220, 426.59375pt x 280.04625pt>
 File: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-11-1.pdf Graphic file (type pdf)
 <use plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-11-1.pdf>
-Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-11-1.pdf  used on input line 817.
-(pdftex.def)             Requested size: 394.35522pt x 258.89769pt.
-<plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-12-1.pdf, id=232, 426.59375pt x 280.04625pt>
+Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-11-1.pdf  used on input line 761.
+(pdftex.def)             Requested size: 376.99902pt x 247.50546pt.
+
+Overfull \hbox (17.0714pt too wide) has occurred while \output is active
+[][]|  
+ []
+
+
+Overfull \hbox (17.0714pt too wide) has occurred while \output is active
+ [][]|
+ []
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 16.18796pt, for example:
+(fancyhdr)                \setlength{\headheight}{16.18796pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-4.18796pt}.
+
+[11 <./plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-10-1.pdf>]
+<plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-12-1.pdf, id=237, 426.59375pt x 280.04625pt>
 File: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-12-1.pdf Graphic file (type pdf)
 <use plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-12-1.pdf>
-Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-12-1.pdf  used on input line 819.
-(pdftex.def)             Requested size: 394.35522pt x 258.89769pt.
+Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-12-1.pdf  used on input line 763.
+(pdftex.def)             Requested size: 376.99902pt x 247.50546pt.
+
+Overfull \hbox (17.0714pt too wide) has occurred while \output is active
+[][]|  
+ []
+
+
+Overfull \hbox (17.0714pt too wide) has occurred while \output is active
+ [][]|
+ []
+
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 16.18796pt, for example:
@@ -1429,29 +1532,32 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-4.18796pt}.
 
-[12 <./plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-10-1.pdf> <./plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-11-1.pdf>]
-<plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-13-1.pdf, id=262, 420.57124pt x 280.04625pt>
+[12 <./plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-11-1.pdf> <./plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-12-1.pdf>]
+<plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-13-1.pdf, id=269, 420.57124pt x 280.04625pt>
 File: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-13-1.pdf Graphic file (type pdf)
 <use plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-13-1.pdf>
-Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-13-1.pdf  used on input line 846.
-(pdftex.def)             Requested size: 394.35522pt x 262.59396pt.
+Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-13-1.pdf  used on input line 790.
+(pdftex.def)             Requested size: 376.99902pt x 251.03508pt.
 
-Package fancyhdr Warning: \headheight is too small (12.0pt): 
-(fancyhdr)                Make it at least 16.18796pt, for example:
-(fancyhdr)                \setlength{\headheight}{16.18796pt}.
-(fancyhdr)                You might also make \topmargin smaller:
-(fancyhdr)                \addtolength{\topmargin}{-4.18796pt}.
-
-[13 <./plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-12-1.pdf>]
-Overfull \hbox (4.54736pt too wide) in paragraph at lines 851--851
+Overfull \hbox (21.90356pt too wide) in paragraph at lines 795--795
 []\T1/cmtt/m/n/10 ##  Correlación de Pearson: -0.4857543 ; Correlación de Spearman: -0.4040818[] 
  []
 
-<plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-14-1.pdf, id=282, 420.57124pt x 280.04625pt>
+<plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-14-1.pdf, id=270, 420.57124pt x 280.04625pt>
 File: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-14-1.pdf Graphic file (type pdf)
 <use plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-14-1.pdf>
-Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-14-1.pdf  used on input line 872.
-(pdftex.def)             Requested size: 394.35522pt x 262.59396pt.
+Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-14-1.pdf  used on input line 816.
+(pdftex.def)             Requested size: 376.99902pt x 251.03508pt.
+
+Overfull \hbox (17.0714pt too wide) has occurred while \output is active
+[][]|  
+ []
+
+
+Overfull \hbox (17.0714pt too wide) has occurred while \output is active
+ [][]|
+ []
+
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 16.18796pt, for example:
@@ -1459,16 +1565,31 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-4.18796pt}.
 
-[14 <./plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-13-1.pdf>]
-Overfull \hbox (4.54736pt too wide) in paragraph at lines 883--883
+[13 <./plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-13-1.pdf>]
+Overfull \hbox (11.40613pt too wide) in paragraph at lines 821--821
+[]\T1/cmtt/m/n/10 ##  Correlación de Pearson: 0.2853812 ; Correlación de Spearman: 0.1775805[] 
+ []
+
+
+Overfull \hbox (21.90356pt too wide) in paragraph at lines 827--827
 []\T1/cmtt/m/n/10 ##  Correlación de Pearson: -0.4076108 ; Correlación de Spearman: -0.2987279[] 
  []
 
-<plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-15-1.pdf, id=300, 428.60126pt x 273.02pt>
+<plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-15-1.pdf, id=288, 428.60126pt x 273.02pt>
 File: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-15-1.pdf Graphic file (type pdf)
 <use plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-15-1.pdf>
-Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-15-1.pdf  used on input line 889.
-(pdftex.def)             Requested size: 394.35522pt x 251.20644pt.
+Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-15-1.pdf  used on input line 833.
+(pdftex.def)             Requested size: 376.99902pt x 240.15002pt.
+
+Overfull \hbox (17.0714pt too wide) has occurred while \output is active
+[][]|  
+ []
+
+
+Overfull \hbox (17.0714pt too wide) has occurred while \output is active
+ [][]|
+ []
+
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 16.18796pt, for example:
@@ -1476,12 +1597,22 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-4.18796pt}.
 
-[15 <./plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-14-1.pdf> <./plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-15-1.pdf>]
-<plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-16-1.pdf, id=324, 302.12875pt x 279.0425pt>
+[14 <./plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-14-1.pdf> <./plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-15-1.pdf>]
+<plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-16-1.pdf, id=313, 302.12875pt x 279.0425pt>
 File: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-16-1.pdf Graphic file (type pdf)
 <use plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-16-1.pdf>
-Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-16-1.pdf  used on input line 915.
-(pdftex.def)             Requested size: 394.35522pt x 364.22415pt.
+Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-16-1.pdf  used on input line 859.
+(pdftex.def)             Requested size: 376.99902pt x 348.19339pt.
+
+Overfull \hbox (17.0714pt too wide) has occurred while \output is active
+[][]|  
+ []
+
+
+Overfull \hbox (17.0714pt too wide) has occurred while \output is active
+ [][]|
+ []
+
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 16.18796pt, for example:
@@ -1489,7 +1620,16 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-4.18796pt}.
 
-[16 <./plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-16-1.pdf>]
+[15 <./plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-16-1.pdf>]
+Overfull \hbox (17.0714pt too wide) has occurred while \output is active
+[][]|  
+ []
+
+
+Overfull \hbox (17.0714pt too wide) has occurred while \output is active
+ [][]|
+ []
+
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 16.18796pt, for example:
@@ -1497,7 +1637,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-4.18796pt}.
 
-[17] 
+[16] 
 enddocument/afterlastpage (AED): lastpage setting LastPage.
 (./plantilla_proyecto_aed.aux)
  ***********
@@ -1508,21 +1648,21 @@ L3 programming layer <2026-09-09>
 LaTeX Warning: There were multiply-defined labels.
 
 Package rerunfilecheck Info: File `plantilla_proyecto_aed.out' has not changed.
-(rerunfilecheck)             Checksum: AEF33FD9E7E8E4CF948BBBE8B8C79FC1;3096.
+(rerunfilecheck)             Checksum: 6DD5EE5A55986EA44B43DAD87F1CA6ED;2703.
  ) 
 Here is how much of TeX's memory you used:
- 35670 strings out of 468958
- 678124 string characters out of 5452778
- 1165714 words of memory out of 5000000
- 63787 multiletter control sequences out of 15000+600000
- 699042 words of font info for 397 fonts, out of 8000000 for 9000
+ 35177 strings out of 468958
+ 670042 string characters out of 5452778
+ 1153344 words of memory out of 5000000
+ 63294 multiletter control sequences out of 15000+600000
+ 699419 words of font info for 405 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 123i,12n,121p,1019b,693s stack positions out of 10000i,1000n,20000p,200000b,200000s
- <c:/Users/luis/AppData/Roaming/TinyTeX/texmf-var/fonts/pk/ljfour/jknappen/ec/ecit1000.600pk> <c:/Users/luis/AppData/Roaming/TinyTeX/texmf-var/fonts/pk/ljfour/jknappen/ec/ectt1000.600pk> <c:/Users/luis/AppData/Roaming/TinyTeX/texmf-var/fonts/pk/ljfour/jknappen/ec/ecss0800.375pk><c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb><c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb><c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb><c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/mathpazo/fplmr.pfb><c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/mathpazo/fplmri.pfb><c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/urw/palatino/uplb8a.pfb><c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/urw/palatino/uplr8a.pfb><c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/urw/palatino/uplri8a.pfb>
-Output written on plantilla_proyecto_aed.pdf (17 pages, 704300 bytes).
+ 123i,12n,121p,1019b,695s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ <c:/Users/luis/AppData/Roaming/TinyTeX/texmf-var/fonts/pk/ljfour/jknappen/ec/ectt1000.600pk> <c:/Users/luis/AppData/Roaming/TinyTeX/texmf-var/fonts/pk/ljfour/jknappen/ec/ecss0800.375pk><c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb><c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb><c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb><c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/mathpazo/fplmr.pfb><c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/mathpazo/fplmri.pfb><c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/urw/palatino/uplb8a.pfb><c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/urw/palatino/uplr8a.pfb><c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/urw/palatino/uplri8a.pfb>
+Output written on plantilla_proyecto_aed.pdf (16 pages, 692573 bytes).
 PDF statistics:
- 508 PDF objects out of 1000 (max. 8388607)
- 307 compressed objects within 4 object streams
- 47 named destinations out of 1000 (max. 500000)
- 104653 words of extra memory for PDF output out of 106986 (max. 10000000)
+ 459 PDF objects out of 1000 (max. 8388607)
+ 294 compressed objects within 3 object streams
+ 43 named destinations out of 1000 (max. 500000)
+ 104133 words of extra memory for PDF output out of 106986 (max. 10000000)
 
