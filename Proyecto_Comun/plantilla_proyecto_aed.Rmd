@@ -668,7 +668,7 @@ df_anio %>% ggplot(aes(x = brecha_pib_renta, y = peso_terciario)) +
   theme_minimal()
 ```
 
-Interpretación: Observamos si las provincias que quedan por debajo de la línea de tendencia (mayor brecha, perciben menos renta de la que producen) coinciden con altos porcentajes del sector terciario. El contraste de hipótesis evalúa la significancia estadística de esta correlación.
+El primer gráfico de dispersión confirma una correlación lineal positiva esperable: a mayor PIB per cápita, mayor renta bruta media. Sin embargo, la dispersión de los puntos revela importantes asimetrías regionales. Provincias como Madrid, Gipuzkoa y Bizkaia lideran ambas métricas, pero al observar la "brecha" (la proporción entre la riqueza generada y la renta percibida frente a la media nacional), el contraste estadístico revela un fenómeno contraintuitivo: existe una correlación negativa ($cor = -0.41$, $p < 0.05$) entre la brecha PIB/Renta y el peso del sector terciario. 
 
 Para visualizar geográficamente dónde se concentra esta brecha (dónde se produce más de lo que repercute en el salario de los trabajadores), representamos los datos en un mapa a nivel provincial.
 
@@ -689,11 +689,11 @@ ggplot(mapa_sf) +
   ) +
   theme_void()
 ```
-
+Como se aprecia en el mapa y en el gráfico de dispersión de la brecha, las provincias altamente terciarizadas (como la costa mediterránea o los archipiélagos) presentan ratios equilibrados o bajos. Esto no significa que sus salarios sean altos, sino que ambas métricas (PIB y Renta) están deprimidas y crecen a la par de forma moderada. Por el contrario, provincias con perfiles más industriales o energéticos, donde se genera un alto Valor Añadido Bruto corporativo que no se transfiere proporcionalmente a las nóminas de los residentes locales, presentan una mayor desconexión (brecha > 1).
 
 ### La trampa del sector servicios
 
-Evaluamos cómo la dependencia del sector terciario presiona el coste de la vivienda y cómo afecta a la expulsión de población joven.
+Pasamos a evaluar cómo la dependencia del sector terciario presiona el coste de la vivienda y cómo afecta a la expulsión de población joven.
 
 ```{r}
 ggplot(df_anio, aes(x = emp_terciario, y = esfuerzo_vivienda)) +
@@ -732,7 +732,9 @@ ggplot(df_anio, aes(x = nivel_terciarizacion, y = esfuerzo_vivienda, fill = nive
   theme_minimal() +
   theme(legend.position = "none")
 ```
-Interpretación: Este diagrama de cajas nos permite evaluar si las provincias fuertemente terciarizadas tienen una mediana de esfuerzo inmobiliario significativamente superior frente a aquellas sostenidas por el sector primario o secundario, así como detectar provincias atípicas (outliers).
+Los datos confirman de forma contundente la hipótesis de "la trampa del sector servicios". El diagrama de dispersión muestra una correlación estadística muy sólida y positiva ($cor = 0.58$, $p < 0.001$) entre la proporción de empleo terciario y el esfuerzo necesario para adquirir una vivienda. Provincias hiperdependientes del turismo como Illes Balears y Málaga se sitúan en el extremo superior de inaccesibilidad inmobiliaria. 
+
+Esta realidad se hace aún más evidente en el diagrama de cajas: al categorizar las provincias por su grado de terciarización, observamos un salto drástico en la mediana del esfuerzo inmobiliario en el tramo de "Alta terciarización (>75%)". Un modelo productivo fuertemente escorado hacia los servicios (especialmente hostelería y turismo) tensiona severamente el mercado de la vivienda al atraer demanda flotante (inversión, alquiler vacacional, turismo), encareciendo el coste de vida por encima de lo que los salarios de ese mismo sector pueden soportar.
 
 ### El coste de la maternidad
 
@@ -754,7 +756,9 @@ ggplot(df_anio, aes(x = esfuerzo_vivienda, y = Edad_Media_Maternidad)) +
 cor.test(df_anio$esfuerzo_vivienda, df_anio$Edad_Media_Maternidad)
 ```
 
-Interpretación: La curva de ajuste local (LOESS) permite observar si existe un crecimiento no lineal o un umbral crítico de esfuerzo inmobiliario a partir del cual la edad de maternidad se dispara.
+El análisis cruza el esfuerzo inmobiliario con la demografía vital, evidenciando una correlación positiva y significativa ($cor = 0.55$, $p < 0.001$). A medida que aumentan los años de renta necesarios para adquirir una vivienda, la edad media a la maternidad se retrasa.
+
+La curva de ajuste local (LOESS) es particularmente reveladora: muestra una fase de escalada abrupta en los niveles bajos y medios de esfuerzo, que luego parece estabilizarse en una "meseta" alta para las provincias más pobladas y tensionadas. Esto sugiere la existencia de un umbral crítico de emancipación; cuando el mercado de la vivienda supera ciertos límites de esfuerzo económico, se produce un aplazamiento sistemático de la decisión de tener hijos, alterando estructuralmente la pirámide poblacional.
 
 ### El refugio industrial
 
@@ -800,6 +804,10 @@ df_anio %>%
   theme_minimal() +
   theme(legend.position = "none")
 ```
+
+La premisa de que la industria actúa como un imán demográfico absoluto debe ser matizada. El contraste de hipótesis muestra que la relación lineal entre el peso del sector secundario y la atracción neta de jóvenes no es estadísticamente significativa ($cor = 0.10$, $p = 0.46$). De hecho, el gráfico de barras divergente ilustra que las provincias que más jóvenes atraen (Illes Balears, Madrid, Las Palmas) son precisamente los grandes polos terciarios, a pesar de su elevada presión inmobiliaria. 
+
+Sin embargo, la industria sí cumple una función de "refugio" o fijación poblacional frente al vacío rural. La correlación negativa y significativa entre la industrialización y la densidad poblacional logarítmica ($cor = -0.35$, $p < 0.05$) indica que el tejido industrial ayuda a sostener demográficamente a provincias medianas, evitando la macrocefalia extrema y la despoblación masiva que sufren las provincias cuyo VAB depende casi exclusivamente del sector primario, como revelan los saldos negativos de Cáceres, Jaén o Zamora.
 
 ### Visión multivariante global
 
@@ -871,8 +879,9 @@ ggplot(df_heat, aes(x = Variable, y = Provincia, fill = Valor_Escalado)) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
+La matriz de correlaciones consolida matemáticamente la narrativa del proyecto: el esfuerzo para acceder a la vivienda está fuertemente acoplado a la terciarización de la economía ($0.60$) y empuja al alza la edad de maternidad ($0.55$).
 
-*Explicación detallada de los gráficos mostrados. "Contar la historia" que revelan los datos. ¿Se confirman las hipótesis iniciales?*
+El heatmap de las 15 provincias más pobladas resulta definitivo para identificar "arquetipos" territoriales en España. Por un lado, destacan polos como Madrid y Barcelona, que combinan un altísimo PIB per cápita y fuerte atracción migratoria, pero a costa de un mercado inmobiliario saturado que castiga la natalidad. Por otro lado, emergen los Polos Turísticos (Málaga, Alicante, Balears, Las Palmas), los cuales exhiben una tremenda capacidad de atracción de población joven y alta presión inmobiliaria, pero sostenidos sobre niveles de Renta Media y PIB per cápita inferiores a la media. Finalmente, provincias como Zaragoza, Asturias o A Coruña presentan modelos más equilibrados: menor presión inmobiliaria y menor atracción migratoria, con salarios medios competitivos, reflejando mercados más estables pero menos dinámicos demográficamente.
 
 # 6. Conclusiones Finales
 
