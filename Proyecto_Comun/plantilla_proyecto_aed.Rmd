@@ -623,20 +623,20 @@ A partir del dataset unificado `df_completo` (resultante del cruce de las tablas
 
 * **Dimensión de Renta y Riqueza Macro vs. Micro:**
   * `PIB_per_capita`: Producto Interior Bruto provincial por habitante (€/hab). Mide la producción agregada regional.
-  * `RentaBrutaMedia`: Renta bruta media disponible por persona (€/hab). Funciona como *proxy* del poder adquisitivo real percibido.
+  * `RentaBrutaMedia`: Renta bruta media por persona (€/hab, antes de impuestos). Funciona como *proxy* de la renta realmente percibida por los residentes.
 
 * **Dimensión del Mercado Inmobiliario:**
   * `Precio_m2_libre`: valor medio del metro cuadrado de la vivienda libre (€/m²), media anual de los cuatro trimestres.
-* `Precio_m2_protegida`: ídem para vivienda protegida (€/m²). No está disponible en todas las provincias (N = 325).
+  * `Precio_m2_protegida`: ídem para vivienda protegida (€/m²). No está disponible en todas las provincias (N = 325).
 
 * **Dimensión Demográfica y Ciclo Vital:**
-  * `Edad_Media_Maternidad`: Edad media de las madres al nacimiento del primer hijo (años).
+  * `Edad_Media_Maternidad`: Edad media de las madres al nacimiento de un hijo, considerando todos los órdenes de nacimiento (años).
   * `Migracion_Interior`: Saldo migratorio neto interprovincial en la cohorte joven de 19 a 35 años (número neto de personas).
   * `Habitantes`: Población provincial total residente (personas).
 
 * **Dimensión de Estructura Productiva (Métricas Derivadas):**
-  * `% Ocupados (Primario, Secundario, Terciario)`: Porcentaje de personas ocupadas en cada sector sobre el total provincial (\%).
-  * `% VAB (Primario, Secundario, Terciario)`: Porcentaje del Valor Añadido Bruto aportado por cada sector sobre el VAB total (\%).
+  * `% Ocupados (Primario, Secundario, Terciario)`: Porcentaje de personas ocupadas en cada sector sobre la suma de los tres sectores (\%). Los ocupados están en miles de personas (media anual de los valores trimestrales).
+  * `% VAB (Primario, Secundario, Terciario)`: Porcentaje del Valor Añadido Bruto aportado por cada sector sobre la suma del VAB de los tres sectores (\%).
   
 Para caracterizar formalmente la distribución de cada variable $X$ evaluamos su posición (media $\bar{x}$, mediana y cuartiles), su dispersión (desviación típica muestral $s$, rango intercuartílico $\mathrm{RIC}=Q_3-Q_1$, extremos y coeficiente de variación $\mathrm{CV}=100\,s/\bar{x}$, solo para variables no negativas) y su forma (coeficiente de asimetría de Fisher $\gamma_1$ y exceso de curtosis $\gamma_2$, con $m_k=\frac{1}{n}\sum_{i=1}^{n}(x_i-\bar{x})^k$):
 
@@ -644,13 +644,23 @@ $$\bar{x} = \frac{1}{n} \sum_{i=1}^{n} x_i, \quad s = \sqrt{\frac{1}{n-1} \sum_{
 
 Como las 364 observaciones del panel son 52 provincias repetidas durante 7 años, calculamos además qué parte de la variabilidad total se debe a diferencias entre provincias, $\eta^2 = \sum_j n_j(\bar{x}_j-\bar{x})^2 / \sum_i (x_i-\bar{x})^2$, donde $\bar{x}_j$ es la media de la provincia $j$. Por último, contrastamos la normalidad con el test de Shapiro-Wilk.
 
-```{r univariante-tabla, echo=TRUE, message=FALSE, warning=FALSE}
+```{r univariante-tabla, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
 # ---- Funciones de apoyo ------------------------------------------------------
-calc_asimetria <- function(x) {            # coeficiente de asimetría de Fisher (g1)
+tabla_pie <- function(df, caption, align) {
+  cap <- gsub("%", "\\\\%", caption)            # escapa el % para LaTeX
+  cat("\\begin{table}[H]\n\\centering\n\\small\n",
+      "\\resizebox{\\ifdim\\width>\\linewidth\\linewidth\\else\\width\\fi}{!}{%\n",
+      knitr::kable(df, format = "latex", booktabs = TRUE, align = align, linesep = ""),
+      "\n}\n\\caption{", cap, "}\n\\end{table}\n", sep = "")
+  invisible(NULL)
+}
+calc_asimetria <- function(x) {            
+# coeficiente de asimetría de Fisher (g1)
   x <- x[!is.na(x)]; m <- mean(x)
   (sum((x - m)^3) / length(x)) / (sum((x - m)^2) / length(x))^(3/2)
 }
-calc_curtosis <- function(x) {             # exceso de curtosis (0 = normal)
+calc_curtosis <- function(x) {             
+# exceso de curtosis (0 = normal)
   x <- x[!is.na(x)]; m <- mean(x)
   (sum((x - m)^4) / length(x)) / (sum((x - m)^2) / length(x))^2 - 3
 }
@@ -662,7 +672,8 @@ calc_cv <- function(x) {
     sd(x) / mean(x) * 100
   }
 }
-pct_var_entre <- function(df, var) {       # % de varianza debido a diferencias entre provincias
+pct_var_entre <- function(df, var) {       
+# % de varianza debido a diferencias entre provincias
   d <- df %>% select(Provincia, x = all_of(var)) %>% filter(!is.na(x))
   m <- mean(d$x)
   sce <- d %>% group_by(Provincia) %>%
@@ -683,7 +694,7 @@ fmt_es <- function(x, d = 2) {
   })
 }
 
-# ---- Variables, etiquetas y decimales a mostrar -----------------------------------
+# ---- Variables, etiquetas y decimales a mostrar ----------
 etiquetas <- tibble::tribble(
   ~Variable,                  ~Etiqueta,                              ~dec,
   "PIB_per_capita",           "PIB per cápita (€)",                    0,
@@ -702,7 +713,7 @@ etiquetas <- tibble::tribble(
 )
 vars_univariante <- etiquetas$Variable
 
-# ---- Base de análisis: porcentajes sobre la suma de los tres sectores ------------------
+# ---- Base de análisis: porcentajes sobre la suma de los tres sectores -----
 df_analisis <- df_completo %>%
   filter(Periodo >= 2015, Periodo <= 2021) %>%
   mutate(
@@ -745,8 +756,7 @@ tabla3 <- tabla_univariante %>%
             Media = fmt_es(Media, dec), Mediana = fmt_es(Mediana, dec),
             `Desv. típ.` = fmt_es(DT, dec), `CV (%)` = fmt_es(CV, 1),
             `Mín.` = fmt_es(Min, dec), `Máx.` = fmt_es(Max, dec))
-knitr::kable(tabla3, align = c("l", rep("r", 7)),
-  caption = "Tabla 3: Estadísticos de posición y dispersión del panel provincial (52 provincias, 2015–2021).")
+tabla_pie(tabla3, "Estadísticos de posición y dispersión del panel provincial (52 provincias, 2015–2021).", c("l", rep("r", 7)))
 
 # Tabla 4: cuartiles, forma de la distribución y estructura del panel
 tabla4 <- tabla_univariante %>%
@@ -754,8 +764,7 @@ tabla4 <- tabla_univariante %>%
             Q1 = fmt_es(Q1, dec), Q3 = fmt_es(Q3, dec), RIC = fmt_es(RIC, dec),
             Asimetría = fmt_es(Asimetria, 2), Curtosis = fmt_es(Curtosis, 2),
             `% var. entre prov.` = fmt_es(Var_entre, 1))
-knitr::kable(tabla4, align = c("l", rep("r", 6)),
-  caption = "Tabla 4: Cuartiles, forma de la distribución (asimetría y exceso de curtosis de Fisher) y porcentaje de la varianza total debido a diferencias entre provincias.")
+tabla_pie(tabla4, "Cuartiles, forma de la distribución (asimetría y exceso de curtosis de Fisher) y porcentaje de la varianza total debido a diferencias entre provincias.", c("l", rep("r", 6)))
 
 resumen_anual <- function(fun, d_fija = NULL) {
   df_analisis %>%
@@ -770,30 +779,33 @@ resumen_anual <- function(fun, d_fija = NULL) {
     arrange(ord) %>% select(Variable = Etiqueta, everything(), -ord)
 }
 
-knitr::kable(resumen_anual(function(x) median(x, na.rm = TRUE)), align = c("l", rep("r", 7)),
-  caption = "Tabla 5: Mediana provincial de cada variable por año.")
-knitr::kable(resumen_anual(calc_cv, d_fija = 1), align = c("l", rep("r", 7)),
-  caption = "Tabla 6: Coeficiente de variación (%) entre provincias por año (no definido para el saldo migratorio, que toma valores negativos).")
+tabla_pie(resumen_anual(function(x) median(x, na.rm = TRUE)), "Mediana provincial de cada variable por año.", c("l", rep("r", 7)))
+tabla_pie(resumen_anual(calc_cv, d_fija = 1), "Coeficiente de variación (%) entre provincias por año (no definido para el saldo migratorio, que toma valores negativos).", c("l", rep("r", 7)))
+
 ```
 Los estadísticos descriptivos (Tablas 3–6) muestran cuatro rasgos principales.
 
 En primer lugar, las variables económicas son moderadamente asimétricas, pero con dispersión muy desigual. El PIB per cápita (media 23.266 €, mediana 21.993 €, CV del 21 %) y la renta bruta media (13.525 €, CV del 17 %) presentan una asimetría positiva suave (0,80 y 0,61), sin colas pesadas (curtosis próxima a 0), y su valor máximo es solo 2,4 y 2,2 veces el mínimo. El precio del metro cuadrado de la vivienda libre varía mucho más: CV del 36 %, asimetría de 1,50 y un rango de 715 a 2.747 €/m², un factor de 3,8. Su media (1.261 €) supera a la mediana (1.133 €) por la cola de las provincias más caras. La vivienda protegida es mucho más homogénea (CV del 11 %, de 725 a 1.397 €/m²), algo coherente con que su precio está regulado.
 
-En segundo lugar, dos variables están dominadas por pocas provincias. El número de habitantes tiene un CV del 130 %, asimetría de 3,5 y curtosis de 13,3, con valores desde 83.517 (Ceuta) hasta 6,8 millones (Madrid). El saldo migratorio joven tiene media nula por construcción, ya que los saldos entre provincias se compensan, pero una mediana de −220, una asimetría de 5,6 y una curtosis de 37,9: la mayoría de las provincias pierde jóvenes y unas pocas, sobre todo Madrid (hasta +15.116), los atraen.
+En segundo lugar, dos variables están dominadas por pocas provincias. El número de habitantes tiene un CV del 130 %, asimetría de 3,5 y curtosis de 13,3, con valores desde 83.517 (Ceuta) hasta 6,8 millones (Madrid). El saldo migratorio joven tiene media nula por construcción, ya que los saldos entre provincias se compensan, pero una mediana de $-220$, una asimetría de 5,6 y una curtosis de 37,9: la mayoría de las provincias pierde jóvenes y unas pocas, sobre todo Madrid (hasta +15.116), los atraen.
 
 En tercer lugar, la estructura productiva está claramente terciarizada: el terciario supone de media el 71,8 % de los ocupados y el 70,5 % del VAB, con un rango del 56 % al 95 %, mientras que el secundario ronda el 21-24 %. El peso del sector primario es pequeño y muy desigual (CV cercano al 80 %, asimetría de 1,1 a 1,4), con unas pocas provincias de peso agrario elevado (hasta el 29,3 % de los ocupados).
 
-En cuarto lugar, la evolución anual (Tablas 5 y 6) es estable en la estructura productiva, pero no en precios. La mediana del PIB per cápita pasa de 20.214 € a 23.488 € entre 2015 y 2021, con un descenso del 9 % en 2020 (21.037 €) y recuperación en 2021, mientras que la renta mediana crece de 11.910 € a 15.330 € sin caída en 2020. El precio mediano de la vivienda libre apenas cambia (1.150 € a 1.144 €/m²), pero su dispersión entre provincias aumenta (CV del 33,0 % al 39,1 %) mientras que la del PIB per cápita disminuye (del 21,1 % al 19,5 %): los precios divergen entre provincias aunque la mediana se mantenga. La edad media de maternidad sube de 32,01 a 32,51 años con muy poca dispersión (CV ≈ 2 %), y la mediana del saldo migratorio joven pasa de −348 a −27 en 2020 y −90 en 2021, probablemente por la menor movilidad durante la pandemia.
+En cuarto lugar, la evolución anual (Tablas 5 y 6) es estable en la estructura productiva, pero no en precios. La mediana del PIB per cápita pasa de 20.214 € a 23.488 € entre 2015 y 2021, con un descenso del 9 % en 2020 (21.037 €) y recuperación en 2021, mientras que la renta mediana crece de 11.910 € a 15.330 € sin caída en 2020. El precio mediano de la vivienda libre apenas cambia (1.150 € a 1.144 €/m²), pero su dispersión entre provincias aumenta (CV del 33,0 % al 39,1 %) mientras que la del PIB per cápita disminuye (del 21,1 % al 19,5 %): los precios divergen entre provincias aunque la mediana se mantenga. La edad media de maternidad sube de 32,01 a 32,51 años con muy poca dispersión (CV de aproximadamente el 2 %), y la mediana del saldo migratorio joven pasa de $-348$ a $-27$ en 2020 y $-90$ en 2021, probablemente por la menor movilidad durante la pandemia.
 
 Por último, entre el 74 % y el 100 % de la varianza de cada variable es varianza entre provincias (Tabla 4), por lo que el panel se comporta casi como un corte transversal repetido y puede analizarse conjuntamente. Las asimetrías y colas pesadas observadas justifican el uso de medidas robustas y de la correlación de Spearman en el análisis bivariante, así como trabajar con el número de habitantes en escala logarítmica.
 
-Procedamos a graficar estos datos para visuaizarlos mejor:
-```{r univariante-graficas, echo=TRUE, message=FALSE, warning=FALSE}
+Para visualizar mejor estas distribuciones, las representamos gráficamente:
+
+
+
+```{r univ-graficas-setup, echo=FALSE, message=FALSE, warning=FALSE}
 df_graf <- df_analisis %>% mutate(log10_Habitantes = log10(Habitantes))
 
 etiq_graf <- etiquetas %>%
   mutate(Variable = ifelse(Variable == "Habitantes", "log10_Habitantes", Variable),
-         Etiqueta = ifelse(Etiqueta == "Habitantes", "Habitantes (log10)", Etiqueta))
+         Etiqueta = ifelse(Etiqueta == "Habitantes", "Habitantes (log10)", Etiqueta),
+         Etiqueta = gsub("m\u00b2", "m2", Etiqueta))   # el "²" no se dibuja en el gráfico
 
 fmt_eje <- scales::label_number(big.mark = ".", decimal.mark = ",")
 
@@ -823,15 +835,27 @@ panel_hist <- function(vars, ncol) {
     tema_univ +
     theme(axis.text.y = element_blank(), axis.ticks.y = element_blank())
 }
+```
 
+
+```{r fig-univ-1, echo=FALSE, message=FALSE, warning=FALSE, fig.height=4.5, out.width="100%", fig.cap="Distribución de las variables económicas y demográficas del panel provincial (2015-2021): histograma, densidad (azul) y mediana (rojo discontinuo). El número de habitantes se muestra en escala logarítmica."}
 panel_hist(c("PIB_per_capita", "RentaBrutaMedia", "Precio_m2_libre", "Precio_m2_protegida",
              "Edad_Media_Maternidad", "Migracion_Interior", "log10_Habitantes"), ncol = 4)
+```
+La primera figura confirma gráficamente lo observado en las tablas. El PIB per cápita y la renta bruta media tienen distribuciones unimodales con cola derecha moderada; en el PIB se intuye además un segundo grupo de provincias en torno a los 28.000-30.000 €. El precio de la vivienda libre es claramente asimétrico: la mayoría de las provincias se concentra entre 800 y 1.400 €/m², mientras que un pequeño grupo formado por Gipuzkoa, Madrid, Bizkaia, Barcelona, Illes Balears y Araba/Álava se aproxima o supera los 2.000 €/m² en varios años y genera la cola derecha. El precio de la vivienda protegida, en cambio, es casi simétrico y se concentra en torno a 1.050 €/m². La edad media de maternidad es unimodal con una cola izquierda corta, formada por Almería, Ceuta, Melilla y Huelva, y el saldo migratorio joven se concentra en un pico muy estrecho alrededor de cero con una cola derecha muy larga, debida sobre todo a Madrid. El número de habitantes, en escala logarítmica, presenta una masa principal entre 200.000 y un millón de habitantes y una cola de provincias muy grandes (Madrid y Barcelona).
 
+```{r fig-univ-2, echo=FALSE, message=FALSE, warning=FALSE, fig.height=3.8, out.width="100%", fig.cap="Distribución de la estructura productiva provincial: porcentaje de ocupados (fila superior) y de VAB (fila inferior) por sector."}
 panel_hist(etiquetas$Variable[8:13], ncol = 3)
+```
+La estructura productiva (segunda figura) refleja una economía claramente terciarizada, con diferencias notables entre sectores. El peso del terciario es unimodal y se centra en torno al 70 %, con una cola derecha de provincias muy terciarizadas (Melilla, Ceuta, Las Palmas, Santa Cruz de Tenerife y Madrid superan en promedio el 85 %), que en el VAB aparece como un segundo bulto cercano al 85 %. El secundario es casi simétrico y alcanza sus mayores valores en provincias industriales del interior y del norte (Burgos, Castellón, Araba/Álava, Navarra, Guadalajara y Palencia superan el 35 % del VAB). El primario se concentra por debajo del 10 %, con una cola larga debida a provincias agrarias como Almería y Huelva, mientras que Madrid, Ceuta y Melilla tienen un peso prácticamente nulo. Para cada sector, la distribución de ocupados y de VAB es similar, pero el primario pesa más en el empleo (7,0 %) que en el VAB (5,4 %), y el secundario menos (21,2 % frente a 24,1 %), lo que sugiere una productividad relativa menor del sector agrario.
 
+```{r fig-univ-3, echo=FALSE, message=FALSE, warning=FALSE, fig.height=4.5, out.width="100%", fig.cap="Distribución provincial por año de las variables clave. Los puntos rojos son valores fuera de 1,5 veces el rango intercuartílico."}
 vars_fig3 <- c("PIB_per_capita", "RentaBrutaMedia", "Precio_m2_libre",
                "Edad_Media_Maternidad", "Migracion_Interior", "pct_VAB_Terciario")
-lev3 <- etiquetas %>% filter(Variable %in% vars_fig3) %>% arrange(match(Variable, vars_fig3))
+lev3 <- etiquetas %>%
+  filter(Variable %in% vars_fig3) %>%
+  arrange(match(Variable, vars_fig3)) %>%
+  mutate(Etiqueta = gsub("m\u00b2", "m2", Etiqueta))
 
 df_analisis %>%
   select(Periodo, all_of(vars_fig3)) %>%
@@ -844,10 +868,15 @@ df_analisis %>%
   facet_wrap(~ Etiqueta, scales = "free_y", ncol = 3, labeller = label_wrap_gen(width = 22)) +
   scale_x_discrete(guide = guide_axis(angle = 45)) +
   labs(y = NULL) +
-  tema_univ + theme(axis.text.x = element_text(size = 7))
-
+  tema_univ
 ```
-```{r univariante-Shapiro-Wilk, echo=TRUE, message=FALSE, warning=FALSE}
+
+La distribución anual (tercera figura) muestra que la forma de las variables se mantiene estable. El PIB per cápita tiene una mediana que crece de forma moderada hasta 2019, cae en 2020 y se recupera en 2021, mientras que la renta bruta media sube de forma sostenida y sin caída en 2020. El precio de la vivienda libre mantiene una mediana casi constante, y las provincias de precio elevado aparecen como valores extremos en todos los años. La edad media de maternidad aumenta gradualmente, con los valores bajos de Ceuta y Melilla como extremos. El saldo migratorio joven se mantiene centrado en torno a cero con extremos positivos en todos los años, y en 2020 y 2021 la caja se estrecha de forma visible, es decir, hay menos movilidad entre provincias. El peso del VAB terciario apenas varía. Los puntos rojos señalan valores fuera del rango de Tukey con fines descriptivos; su tratamiento se discute en la sección de valores atípicos.
+
+
+
+
+```{r univariante-Shapiro-Wilk, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
 etiq_norm <- bind_rows(etiquetas,
   tibble(Variable = "log10_Habitantes", Etiqueta = "Habitantes (log10)", dec = 2))
 
@@ -861,16 +890,21 @@ tabla_normalidad <- df_graf %>%
   left_join(etiq_norm, by = "Variable") %>%
   arrange(match(Variable, etiq_norm$Variable))
 
-knitr::kable(
+tabla_pie(
   tabla_normalidad %>% transmute(Variable = Etiqueta, W = fmt_es(W, 3),
                                  `p-valor` = ifelse(p < 0.001, "<0,001", fmt_es(p, 3))),
-  align = c("l", "r", "r"),
-  caption = "Contraste de normalidad de Shapiro-Wilk (panel completo, orientativo por la repetición de provincias).")
+  "Contraste de normalidad de Shapiro-Wilk (panel completo, orientativo por la repetición de provincias).",
+  c("l", "r", "r"))
 ```
+El contraste rechaza la normalidad (p < 0,05) en las 14 variables evaluadas. Como con 364 observaciones el test detecta incluso desviaciones pequeñas, es más informativo el valor del estadístico $W$: las variables más alejadas de la normalidad son el saldo migratorio ($W=0{,}47$), el número de habitantes ($W=0{,}57$) y el precio de la vivienda libre ($W=0{,}84$), mientras que los porcentajes del secundario (ocupados y VAB) son los más próximos ($W \geq 0{,}98$). Además, al repetirse cada provincia siete veces, los $p$-valores deben tomarse como orientativos.
 
-```{r univariante-QQ-plot, echo=TRUE, message=FALSE, warning=FALSE}
-etiq_qq <- etiq_norm %>% filter(Variable %in% c("Precio_m2_libre", "Migracion_Interior",
-                                                "Habitantes", "log10_Habitantes"))
+
+```{r univariante-QQ-plot, echo=FALSE, message=FALSE, warning=FALSE, fig.height=2.6, out.width="100%", fig.cap="Gráficos cuantil-cuantil de las variables más asimétricas; la línea roja es la normal teórica."}
+etiq_qq <- etiq_norm %>%
+  filter(Variable %in% c("Precio_m2_libre", "Migracion_Interior",
+                         "Habitantes", "log10_Habitantes")) %>%
+  mutate(Etiqueta = gsub("m\u00b2", "m2", Etiqueta))
+
 df_graf %>%
   select(all_of(etiq_qq$Variable)) %>%
   pivot_longer(everything(), names_to = "Variable", values_to = "Valor") %>%
@@ -879,11 +913,12 @@ df_graf %>%
   ggplot(aes(sample = Valor)) +
   stat_qq(size = 0.6, colour = "grey40") + stat_qq_line(colour = "firebrick") +
   facet_wrap(~ Etiqueta, scales = "free", ncol = 4, labeller = label_wrap_gen(22)) +
+  scale_y_continuous(labels = fmt_eje) +
   labs(x = "Cuantiles teóricos", y = "Cuantiles muestrales") +
   theme_minimal(base_size = 9) + theme(strip.text = element_text(face = "bold", size = 8))
 ```
 
-El contraste de Shapiro-Wilk rechaza la normalidad (p < 0,05) en `r sum(tabla_normalidad$p < 0.05)` de las `r nrow(tabla_normalidad)` variables evaluadas. La transformación logarítmica acerca mucho el número de habitantes a la normalidad ($W$ de 0,57 a 0,98), aunque sigue rechazándose formalmente. Esto, junto con las colas pesadas observadas en los gráficos cuantil-cuantil, apoya el uso de correlaciones basadas en rangos en el análisis bivariante.
+Los gráficos cuantil-cuantil muestran dónde se produce la desviación. En el precio de la vivienda libre y en el saldo migratorio los puntos se separan de la recta por la cola derecha, que es mucho más pesada que la normal; en el saldo migratorio hay además cuatro provincias-año con saldos superiores a 10.000 personas, todas muy alejadas del resto. En el número de habitantes, Madrid y Barcelona forman un grupo aparte en la cola superior. La transformación logarítmica corrige casi por completo esta desviación: los puntos de $\log_{10}$(habitantes) siguen la recta, salvo en los extremos inferior (Ceuta y Melilla) y superior (Madrid y Barcelona), y $W$ pasa de 0,57 a 0,98. Estas desviaciones, junto con los valores atípicos estructurales, apoyan el uso de la correlación de Spearman en el análisis bivariante y de la escala logarítmica para las variables de tamaño.
 
 ## 5.2 Análisis Bivariante y Multivariante
 
