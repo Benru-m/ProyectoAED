@@ -255,8 +255,7 @@ Inmobiliario; R}
 \usepackage{float}
 \usepackage{colortbl}
 \usepackage{pdflscape}
-\usepackage{tabularx}
-\usepackage{xltabular}
+\usepackage{tabu}
 \usepackage{threeparttable}
 \usepackage{threeparttablex}
 \usepackage[normalem]{ulem}
@@ -488,13 +487,12 @@ principales variables socioeconómicas, demográficas y de estructura
 productiva obtenidas tras el acondicionamiento del conjunto de datos. El
 objetivo central de este análisis univariante es caracterizar el
 comportamiento estadístico de cada magnitud ---evaluando su tendencia
-central, grado de dispersión, presencia de asimetrías y colas pesadas---
-antes de abordar las relaciones bivariantes.
+central, grado de dispersión, presencia de asimetrías y valores
+atípicos, antes de abordar las relaciones bivariantes.
 
-A partir del dataset unificado \texttt{df\_completo} (resultante del
-cruce de las tablas de datos socioeconómicos y laborales), seleccionamos
-y derivamos las variables cuantitativas continuas organizadas en cuatro
-dimensiones:
+A partir del dataset unificado resultante del cruce de las tablas de
+datos socioeconómicos y laborales, seleccionamos y derivamos las
+variables cuantitativas continuas organizadas en cuatro dimensiones:
 
 \begin{itemize}
 \tightlist
@@ -508,8 +506,7 @@ dimensiones:
     habitante (€/hab). Mide la producción agregada regional.
   \item
     \texttt{Renta\_bruta\_media}: Renta bruta media por persona (€/hab,
-    antes de impuestos). Funciona como \emph{proxy} de la renta
-    realmente percibida por los residentes.
+    antes de impuestos).
   \end{itemize}
 \item
   \textbf{Dimensión del Mercado Inmobiliario:}
@@ -557,38 +554,31 @@ Para caracterizar formalmente la distribución de cada variable \(X\)
 evaluamos su posición (media \(\bar{x}\), mediana y cuartiles), su
 dispersión (desviación típica muestral \(s\), rango intercuartílico
 \(\mathrm{RIC}=Q_3-Q_1\), extremos y coeficiente de variación
-\(\mathrm{CV}=100\,s/\bar{x}\), solo para variables no negativas) y su
-forma (coeficiente de asimetría de Fisher \(\gamma_1\) y exceso de
+\(\mathrm{CV}=100\,s/\bar{x}\), solo para variables no negativas), y
 curtosis \(\gamma_2\), con
 \(m_k=\frac{1}{n}\sum_{i=1}^{n}(x_i-\bar{x})^k\)):
-
-\[\bar{x} = \frac{1}{n} \sum_{i=1}^{n} x_i, \quad s = \sqrt{\frac{1}{n-1} \sum_{i=1}^{n} (x_i - \bar{x})^2}, \quad \gamma_1 = \frac{m_3}{m_2^{3/2}}, \quad \gamma_2 = \frac{m_4}{m_2^{2}} - 3.\]
-
-A partir de las 52 observaciones correspondientes a las provincias y
-ciudades autónomas en el año 2019, contrastamos finalmente la hipótesis
-de normalidad con el test de Shapiro-Wilk.
 
 \begin{table}[H]
 \centering
 \small
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
 
-\begin{tabular}{lrrrrrrr}
+\begin{tabular}{lrrrrrr}
 \toprule
-Variable & N & Media & Mediana & Desv. típ. & CV (\%) & Mín. & Máx.\\
+Variable & Media & Mediana & Desv. típ. & CV (\%) & Mín. & Máx.\\
 \midrule
-PIB per cápita (€) & 52 & 24.617 & 23.116 & 5.061 & 20,6 & 17.840 & 38.631\\
-Renta bruta media (€) & 52 & 14.144 & 13.838 & 2.115 & 15,0 & 11.043 & 19.785\\
-Precio m² (€) & 52 & 1.173,5 & 1.100,7 & 307,3 & 26,2 & 798,4 & 2.034,4\\
-Edad media maternidad (años) & 52 & 32,16 & 32,29 & 0,60 & 1,9 & 30,47 & 33,03\\
-Saldo migratorio 19-35 años (pers.) & 52 & 0 & -308 & 1.864 & – & -1.871 & 12.144\\
-Habitantes & 52 & 904.350 & 607.321 & 1.188.192 & 131,4 & 84.777 & 6.663.394\\
-Ocupados primario (\%) & 52 & 6,5 & 4,9 & 4,9 & 76,5 & 0,2 & 23,9\\
-Ocupados secundario (\%) & 52 & 21,5 & 22,4 & 6,3 & 29,3 & 6,4 & 32,8\\
-Ocupados terciario (\%) & 52 & 72,0 & 70,7 & 7,3 & 10,2 & 61,5 & 93,3\\
-VAB primario (\%) & 52 & 5,1 & 4,3 & 4,0 & 78,7 & 0,0 & 17,0\\
-VAB secundario (\%) & 52 & 24,0 & 23,9 & 7,9 & 32,8 & 8,3 & 39,7\\
-VAB terciario (\%) & 52 & 70,9 & 69,9 & 8,8 & 12,4 & 55,8 & 91,7\\
+PIB per cápita (€) & 24.617 & 23.116 & 5.061 & 20,6 & 17.840 & 38.631\\
+Renta bruta media (€) & 14.144 & 13.838 & 2.115 & 15,0 & 11.043 & 19.785\\
+Precio m² (€) & 1.173,5 & 1.100,7 & 307,3 & 26,2 & 798,4 & 2.034,4\\
+Edad media maternidad (años) & 32,16 & 32,29 & 0,60 & 1,9 & 30,47 & 33,03\\
+Saldo migratorio interior 19-35 años (pers.) & 0 & -308 & 1.864 & – & -1.871 & 12.144\\
+Habitantes & 904.350 & 607.321 & 1.188.192 & 131,4 & 84.777 & 6.663.394\\
+Ocupados primario (\%) & 6,5 & 4,9 & 4,9 & 76,5 & 0,2 & 23,9\\
+Ocupados secundario (\%) & 21,5 & 22,4 & 6,3 & 29,3 & 6,4 & 32,8\\
+Ocupados terciario (\%) & 72,0 & 70,7 & 7,3 & 10,2 & 61,5 & 93,3\\
+VAB primario (\%) & 5,1 & 4,3 & 4,0 & 78,7 & 0,0 & 17,0\\
+VAB secundario (\%) & 24,0 & 23,9 & 7,9 & 32,8 & 8,3 & 39,7\\
+VAB terciario (\%) & 70,9 & 69,9 & 8,8 & 12,4 & 55,8 & 91,7\\
 \bottomrule
 \end{tabular}
 }
@@ -601,13 +591,13 @@ VAB terciario (\%) & 52 & 70,9 & 69,9 & 8,8 & 12,4 & 55,8 & 91,7\\
 
 \begin{tabular}{lrrrrr}
 \toprule
-Variable & Q1 & Q3 & RIC & Asimetría & Curtosis\\
+Variable & Q1 & Q3 & IQR & Asimetría & Curtosis\\
 \midrule
 PIB per cápita (€) & 20.838 & 28.476 & 7.638 & 0,78 & -0,14\\
 Renta bruta media (€) & 12.314 & 15.366 & 3.052 & 0,77 & 0,15\\
 Precio m² (€) & 964,5 & 1.247,1 & 282,6 & 1,19 & 0,78\\
 Edad media maternidad (años) & 31,79 & 32,56 & 0,77 & -0,74 & 0,29\\
-Saldo migratorio 19-35 años (pers.) & -600 & 81 & 680 & 5,49 & 33,16\\
+Saldo migratorio interior 19-35 años (pers.) & -600 & 81 & 680 & 5,49 & 33,16\\
 Habitantes & 326.390 & 1.025.346 & 698.956 & 3,54 & 13,33\\
 Ocupados primario (\%) & 2,9 & 9,3 & 6,4 & 1,23 & 1,86\\
 Ocupados secundario (\%) & 17,9 & 25,8 & 7,9 & -0,45 & -0,05\\
@@ -619,58 +609,6 @@ VAB terciario (\%) & 64,4 & 76,0 & 11,7 & 0,47 & -0,39\\
 \end{tabular}
 }
 \caption{Cuartiles, forma de la distribución (asimetría y exceso de curtosis de Fisher) y porcentaje de la varianza total debido a diferencias entre provincias.}
-\end{table}
-\begin{table}[H]
-\centering
-\small
-\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
-
-\begin{tabular}{lr}
-\toprule
-Variable & 2019\\
-\midrule
-PIB per cápita (€) & 23.116\\
-Renta bruta media (€) & 13.838\\
-Precio m² (€) & 1.100,7\\
-Edad media maternidad (años) & 32,29\\
-Saldo migratorio 19-35 años (pers.) & -308\\
-Habitantes & 607.321\\
-Ocupados primario (\%) & 4,9\\
-Ocupados secundario (\%) & 22,4\\
-Ocupados terciario (\%) & 70,7\\
-VAB primario (\%) & 4,3\\
-VAB secundario (\%) & 23,9\\
-VAB terciario (\%) & 69,9\\
-\bottomrule
-\end{tabular}
-}
-\caption{Mediana provincial de cada variable por año.}
-\end{table}
-\begin{table}[H]
-\centering
-\small
-\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
-
-\begin{tabular}{lr}
-\toprule
-Variable & 2019\\
-\midrule
-PIB per cápita (€) & 20,6\\
-Renta bruta media (€) & 15,0\\
-Precio m² (€) & 26,2\\
-Edad media maternidad (años) & 1,9\\
-Saldo migratorio 19-35 años (pers.) & –\\
-Habitantes & 131,4\\
-Ocupados primario (\%) & 76,5\\
-Ocupados secundario (\%) & 29,3\\
-Ocupados terciario (\%) & 10,2\\
-VAB primario (\%) & 78,7\\
-VAB secundario (\%) & 32,8\\
-VAB terciario (\%) & 12,4\\
-\bottomrule
-\end{tabular}
-}
-\caption{Coeficiente de variación (\%) entre provincias por año (no definido para el saldo migratorio, que toma valores negativos).}
 \end{table}
 
 Los estadísticos descriptivos (Tablas 3-6) revelan la estructura
@@ -769,63 +707,6 @@ retenidos, acompañado de un segundo valor atípico cercano a los
 \(2.000\). En el ámbito productivo, el VAB terciario exhibe un atípico
 inferior por debajo del \(60\%\), apuntando a la existencia de alguna
 provincia altamente especializada fuera de los servicios.
-
-\begin{table}[H]
-\centering
-\small
-\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
-
-\begin{tabular}{lrr}
-\toprule
-Variable & W & p-valor\\
-\midrule
-PIB per cápita (€) & 0,924 & 0,003\\
-Renta bruta media (€) & 0,933 & 0,006\\
-Precio m² (€) & 0,874 & <0,001\\
-Edad media maternidad (años) & 0,950 & 0,029\\
-Saldo migratorio 19-35 años (pers.) & 0,437 & <0,001\\
-Habitantes & 0,572 & <0,001\\
-Ocupados primario (\%) & 0,901 & <0,001\\
-Ocupados secundario (\%) & 0,971 & 0,238\\
-Ocupados terciario (\%) & 0,925 & 0,003\\
-VAB primario (\%) & 0,903 & <0,001\\
-VAB secundario (\%) & 0,983 & 0,643\\
-VAB terciario (\%) & 0,969 & 0,189\\
-Habitantes (log10) & 0,980 & 0,523\\
-\bottomrule
-\end{tabular}
-}
-\caption{Contraste de normalidad de Shapiro-Wilk (panel completo, orientativo por la repetición de provincias).}
-\end{table}
-
-La Tabla 7 y la Figura 4 demuestran formalmente el rechazo de la
-hipótesis de normalidad para prácticamente todas las variables críticas
-(\(p < 0{,}05\)). El estadístico \(W\) de Shapiro-Wilk cuantifica la
-severidad de esta desviación: las magnitudes menos normales son el saldo
-migratorio (\(W=0{,}437\)), el número absoluto de habitantes
-(\(W=0{,}572\)) y el precio de la vivienda (\(W=0{,}874\)).
-
-\begin{figure}[H]
-
-{\centering \includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/univariante-QQ-plot-1} 
-
-}
-
-\caption{Gráficos cuantil-cuantil de las variables más asimétricas; la línea roja es la normal teórica.}\label{fig:univariante-QQ-plot}
-\end{figure}
-
-Los gráficos cuantil-cuantil localizan con precisión el origen de esta
-ruptura. En el precio de la vivienda y en el saldo migratorio, los
-cuantiles muestrales se despegan abruptamente de la recta teórica en su
-extremo superior, traccionados por las provincias elitistas que forman
-la pesada cola derecha. En los habitantes, Madrid y Barcelona provocan
-un escalón aislado en la parte alta. No obstante, la transformación
-logarítmica de la población logra corregir esta desviación estructural
-de forma sobresaliente, alineando los puntos con la normal (donde \(W\)
-pasa de \(0{,}572\) a \(0{,}980\)) a excepción de los inevitables
-extremos demográficos absolutos. Estos resultados ratifican la idoneidad
-de emplear correlaciones no paramétricas (Spearman) en las posteriores
-fases bivariantes.
 
 \subsection{5.2 Análisis Bivariante y
 Multivariante}\label{anuxe1lisis-bivariante-y-multivariante}
