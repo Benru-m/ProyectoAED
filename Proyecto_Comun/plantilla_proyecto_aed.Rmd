@@ -607,9 +607,9 @@ Algunas provincias (como Madrid, Barcelona o regiones insulares) pueden presenta
 
 *Explicación del tratamiento de los outliers. Se debe justificar si se mantienen en el dataset porque representan información real valiosa o si se aplican transformaciones logarítmicas para suavizar su impacto.*
 
-# 5. Análisis Exploratorio de Datos (EDA)
+# Análisis Exploratorio de Datos (EDA)
 
-## 5.1 Análisis Univariante
+## Análisis Univariante
 
 En esta sección procedemos a examinar la distribución individual de las principales variables socioeconómicas, demográficas y de estructura productiva obtenidas tras el acondicionamiento del conjunto de datos. El objetivo central de este análisis univariante es caracterizar el comportamiento estadístico de cada magnitud —evaluando su tendencia central, grado de dispersión, presencia de asimetrías y colas pesadas— antes de abordar las relaciones bivariantes.
 
