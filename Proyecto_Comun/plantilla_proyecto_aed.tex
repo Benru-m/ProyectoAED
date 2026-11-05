@@ -264,97 +264,6 @@ preguntas de investigación:
   positivo) frente a aquellas con modelos primarios?
 \end{enumerate}
 
-Con el fin de responder las preguntas, se estudian las siguientes
-variables socioeconómicas, organizadas en cuatro dimensiones:
-
-\begin{enumerate}
-\def\labelenumi{\arabic{enumi}.}
-\tightlist
-\item
-  \textbf{Dimensión de Renta y Riqueza Macro vs.~Micro:}
-\end{enumerate}
-
-\begin{itemize}
-\tightlist
-\item
-  \texttt{PIB\ per\ cápita}: Producto Interior Bruto provincial por
-  habitante (€/hab). Este indicador mide el valor monetario de todos los
-  bienes y servicios finales producidos en un periodo en una región.
-\item
-  \texttt{Renta\ bruta\ media}: Renta bruta media por persona (€/hab).
-  El concepto de renta bruta corresponde, el conjunto total de ingresos
-  que percibe una persona durante un periodo determinado, antes de
-  aplicar ningún tipo de impuesto.
-\end{itemize}
-
-\begin{enumerate}
-\def\labelenumi{\arabic{enumi}.}
-\setcounter{enumi}{1}
-\tightlist
-\item
-  \textbf{Dimensión del Mercado Inmobiliario:}
-\end{enumerate}
-
-\begin{itemize}
-\tightlist
-\item
-  \texttt{Precio\ del\ metro\ cuadrado}: Valor medio del metro cuadrado
-  de la vivienda (€/m²).
-\end{itemize}
-
-\begin{enumerate}
-\def\labelenumi{\arabic{enumi}.}
-\setcounter{enumi}{2}
-\tightlist
-\item
-  \textbf{Dimensión Demográfica y Ciclo Vital:}
-\end{enumerate}
-
-\begin{itemize}
-\tightlist
-\item
-  \texttt{Edad\ media\ de\ maternidad}: Edad media de las madres al
-  nacimiento de un hijo/a, considerando todos los órdenes de nacimiento
-  (primer hijo/a, segundo hijo/a,\ldots) (años).
-\item
-  \texttt{Migracion\ Interior}: Saldo migratorio neto interprovincial
-  (personas que pasan de vivir de una provincia a otra) en el rango de
-  edad de 19 a 35 años (número neto de personas).
-\item
-  \texttt{Habitantes}: Población provincial total residente (personas).
-\end{itemize}
-
-\begin{enumerate}
-\def\labelenumi{\arabic{enumi}.}
-\setcounter{enumi}{3}
-\tightlist
-\item
-  \textbf{Dimensión de Estructura Productiva:}
-\end{enumerate}
-
-\begin{itemize}
-\tightlist
-\item
-  \texttt{Personas\ ocupadas\ por\ sector\ (Primario,\ Secundario,\ Terciario)}:
-  Número de personas ocupadas en cada gran sector. Los ocupados están en
-  miles de personas .
-\item
-  \texttt{VAB\ por\ sector\ (Primario,\ Secundario,\ Terciario)}: El
-  valor bruto añadido mide el valor económico total que genera una
-  empresa, sector, región o país durante un periodo de tiempo
-  determinado.
-\end{itemize}
-
-Para la realización del informe se han recopilado todos los datos
-existentes de dichos registros en el INE (entre todas las variables hay
-registros desde 1975 a 2026). En particular, solamente hay registros de
-todas las variables en el periodo 2015-2021, y por cuestiones de
-espacio, en el informe solamente se muestra un análisis exploratorio de
-los datos correspondientes al año 2019, elegido ya que siendo uno de los
-años con más datos disponibles, es justamente previo a la pandemia de
-COVID-19, por lo que este análisis puede ser usado para estudiar los
-efectos de la pandemia en los factores estudiados.
-
 \section{Importación y Acondicionamiento de
 Datos}\label{importaciuxf3n-y-acondicionamiento-de-datos}
 
@@ -367,14 +276,19 @@ ficheros originales se encuentran almacenados en la carpeta local
 La fuente de datos no proporciona los datos estrictamente adecuados para
 el análisis que queremos realizar (buscamos un análisis anual a nivel
 provincial de ciertas variables socioeconómicas). Por lo tanto, el
-primer paso es acondicionar los datos obtenidos para llegar a un
-conjunto de datos que contenga los datos que nos interesan. Uno de los
-factores principales a tener en cuenta es que los datos han sido tomados
-y guardados en español, por lo que hemos de tener cuidado con el
-indicador de millares y decimales en los datos numéricos. Los datos han
-sido importados a \texttt{R} usando una función basada en
-\texttt{read\_delim} de \texttt{readr} para tratar adecuadamente las
-variables numéricas, usando la función \texttt{locale}.
+primer paso será acondicionar los datos que más se ajustaban a los
+necesitados para seleccionar los que nos interesan y juntarlos todos en
+la misma estructura de datos. Uno de los factores principales a tener en
+cuenta es que los datos han sido tomados y guardados en español, por lo
+que hemos de tener cuidado con el indicador de millares y decimales en
+los datos numéricos. Los datos han sido importados a \texttt{R} usando
+una función basada en \texttt{read\_delim} de \texttt{readr} para tratar
+adecuadamente las variables numéricas, usando la función
+\texttt{locale}.
+
+\emph{Explicación de los pasos seguidos para homogeneizar los nombres de
+las columnas, filtrar los años de estudio (ej. 2015-2021 y el cruce de
+las tablas.}
 
 El proceso de preparación de los datos se hace siguiendo la filosofía
 tidy. Al ser un proceso mecánico y repetitivo, no se explicitarán todos
@@ -510,22 +424,87 @@ dato posterior o respectivamente anterior no faltante.
 \subsection{Análisis Univariante}\label{anuxe1lisis-univariante}
 
 En esta sección procedemos a examinar la distribución individual de las
-variables recopiladas. El objetivo central de este análisis univariante
-es caracterizar el comportamiento estadístico de cada magnitud
----evaluando su tendencia central, grado de dispersión, presencia de
-asimetrías y valores atípicos, antes de abordar las relaciones
-multivariantes.
+principales variables socioeconómicas, demográficas y de estructura
+productiva obtenidas tras el acondicionamiento del conjunto de datos. El
+objetivo central de este análisis univariante es caracterizar el
+comportamiento estadístico de cada magnitud ---evaluando su tendencia
+central, grado de dispersión, presencia de asimetrías y valores
+atípicos, antes de abordar las relaciones bivariantes.
 
-Empezaremos mostrando resúmenes estadísticos de cada una de las
-variables, tanto de localización como de dispersión.
+A partir del dataset unificado resultante del cruce de las tablas de
+datos socioeconómicos y laborales, seleccionamos y derivamos las
+variables cuantitativas continuas organizadas en cuatro dimensiones:
 
-\begin{table}[!h]
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Dimensión de Renta y Riqueza Macro vs.~Micro:}
+
+  \begin{itemize}
+  \tightlist
+  \item
+    \texttt{PIB\_per\_capita}: Producto Interior Bruto provincial por
+    habitante (€/hab). Mide la producción agregada regional.
+  \item
+    \texttt{Renta\_bruta\_media}: Renta bruta media por persona (€/hab,
+    antes de impuestos).
+  \end{itemize}
+\item
+  \textbf{Dimensión del Mercado Inmobiliario:}
+
+  \begin{itemize}
+  \tightlist
+  \item
+    \texttt{Precio\_m2}: valor medio del metro cuadrado de la vivienda
+    (€/m²), media anual de los cuatro trimestres.
+  \end{itemize}
+\item
+  \textbf{Dimensión Demográfica y Ciclo Vital:}
+
+  \begin{itemize}
+  \tightlist
+  \item
+    \texttt{Edad\_Media\_Maternidad}: Edad media de las madres al
+    nacimiento de un hijo, considerando todos los órdenes de nacimiento
+    (años).
+  \item
+    \texttt{Migracion\_Interior}: Saldo migratorio neto interprovincial
+    en la cohorte joven de 19 a 35 años (número neto de personas).
+  \item
+    \texttt{Habitantes}: Población provincial total residente
+    (personas).
+  \end{itemize}
+\item
+  \textbf{Dimensión de Estructura Productiva (Métricas Derivadas):}
+
+  \begin{itemize}
+  \tightlist
+  \item
+    \texttt{\%\ Ocupados\ (Primario,\ Secundario,\ Terciario)}:
+    Porcentaje de personas ocupadas en cada sector sobre la suma de los
+    tres sectores (\%). Los ocupados están en miles de personas (media
+    anual de los valores trimestrales).
+  \item
+    \texttt{\%\ VAB\ (Primario,\ Secundario,\ Terciario)}: Porcentaje
+    del Valor Añadido Bruto aportado por cada sector sobre la suma del
+    VAB de los tres sectores (\%).
+  \end{itemize}
+\end{itemize}
+
+Para caracterizar formalmente la distribución de cada variable \(X\)
+evaluamos su posición (media \(\bar{x}\), mediana y cuartiles), su
+dispersión (desviación típica muestral \(s\), rango intercuartílico
+\(\mathrm{RIC}=Q_3-Q_1\), extremos y coeficiente de variación
+\(\mathrm{CV}=100\,s/\bar{x}\), solo para variables no negativas), y
+curtosis \(\gamma_2\), con
+\(m_k=\frac{1}{n}\sum_{i=1}^{n}(x_i-\bar{x})^k\)):
+
+\begin{table}[H]
 \centering
-\caption{\label{tab:univariante-tabla}Estadísticos de posición y dispersión del panel provincial (52 provincias, 2015–2021).}
-\centering
-\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{
-\fontsize{8}{10}\selectfont
-\begin{tabular}[t]{lrrrrrr}
+\small
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+
+\begin{tabular}{lrrrrrr}
 \toprule
 Variable & Media & Mediana & Desv. típ. & CV (\%) & Mín. & Máx.\\
 \midrule
@@ -542,18 +521,18 @@ VAB primario (\%) & 5,1 & 4,3 & 4,0 & 78,7 & 0,0 & 17,0\\
 VAB secundario (\%) & 24,0 & 23,9 & 7,9 & 32,8 & 8,3 & 39,7\\
 VAB terciario (\%) & 70,9 & 69,9 & 8,8 & 12,4 & 55,8 & 91,7\\
 \bottomrule
-\end{tabular}}
+\end{tabular}
+}
+\caption{Estadísticos de posición y dispersión del panel provincial (52 provincias, 2015–2021).}
 \end{table}
+\begin{table}[H]
+\centering
+\small
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
 
-\begin{table}[!h]
-\centering
-\caption{\label{tab:univariante-tabla}Cuartiles y forma de la distribución (asimetría y exceso de curtosis de Fisher).}
-\centering
-\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{
-\fontsize{8}{10}\selectfont
-\begin{tabular}[t]{lrrrrr}
+\begin{tabular}{lrrrrr}
 \toprule
-Variable & Q1 & Q3 & IQR & Asimetria & Curtosis\\
+Variable & Q1 & Q3 & IQR & Asimetría & Curtosis\\
 \midrule
 PIB per cápita (€) & 20.838 & 28.476 & 7.638 & 0,78 & -0,14\\
 Renta bruta media (€) & 12.314 & 15.366 & 3.052 & 0,77 & 0,15\\
@@ -568,30 +547,85 @@ VAB primario (\%) & 2,1 & 6,8 & 4,7 & 1,18 & 1,53\\
 VAB secundario (\%) & 18,0 & 29,9 & 11,8 & 0,12 & -0,73\\
 VAB terciario (\%) & 64,4 & 76,0 & 11,7 & 0,47 & -0,39\\
 \bottomrule
-\end{tabular}}
+\end{tabular}
+}
+\caption{Cuartiles, forma de la distribución (asimetría y exceso de curtosis de Fisher) y porcentaje de la varianza total debido a diferencias entre provincias.}
 \end{table}
 
-Los estadísticos descriptivos (Tablas 3-4) revelan la estructura
+Los estadísticos descriptivos (Tablas 3-6) revelan la estructura
 socioeconómica transversal del año 2019 a través de tres grandes rasgos.
 
-Basándonos en el resumen estadístico, podemos decir, que en general,
-encontramos un conjunto de datos bastante heterogéneo, ya que el
-coeficiente de variación toma valores intermedios. Cabe destacar la
-homogeneidad de la edad media de maternidad, y el peso del sector
-terciario tanto a nivel de ocupación, como a nivel de valor bruto
-añadido. De la migración interior no se puede obtener el coeficiente de
-variación, ya que su media es 0, pero ahora después visualizaremos su
-dispersión. También podemos decir que las distribuciones son poco
-simétricas, la mayoría con colas a la derecha (asimetría positiva), y
-que la curtósis nos indica en la mayoría de casos una dispersión de los
-datos respecto a la media cercana a la normal, a excepción de la edad
-media de maternidad y la población, que presentan o bien una gran
-concentración en torno a la media, o valores atípicos muy notables.
+En primer lugar, las magnitudes económicas presentan asimetría positiva,
+aunque con diferencias notables en su dispersión. El PIB per cápita
+(media de \(24.617\) € y mediana de \(23.116\) €) y la renta bruta media
+(media de \(14.144\) €) muestran coeficientes de variación moderados
+(\(20,6\%\) y \(15,0\%\), respectivamente) sin colas excesivamente
+pesadas. Sin embargo, el precio de la vivienda (Precio\_m2) es mucho más
+heterogéneo: su CV alcanza el \(26,2\%\) con un claro sesgo a la derecha
+(asimetría de \(1,19\)), abarcando desde un mínimo de \(798,4\)
+€/m\(^2\) hasta un máximo de \(2.034,4\) €/m\(^2\). Su media
+(\(1.173,5\) €) supera a la mediana (\(1.100,7\) €) precisamente por la
+tracción que ejercen las provincias más encarecidas.
 
-Con el fin de visualizar las distribuciones, y resolver las dudas que
-nos plantean las representamos gráficamente:
+En segundo lugar, la demografía y los flujos migratorios están
+monopolizados por unos pocos núcleos. El volumen de habitantes exhibe un
+CV extremo del \(131,4\%\) y una curtosis de \(13,33\), evidenciando el
+salto desde ciudades autónomas de \(84.777\) residentes hasta
+macro-urbes de más de \(6,6\) millones. Esto se refleja de forma
+drástica en el saldo migratorio joven: aunque la mediana es de \(-308\)
+personas (la mayor parte del territorio expulsa jóvenes), su enorme
+asimetría (\(5,49\)) y curtosis (\(33,16\)) muestran que el talento es
+absorbido por un número muy reducido de polos, con un pico de atracción
+neta máximo de \(12.144\) jóvenes.
 
-\begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/univ-graficas-setup-1} \end{center}
+En tercer lugar, se confirma la profunda terciarización del tejido
+productivo provincial. El sector servicios acapara de media el
+\(72,0\%\) de la ocupación y el \(70,9\%\) del VAB, mientras que el
+sector secundario ronda el \(21\%-24\%\). El sector primario queda con
+un peso residual (en torno al \(5\%-6,5\%\)) pero muy desigual (CV
+cercano al \(78\%-76\%\)), ya que unas pocas provincias mantienen una
+dependencia agraria significativa que alcanza hasta el \(23,9\%\) de sus
+ocupados.
+
+Para visualizar mejor estas distribuciones, las representamos
+gráficamente:
+
+\begin{figure}[H]
+
+{\centering \includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/fig-univ-1-1} 
+
+}
+
+\caption{Distribución de las variables económicas y demográficas del panel provincial (2015-2021): histograma, densidad (azul) y mediana (rojo discontinuo). El número de habitantes se muestra en escala logarítmica.}\label{fig:fig-univ-1}
+\end{figure}
+
+En la primera figura, el PIB per cápita y la renta bruta muestran
+distribuciones unimodales, aunque en el PIB se insinúa un ligero
+abultamiento en la cola derecha (cerca de los \(30.000\) €), reflejo de
+las provincias más ricas. El precio de la vivienda evidencia su fuerte
+asimetría: una gran masa concentrada en torno a los \(1.000-1.200\)
+€/m\(^2\) y una cola alargada hacia la derecha. La gráfica del saldo
+migratorio joven es especialmente reveladora, con un pico leptocúrtico
+masivo ligeramente por debajo de cero y una cola derecha extensa y casi
+plana que llega hasta los \(12.000\). Por su parte, la aplicación de la
+escala logarítmica normaliza la campana de la población
+(\(\log_{10}(\text{Habitantes})\)), aislando de forma clara en la cola
+superior a las provincias millonarias.
+
+\begin{figure}[H]
+
+{\centering \includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/fig-univ-2-1} 
+
+}
+
+\caption{Distribución de la estructura productiva provincial: porcentaje de ocupados (fila superior) y de VAB (fila inferior) por sector.}\label{fig:fig-univ-2}
+\end{figure}
+
+En la segunda figura, la distribución de la estructura productiva
+muestra cómo el peso del primario (tanto en VAB como en ocupados) se
+agolpa contra el cero con una larga cola derecha, mientras que los
+sectores secundario y terciario adoptan formas más amplias y centradas
+en valores considerablemente más altos.
 
 \begin{figure}[H]
 
@@ -602,17 +636,18 @@ nos plantean las representamos gráficamente:
 \caption{Distribución provincial por año de las variables clave. Los puntos rojos son valores fuera de 1,5 veces el rango intercuartílico.}\label{fig:fig-univ-3}
 \end{figure}
 
-La distribución mediante diagramas de caja, subraya el peso que tienen
-los valores extremos (marcados en rojo) en la distorsión de las medias.
-El precio del metro cuadrado destaca por concentrar cuatro valores
-atípicos superiores a los \(1.600\) €/m\(^2\). El saldo migratorio
-ilustra de forma prístina la macrocefalia demográfica del país: mientras
-la inmensa mayoría de las provincias ven sus cajas comprimidas por
-debajo del cero, un atípico extremo se dispara por encima de los
-\(12.000\) jóvenes retenidos, acompañado de un segundo valor atípico
-cercano a los \(2.000\).
-
-\begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-5-1} \end{center}
+La distribución mediante diagramas de caja (Figura 3), circunscrita al
+único año de observación (2019), subraya el peso que tienen los valores
+extremos (marcados en rojo) en la distorsión de las medias. El precio
+del metro cuadrado destaca por concentrar cuatro valores atípicos
+superiores a los \(1.600\) €/m\(^2\). El saldo migratorio ilustra de
+forma prístina la macrocefalia demográfica del país: mientras la inmensa
+mayoría de las provincias ven sus cajas comprimidas por debajo del cero,
+un atípico extremo se dispara por encima de los \(12.000\) jóvenes
+retenidos, acompañado de un segundo valor atípico cercano a los
+\(2.000\). En el ámbito productivo, el VAB terciario exhibe un atípico
+inferior por debajo del \(60\%\), apuntando a la existencia de alguna
+provincia altamente especializada fuera de los servicios.
 
 \subsection{Análisis Bivariante y
 Multivariante}\label{anuxe1lisis-bivariante-y-multivariante}
@@ -621,11 +656,11 @@ En esta sección cruzamos las variables para dar respuesta a las
 preguntas planteadas en la introducción. Para ello, fijamos el análisis
 en el año 2019.
 
-\begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-6-1} \end{center}
+\begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-5-1} \end{center}
 
 \begin{table}[!h]
 \centering
-\caption{\label{tab:unnamed-chunk-7}Perfil demográfico y económico por Cluster (Año 2019 )}
+\caption{\label{tab:unnamed-chunk-6}Perfil demográfico y económico por Cluster (Año 2019 )}
 \centering
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{
 \begin{tabular}[t]{lrrrrrrrr}
@@ -643,7 +678,7 @@ Cluster 5 & 2 & 2019 & 1905.09 & 6163986.5 & 32.75 & 7179.00 & 34258.00 & 18865.
 
 \begin{table}[!h]
 \centering
-\caption{\label{tab:unnamed-chunk-7}Perfil laboral y productivo por Cluster (Año 2019 )}
+\caption{\label{tab:unnamed-chunk-6}Perfil laboral y productivo por Cluster (Año 2019 )}
 \centering
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{
 \begin{tabular}[t]{lrrrrrrr}
@@ -659,7 +694,7 @@ Cluster 5 & 2 & 6.81 & 536.84 & 2279.78 & 531739.5 & 34721836 & 157058499\\
 \end{tabular}}
 \end{table}
 
-\begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-8-1} \end{center}
+\begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-7-1} \end{center}
 
 \subsubsection{El espejismo del PIB}\label{el-espejismo-del-pib}
 
@@ -667,9 +702,9 @@ Analizamos la relación entre la riqueza generada (PIB per cápita) y la
 percibida (Renta Bruta Media), así como la influencia del sector
 terciario en la brecha entre ambas.
 
-\begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-9-1} \end{center}
+\begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-8-1} \end{center}
 
-\begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-9-2} \end{center}
+\begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-8-2} \end{center}
 
 \begin{verbatim}
 ## Brecha PIB/Renta vs Peso del sector terciario:
@@ -690,7 +725,7 @@ Para visualizar geográficamente dónde se concentra esta brecha (dónde se
 produce más de lo que repercute en el salario de los trabajadores),
 representamos los datos en un mapa a nivel provincial.
 
-\begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-10-1} \end{center}
+\begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-9-1} \end{center}
 
 Como se aprecia en el mapa y en el gráfico de dispersión de la brecha,
 las provincias altamente terciarizadas (como la costa mediterránea o los
@@ -708,7 +743,7 @@ servicios}\label{la-trampa-del-sector-servicios}
 Pasamos a evaluar cómo la dependencia del sector terciario presiona el
 coste de la vivienda y cómo afecta a la expulsión de población joven.
 
-\begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-11-1} \end{center}
+\begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-10-1} \end{center}
 
 \begin{verbatim}
 ## Empleo en el Sector Terciario vs Esfuerzo Inmobiliario:
@@ -720,9 +755,9 @@ el acceso a la vivienda, representamos mediante boxplots el esfuerzo
 inmobiliario en cada cluster. Además, realizamos una agrupación por peso
 del sector terciario.
 
-\begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-12-1} \end{center}
+\begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-11-1} \end{center}
 
-\begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-13-1} \end{center}
+\begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-12-1} \end{center}
 
 Los datos confirman de forma contundente la hipótesis de ``la trampa del
 sector servicios''. El diagrama de dispersión muestra una correlación
@@ -749,7 +784,7 @@ Buscamos evidenciar si el endurecimiento del mercado inmobiliario
 (esfuerzo para acceder a una vivienda) retrasa la edad media a la
 maternidad.
 
-\begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-14-1} \end{center}
+\begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-13-1} \end{center}
 
 \begin{verbatim}
 ## Esfuerzo Inmobiliario vs Edad de Maternidad:
@@ -775,7 +810,7 @@ pirámide poblacional.
 Comprobamos si el tejido industrial funciona como fijador de población
 joven y si se correlaciona con una densidad demográfica más equilibrada.
 
-\begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-15-1} \end{center}
+\begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-14-1} \end{center}
 
 \begin{verbatim}
 ## Peso del Sector Industrial vs Saldo Migratorio Joven:
@@ -793,7 +828,7 @@ atracción y expulsión de jóvenes, generamos un barplot divergente
 aislando el top 10 y bottom 10, donde el color corresponde al Cluster
 para apreciar la relación con el perfil socioeconómico.
 
-\begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-16-1} \end{center}
+\begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-15-1} \end{center}
 
 La premisa de que la industria actúa como un imán demográfico absoluto
 debe ser matizada. El contraste de hipótesis muestra que la relación
@@ -819,7 +854,7 @@ global}\label{visiuxf3n-multivariante-global}
 Para resumir las dinámicas conjuntas, comenzamos con una matriz de
 correlación.
 
-\begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-17-1} \end{center}
+\begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-16-1} \end{center}
 
 La matriz de correlaciones consolida matemáticamente la narrativa del
 proyecto: el esfuerzo para acceder a la vivienda está fuertemente
