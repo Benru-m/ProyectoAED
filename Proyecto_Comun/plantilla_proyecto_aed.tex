@@ -216,7 +216,8 @@ Inmobiliario; R}
 \usepackage{float}
 \usepackage{colortbl}
 \usepackage{pdflscape}
-\usepackage{tabu}
+\usepackage{tabularx}
+\usepackage{xltabular}
 \usepackage{threeparttable}
 \usepackage{threeparttablex}
 \usepackage[normalem]{ulem}
@@ -345,8 +346,8 @@ Una vez tenemos los datos tratados, los juntamos haciendo uso del
 identificador único. Para evitar que se generen muchos valores perdidos,
 para la unión solamente tomaremos las instancias comunes a todos.
 
-\section{Análisis de Datos Perdidos (NAs) e
-Imputación}\label{anuxe1lisis-de-datos-perdidos-nas-e-imputaciuxf3n}
+\section{Análisis de Datos
+Perdidos}\label{anuxe1lisis-de-datos-perdidos}
 
 Ahora que tenemos un conjunto de datos con todas las variables de
 interés, y las instancias adecuadamente identificadas, podemos proceder
@@ -370,7 +371,7 @@ Personas\_Ocupadas\_Primario & 7 \\
 \end{longtable}
 
 Por suerte, hay pocos valores perdidos, por lo que podemos visualizar
-sus instancias correspondientes para decidir que realizar con ellos.
+sus instancias correspondientes antes de decidir qué hacer con ellos.
 
 \begin{longtable}[]{@{}lrrr@{}}
 \caption{Instancias con valores faltantes}\tabularnewline
@@ -663,7 +664,7 @@ en el año 2019.
 
 \begin{table}[!h]
 \centering
-\caption{\label{tab:unnamed-chunk-6}Perfil demográfico y económico por Cluster (Año 2018 )}
+\caption{\label{tab:unnamed-chunk-6}Perfil demográfico y económico por Cluster (Año 2019 )}
 \centering
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{
 \begin{tabular}[t]{lrrrrrrrr}
@@ -681,7 +682,7 @@ Cluster 5 & 2 & 2019 & 1905.09 & 6163986.5 & 32.75 & 7179.00 & 34258.00 & 18865.
 
 \begin{table}[!h]
 \centering
-\caption{\label{tab:unnamed-chunk-6}Perfil laboral y productivo por Cluster (Año 2018 )}
+\caption{\label{tab:unnamed-chunk-6}Perfil laboral y productivo por Cluster (Año 2019 )}
 \centering
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{
 \begin{tabular}[t]{lrrrrrrr}
@@ -828,7 +829,8 @@ joven y si se correlaciona con una densidad demográfica más equilibrada.
 
 Para observar con claridad cuáles son las provincias que lideran la
 atracción y expulsión de jóvenes, generamos un barplot divergente
-aislando el top 10 y bottom 10.
+aislando el top 10 y bottom 10, donde el color corresponde al Cluster
+para apreciar la relación con el perfil socioeconómico.
 
 \begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-15-1} \end{center}
 

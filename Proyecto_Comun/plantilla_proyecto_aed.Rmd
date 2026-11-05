@@ -933,7 +933,7 @@ perfil_promedio %>%
     format = "latex",
     booktabs = TRUE,
     longtable = FALSE,
-    caption = paste("Perfil demográfico y económico por Cluster (Año", 2018, ")"),
+    caption = paste("Perfil demográfico y económico por Cluster (Año", 2019, ")"),
     digits = 2
   ) %>%
   kable_styling(
@@ -952,7 +952,7 @@ perfil_promedio %>%
     format = "latex",
     booktabs = TRUE,
     longtable = FALSE,
-    caption = paste("Perfil laboral y productivo por Cluster (Año", 2018, ")"),
+    caption = paste("Perfil laboral y productivo por Cluster (Año", 2019, ")"),
     digits = 2
   ) %>%
   kable_styling(
@@ -994,7 +994,7 @@ ggplot(mapa_prov_clusters) +
   theme_void(base_size = 11) +
   labs(
     title = paste("Distribución Espacial de Clusters Socioeconómicos (Año", 2019, ")"),
-    subtitle = "Agrupamiento jerárquico interprovincial (Ward.D2, k = 4)",
+    subtitle = paste0("Agrupamiento jerárquico interprovincial (Ward.D2, k = ",k_grupos,")",sep=""),
     caption = "Fuente: Elaboración propia a partir de datos socioeconómicos provinciales | Capa geográfica: mapSpain"
   ) +
   theme(
@@ -1247,7 +1247,7 @@ Densidad_Spearman <- cor(df_analisis_bivariante$peso_secundario, df_analisis_biv
 cat("\nPeso del Sector Industrial vs Densidad poblacional:\n Correlación de Pearson:", Densidad_Pearson,"; Correlación de Spearman:", Densidad_Spearman)
 ```
 
-Para observar con claridad cuáles son las provincias que lideran la atracción y expulsión de jóvenes, generamos un barplot divergente aislando el top 10 y bottom 10.
+Para observar con claridad cuáles son las provincias que lideran la atracción y expulsión de jóvenes, generamos un barplot divergente aislando el top 10 y bottom 10, donde el color corresponde al Cluster para apreciar la relación con el perfil socioeconómico.
 
 ```{r,echo=FALSE}
 df_analisis_bivariante %>%
@@ -1258,7 +1258,7 @@ df_analisis_bivariante %>%
   geom_col() +
   scale_fill_manual(values = colores_cluster) +
   labs(
-    title = "Top 10 Atracción vs Top 10 Expulsión de Jóvenes (20-35 años)",
+    title = "Top 10 Atracción vs Top 10 Expulsión de\nJóvenes (20-35 años)",
     subtitle = "Saldo migratorio interno normalizado por mil habitantes",
     x = "Migración Neta (Jóvenes / 1000 hab.)",
     y = NULL,
