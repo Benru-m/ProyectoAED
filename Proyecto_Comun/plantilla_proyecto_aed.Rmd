@@ -626,8 +626,8 @@ A partir del dataset unificado `df_completo` (resultante del cruce de las tablas
   * `RentaBrutaMedia`: Renta bruta media disponible por persona (€/hab). Funciona como *proxy* del poder adquisitivo real percibido.
 
 * **Dimensión del Mercado Inmobiliario:**
-  * `Precio_m2_libre`: valor medio del m² de vivienda libre (€/m²), media anual de los cuatro trimestres.
-  * `Precio_m2_libre`: lo mismo para vivienda protegida.
+  * `Precio_m2_libre`: valor medio del metro cuadrado de la vivienda libre (€/m²), media anual de los cuatro trimestres.
+* `Precio_m2_protegida`: ídem para vivienda protegida (€/m²). No está disponible en todas las provincias (N = 325).
 
 * **Dimensión Demográfica y Ciclo Vital:**
   * `Edad_Media_Maternidad`: Edad media de las madres al nacimiento del primer hijo (años).
@@ -638,11 +638,11 @@ A partir del dataset unificado `df_completo` (resultante del cruce de las tablas
   * `% Ocupados (Primario, Secundario, Terciario)`: Porcentaje de personas ocupadas en cada sector sobre el total provincial (\%).
   * `% VAB (Primario, Secundario, Terciario)`: Porcentaje del Valor Añadido Bruto aportado por cada sector sobre el VAB total (\%).
   
-Para caracterizar formalmente la distribución de cada variable $X$, evaluamos la media muestral ($\bar{x}$), la mediana ($\tilde{x}$), la desviación típica muestral ($s$), los valores extremos ($\min(X)$, $\max(X)$) y el coeficiente de asimetría de Fisher ($\gamma_1$)[cite: 11]:
+Para caracterizar formalmente la distribución de cada variable $X$ evaluamos su posición (media $\bar{x}$, mediana y cuartiles), su dispersión (desviación típica muestral $s$, rango intercuartílico $\mathrm{RIC}=Q_3-Q_1$, extremos y coeficiente de variación $\mathrm{CV}=100\,s/\bar{x}$, solo para variables no negativas) y su forma (coeficiente de asimetría de Fisher $\gamma_1$ y exceso de curtosis $\gamma_2$, con $m_k=\frac{1}{n}\sum_{i=1}^{n}(x_i-\bar{x})^k$):
 
-$$\bar{x} = \frac{1}{n} \sum_{i=1}^{n} x_i, \quad s = \sqrt{\frac{1}{n-1} \sum_{i=1}^{n} (x_i - \bar{x})^2}, \quad \gamma_1 = \frac{\frac{1}{n} \sum_{i=1}^{n} (x_i - \bar{x})^3}{\left(\frac{1}{n} \sum_{i=1}^{n} (x_i - \bar{x})^2\right)^{3/2}}$$
+$$\bar{x} = \frac{1}{n} \sum_{i=1}^{n} x_i, \quad s = \sqrt{\frac{1}{n-1} \sum_{i=1}^{n} (x_i - \bar{x})^2}, \quad \gamma_1 = \frac{m_3}{m_2^{3/2}}, \quad \gamma_2 = \frac{m_4}{m_2^{2}} - 3.$$
 
-Donde $n = 364$ representa el volumen total de observaciones del panel.
+Como las 364 observaciones del panel son 52 provincias repetidas durante 7 años, calculamos además qué parte de la variabilidad total se debe a diferencias entre provincias, $\eta^2 = \sum_j n_j(\bar{x}_j-\bar{x})^2 / \sum_i (x_i-\bar{x})^2$, donde $\bar{x}_j$ es la media de la provincia $j$. Por último, contrastamos la normalidad con el test de Shapiro-Wilk.
 
 ```{r univariante-tabla, echo=TRUE, message=FALSE, warning=FALSE}
 # ---- Funciones de apoyo ------------------------------------------------------
@@ -787,7 +787,103 @@ En cuarto lugar, la evolución anual (Tablas 5 y 6) es estable en la estructura 
 
 Por último, entre el 74 % y el 100 % de la varianza de cada variable es varianza entre provincias (Tabla 4), por lo que el panel se comporta casi como un corte transversal repetido y puede analizarse conjuntamente. Las asimetrías y colas pesadas observadas justifican el uso de medidas robustas y de la correlación de Spearman en el análisis bivariante, así como trabajar con el número de habitantes en escala logarítmica.
 
-*Comentarios sobre las distribuciones obtenidas (simetría, sesgos, concentración de datos).*
+Procedamos a graficar estos datos para visuaizarlos mejor:
+```{r univariante-graficas, echo=TRUE, message=FALSE, warning=FALSE}
+df_graf <- df_analisis %>% mutate(log10_Habitantes = log10(Habitantes))
+
+etiq_graf <- etiquetas %>%
+  mutate(Variable = ifelse(Variable == "Habitantes", "log10_Habitantes", Variable),
+         Etiqueta = ifelse(Etiqueta == "Habitantes", "Habitantes (log10)", Etiqueta))
+
+fmt_eje <- scales::label_number(big.mark = ".", decimal.mark = ",")
+
+tema_univ <- theme_minimal(base_size = 9) +
+  theme(strip.text = element_text(face = "bold", size = 8),
+        panel.grid.minor = element_blank(),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 7))
+
+# Histograma + densidad (azul) + mediana (rojo discontinuo), un panel por variable
+panel_hist <- function(vars, ncol) {
+  lev <- etiq_graf %>% filter(Variable %in% vars) %>% arrange(match(Variable, vars))
+  d <- df_graf %>%
+    select(all_of(lev$Variable)) %>%
+    pivot_longer(everything(), names_to = "Variable", values_to = "Valor") %>%
+    left_join(lev, by = "Variable") %>%
+    mutate(Etiqueta = factor(Etiqueta, levels = lev$Etiqueta))
+  med <- d %>% group_by(Etiqueta) %>% summarise(m = median(Valor, na.rm = TRUE), .groups = "drop")
+  ggplot(d, aes(x = Valor)) +
+    geom_histogram(aes(y = after_stat(density)), bins = 12,
+                   fill = "grey80", colour = "white", na.rm = TRUE) +
+    geom_density(colour = "steelblue", linewidth = 0.7, na.rm = TRUE) +
+    geom_vline(data = med, aes(xintercept = m), colour = "firebrick", linetype = "dashed") +
+    facet_wrap(~ Etiqueta, scales = "free", ncol = ncol, labeller = label_wrap_gen(width = 22)) +
+    scale_x_continuous(labels = fmt_eje, n.breaks = 4) +
+    labs(y = "Densidad") +
+    tema_univ +
+    theme(axis.text.y = element_blank(), axis.ticks.y = element_blank())
+}
+
+panel_hist(c("PIB_per_capita", "RentaBrutaMedia", "Precio_m2_libre", "Precio_m2_protegida",
+             "Edad_Media_Maternidad", "Migracion_Interior", "log10_Habitantes"), ncol = 4)
+
+panel_hist(etiquetas$Variable[8:13], ncol = 3)
+
+vars_fig3 <- c("PIB_per_capita", "RentaBrutaMedia", "Precio_m2_libre",
+               "Edad_Media_Maternidad", "Migracion_Interior", "pct_VAB_Terciario")
+lev3 <- etiquetas %>% filter(Variable %in% vars_fig3) %>% arrange(match(Variable, vars_fig3))
+
+df_analisis %>%
+  select(Periodo, all_of(vars_fig3)) %>%
+  pivot_longer(-Periodo, names_to = "Variable", values_to = "Valor") %>%
+  left_join(lev3, by = "Variable") %>%
+  mutate(Etiqueta = factor(Etiqueta, levels = lev3$Etiqueta), Periodo = factor(Periodo)) %>%
+  ggplot(aes(x = Periodo, y = Valor)) +
+  geom_boxplot(fill = "grey90", colour = "grey30", linewidth = 0.3,
+               outlier.colour = "firebrick", outlier.size = 0.8, na.rm = TRUE) +
+  facet_wrap(~ Etiqueta, scales = "free_y", ncol = 3, labeller = label_wrap_gen(width = 22)) +
+  scale_x_discrete(guide = guide_axis(angle = 45)) +
+  labs(y = NULL) +
+  tema_univ + theme(axis.text.x = element_text(size = 7))
+
+```
+```{r univariante-Shapiro-Wilk, echo=TRUE, message=FALSE, warning=FALSE}
+etiq_norm <- bind_rows(etiquetas,
+  tibble(Variable = "log10_Habitantes", Etiqueta = "Habitantes (log10)", dec = 2))
+
+tabla_normalidad <- df_graf %>%
+  select(all_of(etiq_norm$Variable)) %>%
+  pivot_longer(everything(), names_to = "Variable", values_to = "Valor") %>%
+  group_by(Variable) %>%
+  summarise(sw = list(shapiro.test(na.omit(Valor))), .groups = "drop") %>%
+  mutate(W = purrr::map_dbl(sw, ~ unname(.x$statistic)),
+         p = purrr::map_dbl(sw, ~ .x$p.value)) %>%
+  left_join(etiq_norm, by = "Variable") %>%
+  arrange(match(Variable, etiq_norm$Variable))
+
+knitr::kable(
+  tabla_normalidad %>% transmute(Variable = Etiqueta, W = fmt_es(W, 3),
+                                 `p-valor` = ifelse(p < 0.001, "<0,001", fmt_es(p, 3))),
+  align = c("l", "r", "r"),
+  caption = "Contraste de normalidad de Shapiro-Wilk (panel completo, orientativo por la repetición de provincias).")
+```
+
+```{r univariante-QQ-plot, echo=TRUE, message=FALSE, warning=FALSE}
+etiq_qq <- etiq_norm %>% filter(Variable %in% c("Precio_m2_libre", "Migracion_Interior",
+                                                "Habitantes", "log10_Habitantes"))
+df_graf %>%
+  select(all_of(etiq_qq$Variable)) %>%
+  pivot_longer(everything(), names_to = "Variable", values_to = "Valor") %>%
+  left_join(etiq_qq, by = "Variable") %>%
+  mutate(Etiqueta = factor(Etiqueta, levels = etiq_qq$Etiqueta)) %>%
+  ggplot(aes(sample = Valor)) +
+  stat_qq(size = 0.6, colour = "grey40") + stat_qq_line(colour = "firebrick") +
+  facet_wrap(~ Etiqueta, scales = "free", ncol = 4, labeller = label_wrap_gen(22)) +
+  labs(x = "Cuantiles teóricos", y = "Cuantiles muestrales") +
+  theme_minimal(base_size = 9) + theme(strip.text = element_text(face = "bold", size = 8))
+```
+
+El contraste de Shapiro-Wilk rechaza la normalidad (p < 0,05) en `r sum(tabla_normalidad$p < 0.05)` de las `r nrow(tabla_normalidad)` variables evaluadas. La transformación logarítmica acerca mucho el número de habitantes a la normalidad ($W$ de 0,57 a 0,98), aunque sigue rechazándose formalmente. Esto, junto con las colas pesadas observadas en los gráficos cuantil-cuantil, apoya el uso de correlaciones basadas en rangos en el análisis bivariante.
 
 ## 5.2 Análisis Bivariante y Multivariante
 
