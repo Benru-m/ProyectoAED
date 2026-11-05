@@ -587,7 +587,7 @@ A partir del análisis exploratorio realizado, podemos extraer las siguientes co
 *   **Sobre el modelo productivo y migración:** (Respuesta a las preguntas 3 y 4).
 *   **Aportaciones adicionales:** (Limitaciones del estudio, posibles líneas futuras o reflexiones sobre los datos).
 
-\newpage
+\newpage.
 # Referencias
 
 *   Instituto Nacional de Estadística (INE). (2026). *Bases de datos provinciales*. Recuperado de https://www.ine.es/dyngs/DAB/index.htm?cid=1722
