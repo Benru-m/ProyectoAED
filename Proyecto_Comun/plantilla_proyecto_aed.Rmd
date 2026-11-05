@@ -276,20 +276,14 @@ coste_vivienda <- filtrar_provincias(coste_vivienda)
 # Conservamos ambos regímenes (libre y protegida) en columnas separadas.
 # distinct() elimina filas exactamente duplicadas (p. ej. Navarra en algunos trimestres).
 coste_vivienda <- coste_vivienda %>%
-  distinct() %>%
   arrange(id_prov) %>%
   arrange(Periodo) %>%
-  generar_id_obs(.,col_anyo = .$Periodo, col_prov = .$id_prov) %>%
-  group_by(id, Regimen) %>%
-  summarise(Precio_m2 = mean(Valor, na.rm = TRUE), .groups = "drop") %>%
-  mutate(Precio_m2 = ifelse(is.nan(Precio_m2), NA_real_, Precio_m2)) %>%
-  pivot_wider(
-    names_from  = Regimen,
-    values_from = Precio_m2,
-    names_prefix = "Precio_m2_"
-  ) %>%
-  rename(Precio_m2_libre = Precio_m2_Libre,
-         Precio_m2_protegida = Precio_m2_Protegida)
+ generar_id_obs(.,col_anyo = .$Periodo, col_prov = .$id_prov) %>%
+ group_by(id) %>%
+  mutate(Precio_m2 = mean(Valor, na.rm = TRUE)) %>%
+  ungroup() %>%
+  select(id,Precio_m2) %>%
+  distinct()
 ```
 
 ```{r,include=FALSE}
@@ -626,8 +620,7 @@ A partir del dataset unificado `df_completo` (resultante del cruce de las tablas
   * `RentaBrutaMedia`: Renta bruta media por persona (€/hab, antes de impuestos). Funciona como *proxy* de la renta realmente percibida por los residentes.
 
 * **Dimensión del Mercado Inmobiliario:**
-  * `Precio_m2_libre`: valor medio del metro cuadrado de la vivienda libre (€/m²), media anual de los cuatro trimestres.
-  * `Precio_m2_protegida`: ídem para vivienda protegida (€/m²). No está disponible en todas las provincias (N = 325).
+  * `Precio_m2`: valor medio del metro cuadrado de la vivienda (€/m²), media anual de los cuatro trimestres.
 
 * **Dimensión Demográfica y Ciclo Vital:**
   * `Edad_Media_Maternidad`: Edad media de las madres al nacimiento de un hijo, considerando todos los órdenes de nacimiento (años).
@@ -699,8 +692,7 @@ etiquetas <- tibble::tribble(
   ~Variable,                  ~Etiqueta,                              ~dec,
   "PIB_per_capita",           "PIB per cápita (€)",                    0,
   "RentaBrutaMedia",          "Renta bruta media (€)",                 0,
-  "Precio_m2_libre",          "Precio m² vivienda libre (€)",          1,
-  "Precio_m2_protegida",      "Precio m² vivienda protegida (€)",      1,
+  "Precio_m2",          "Precio m² (€)",          1,
   "Edad_Media_Maternidad",    "Edad media maternidad (años)",          2,
   "Migracion_Interior",       "Saldo migratorio 19-35 años (pers.)",   0,
   "Habitantes",               "Habitantes",                            0,
@@ -715,7 +707,7 @@ vars_univariante <- etiquetas$Variable
 
 # ---- Base de análisis: porcentajes sobre la suma de los tres sectores -----
 df_analisis <- df_completo %>%
-  filter(Periodo >= 2015, Periodo <= 2021) %>%
+  filter(Periodo == 2019) %>%
   mutate(
     Ocupados_Suma = Personas_Ocupadas_Primario + Personas_Ocupadas_Secundario + Personas_Ocupadas_Terciario,
     VAB_Suma      = VAB_Primario + VAB_Secundario + VAB_Terciario,
@@ -839,7 +831,7 @@ panel_hist <- function(vars, ncol) {
 
 
 ```{r fig-univ-1, echo=FALSE, message=FALSE, warning=FALSE, fig.height=4.5, out.width="100%", fig.cap="Distribución de las variables económicas y demográficas del panel provincial (2015-2021): histograma, densidad (azul) y mediana (rojo discontinuo). El número de habitantes se muestra en escala logarítmica."}
-panel_hist(c("PIB_per_capita", "RentaBrutaMedia", "Precio_m2_libre", "Precio_m2_protegida",
+panel_hist(c("PIB_per_capita", "RentaBrutaMedia", "Precio_m2",
              "Edad_Media_Maternidad", "Migracion_Interior", "log10_Habitantes"), ncol = 4)
 ```
 La primera figura confirma gráficamente lo observado en las tablas. El PIB per cápita y la renta bruta media tienen distribuciones unimodales con cola derecha moderada; en el PIB se intuye además un segundo grupo de provincias en torno a los 28.000-30.000 €. El precio de la vivienda libre es claramente asimétrico: la mayoría de las provincias se concentra entre 800 y 1.400 €/m², mientras que un pequeño grupo formado por Gipuzkoa, Madrid, Bizkaia, Barcelona, Illes Balears y Araba/Álava se aproxima o supera los 2.000 €/m² en varios años y genera la cola derecha. El precio de la vivienda protegida, en cambio, es casi simétrico y se concentra en torno a 1.050 €/m². La edad media de maternidad es unimodal con una cola izquierda corta, formada por Almería, Ceuta, Melilla y Huelva, y el saldo migratorio joven se concentra en un pico muy estrecho alrededor de cero con una cola derecha muy larga, debida sobre todo a Madrid. El número de habitantes, en escala logarítmica, presenta una masa principal entre 200.000 y un millón de habitantes y una cola de provincias muy grandes (Madrid y Barcelona).
@@ -850,7 +842,7 @@ panel_hist(etiquetas$Variable[8:13], ncol = 3)
 La estructura productiva (segunda figura) refleja una economía claramente terciarizada, con diferencias notables entre sectores. El peso del terciario es unimodal y se centra en torno al 70 %, con una cola derecha de provincias muy terciarizadas (Melilla, Ceuta, Las Palmas, Santa Cruz de Tenerife y Madrid superan en promedio el 85 %), que en el VAB aparece como un segundo bulto cercano al 85 %. El secundario es casi simétrico y alcanza sus mayores valores en provincias industriales del interior y del norte (Burgos, Castellón, Araba/Álava, Navarra, Guadalajara y Palencia superan el 35 % del VAB). El primario se concentra por debajo del 10 %, con una cola larga debida a provincias agrarias como Almería y Huelva, mientras que Madrid, Ceuta y Melilla tienen un peso prácticamente nulo. Para cada sector, la distribución de ocupados y de VAB es similar, pero el primario pesa más en el empleo (7,0 %) que en el VAB (5,4 %), y el secundario menos (21,2 % frente a 24,1 %), lo que sugiere una productividad relativa menor del sector agrario.
 
 ```{r fig-univ-3, echo=FALSE, message=FALSE, warning=FALSE, fig.height=4.5, out.width="100%", fig.cap="Distribución provincial por año de las variables clave. Los puntos rojos son valores fuera de 1,5 veces el rango intercuartílico."}
-vars_fig3 <- c("PIB_per_capita", "RentaBrutaMedia", "Precio_m2_libre",
+vars_fig3 <- c("PIB_per_capita", "RentaBrutaMedia", "Precio_m2",
                "Edad_Media_Maternidad", "Migracion_Interior", "pct_VAB_Terciario")
 lev3 <- etiquetas %>%
   filter(Variable %in% vars_fig3) %>%
@@ -901,7 +893,7 @@ El contraste rechaza la normalidad (p < 0,05) en las 14 variables evaluadas. Com
 
 ```{r univariante-QQ-plot, echo=FALSE, message=FALSE, warning=FALSE, fig.height=2.6, out.width="100%", fig.cap="Gráficos cuantil-cuantil de las variables más asimétricas; la línea roja es la normal teórica."}
 etiq_qq <- etiq_norm %>%
-  filter(Variable %in% c("Precio_m2_libre", "Migracion_Interior",
+  filter(Variable %in% c("Precio_m2", "Migracion_Interior",
                          "Habitantes", "log10_Habitantes")) %>%
   mutate(Etiqueta = gsub("m\u00b2", "m2", Etiqueta))
 
@@ -944,7 +936,7 @@ df_completo <- df_completo %>%
     peso_terciario    = VAB_Terciario  / (VAB_Primario+VAB_Secundario+VAB_Terciario),
     emp_terciario     = Personas_Ocupadas_Terciario / Personas_Ocupadas_Total,
     # Años de renta bruta media necesarios para una vivienda de 80 m2
-    esfuerzo_vivienda = (Precio_m2_libre * 80) / RentaBrutaMedia,
+    esfuerzo_vivienda = (Precio_m2 * 80) / RentaBrutaMedia,
     mig_joven_1000    = (Migracion_Interior / Habitantes) * 1000,
     log_densidad      = log10(Habitantes / area_km2)
   ) %>%
