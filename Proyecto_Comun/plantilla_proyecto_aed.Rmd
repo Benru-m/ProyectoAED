@@ -680,101 +680,37 @@ etiquetas_variables <- tibble::tribble(
   "Edad_Media_Maternidad",    "Edad media maternidad (años)",          2,
   "Migracion_Interior",       "Saldo migratorio interior 19-35 años (pers.)",   0,
   "Habitantes",               "Habitantes",                            0,
-  "pct_Ocupados_Primario",    "Ocupados primario (%)",                 1,
-  "pct_Ocupados_Secundario",  "Ocupados secundario (%)",               1,
-  "pct_Ocupados_Terciario",   "Ocupados terciario (%)",                1,
-  "pct_VAB_Primario",         "VAB primario (%)",                      1,
-  "pct_VAB_Secundario",       "VAB secundario (%)",                    1,
-  "pct_VAB_Terciario",        "VAB terciario (%)",                     1
+  "pct_Ocupados_Primario",    "Ocupados primario (% nacional)",        1,
+  "pct_Ocupados_Secundario",  "Ocupados secundario (% nacional)",      1,
+  "pct_Ocupados_Terciario",   "Ocupados terciario (% nacional)",       1,
+  "pct_VAB_Primario",         "VAB primario (% nacional)",             1,
+  "pct_VAB_Secundario",       "VAB secundario (% nacional)",           1,
+  "pct_VAB_Terciario",        "VAB terciario (% nacional)",            1
 )
 variables_univariantes <- etiquetas_variables$Variable
 
-#  porcentajes sobre la suma de los tres sectores
+# Porcentaje de ocupados y VAB de cada provincia sobre el total nacional
+# correspondiente a cada sector.
 panel_analisis_2019 <- panel_provincial %>%
   filter(Periodo == 2019) %>%
   mutate(
-    Ocupados_Suma = Personas_Ocupadas_Primario + Personas_Ocupadas_Secundario + Personas_Ocupadas_Terciario,
-    VAB_Suma      = VAB_Primario + VAB_Secundario + VAB_Terciario,
-    pct_Ocupados_Primario   = Personas_Ocupadas_Primario   / Ocupados_Suma * 100,
-    pct_Ocupados_Secundario = Personas_Ocupadas_Secundario / Ocupados_Suma * 100,
-    pct_Ocupados_Terciario  = Personas_Ocupadas_Terciario  / Ocupados_Suma * 100,
-    pct_VAB_Primario        = VAB_Primario   / VAB_Suma * 100,
-    pct_VAB_Secundario      = VAB_Secundario / VAB_Suma * 100,
-    pct_VAB_Terciario       = VAB_Terciario  / VAB_Suma * 100
+    pct_Ocupados_Primario   = Personas_Ocupadas_Primario /
+      sum(Personas_Ocupadas_Primario, na.rm = TRUE) * 100,
+    pct_Ocupados_Secundario = Personas_Ocupadas_Secundario /
+      sum(Personas_Ocupadas_Secundario, na.rm = TRUE) * 100,
+    pct_Ocupados_Terciario  = Personas_Ocupadas_Terciario /
+      sum(Personas_Ocupadas_Terciario, na.rm = TRUE) * 100,
+    pct_VAB_Primario        = VAB_Primario /
+      sum(VAB_Primario, na.rm = TRUE) * 100,
+    pct_VAB_Secundario      = VAB_Secundario /
+      sum(VAB_Secundario, na.rm = TRUE) * 100,
+    pct_VAB_Terciario       = VAB_Terciario /
+      sum(VAB_Terciario, na.rm = TRUE) * 100
   )
 
-tabla_univariante <- panel_analisis_2019 %>%
-    select(all_of(variables_univariantes)) %>%
-  pivot_longer(everything(), names_to = "Variable", values_to = "Valor") %>%
-  group_by(Variable) %>%
-  summarise(
-    Media     = mean(Valor, na.rm = TRUE),
-    Mediana   = median(Valor, na.rm = TRUE),
-    Desv_tipica = sd(Valor, na.rm = TRUE),
-    CV        = calc_cv(Valor),
-    Min       = min(Valor, na.rm = TRUE),
-    Q1        = unname(quantile(Valor, 0.25, na.rm = TRUE)),
-    Q3        = unname(quantile(Valor, 0.75, na.rm = TRUE)),
-    Max       = max(Valor, na.rm = TRUE),
-    IQR      = IQR(Valor, na.rm = TRUE),
-    Asimetria = calc_asimetria(Valor),
-    Curtosis  = calc_curtosis(Valor),
-    .groups = "drop"
-  ) %>%
-  left_join(etiquetas_variables, by = "Variable") %>%
-  arrange(match(Variable, etiquetas_variables$Variable))
-
-# Tabla 3: posición y dispersión
-tabla_posicion_dispersion <- tabla_univariante %>%
-  transmute(Variable = Etiqueta,
-            Media = fmt_es(Media, dec),
-            Mediana = fmt_es(Mediana, dec),
-            `Desv. típ.` = fmt_es(Desv_tipica, dec),
-            `CV (%)` = fmt_es(CV, 1),
-            `Mín.` = fmt_es(Min, dec),
-            `Máx.` = fmt_es(Max, dec))
-
-knitr::kable(
-  tabla_posicion_dispersion,
-  format = "latex",
-  booktabs = TRUE,
-  caption = "Estadísticos de posición y dispersión del panel provincial (52 provincias, 2015–2021).",
-  align = c("l", rep("r", 6)),
-  escape = TRUE,
-  linesep = ""
-) |>
-  kableExtra::kable_styling(
-    latex_options = c("hold_position", "scale_down"),
-    position = "center",
-    font_size = 8
-  )
-
-# Tabla 4: cuartiles, forma de la distribución y estructura del panel
-tabla_cuartiles_forma <- tabla_univariante %>%
-  transmute(Variable = Etiqueta,
-            Q1 = fmt_es(Q1, dec),
-            Q3 = fmt_es(Q3, dec),
-            IQR = fmt_es(IQR, dec),
-            Asimetria = fmt_es(Asimetria, 2),
-            Curtosis = fmt_es(Curtosis, 2))
-knitr::kable(
-  tabla_cuartiles_forma,
-  format = "latex",
-  booktabs = TRUE,
-  caption = "Cuartiles y forma de la distribución (asimetría y exceso de curtosis de Fisher).",
-  align = c("l", rep("r", 5)),
-  escape = TRUE,
-  linesep = ""
-) |>
-  kableExtra::kable_styling(
-    latex_options = c("hold_position", "scale_down"),
-    position = "center",
-    font_size = 8
-  )
 ```
-Los estadísticos descriptivos (Tablas 3-4) revelan la estructura socioeconómica transversal del año 2019 a través de tres grandes rasgos.
 
-Basándonos en el resumen estadístico, podemos decir, que en general, encontramos un conjunto de datos bastante heterogéneo, ya que el coeficiente de variación toma valores intermedios. Cabe destacar la homogeneidad de la edad media de maternidad, y el peso del sector terciario tanto a nivel de ocupación, como a nivel de valor bruto añadido. De la migración interior no se puede obtener el coeficiente de variación, ya que su media es 0, pero ahora después visualizaremos su dispersión. También podemos decir que las distribuciones son poco simétricas, la mayoría con colas a la derecha (asimetría positiva), y que la curtósis nos indica en la mayoría de casos una dispersión de los datos respecto a la media cercana a la normal, a excepción de la edad media de maternidad y la población, que presentan o bien una gran concentración en torno a la media, o valores atípicos muy notables.
+En conjunto, las distribuciones muestran una heterogeneidad moderada y, en muchos casos, asimetría positiva. La edad media de maternidad presenta una dispersión reducida, mientras que la migración interior y la población concentran valores atípicos más marcados. Estas características se incorporan directamente en los histogramas y diagramas de caja mediante sus estadísticos descriptivos.
 
 Para salir de dudas, visualizamos los histogramas de los datos:
 
@@ -816,7 +752,27 @@ etiquetas_histograma <- etiquetas_graficos %>%
       mediana = median(Valor, na.rm = TRUE),
       media = mean(Valor, na.rm = TRUE),
       desv_tipica = sd(Valor, na.rm = TRUE),
+      curtosis = calc_curtosis(Valor),
       .groups = "drop"
+    )
+
+  estadisticos_histograma_lineas <- estadisticos_histograma %>%
+    pivot_longer(
+      cols = c(mediana, media),
+      names_to = "Estadistico",
+      values_to = "Valor_estadistico"
+    ) %>%
+    mutate(
+      Estadistico = recode(Estadistico, mediana = "Mediana", media = "Media"),
+      etiqueta = paste0(Estadistico, " = ", fmt_es(Valor_estadistico, 2))
+    )
+
+  estadisticos_histograma <- estadisticos_histograma %>%
+    mutate(
+      etiqueta_forma = paste0(
+        "SD = ", fmt_es(desv_tipica, 2),
+        "\nCurtosis = ", fmt_es(curtosis, 2)
+      )
     )
   
   # 3. Filtramos los valores atípicos (Regla: alejados más de 3 desviaciones de la media)
@@ -839,6 +795,22 @@ etiquetas_histograma <- etiquetas_graficos %>%
     geom_vline(data = estadisticos_histograma,
                aes(xintercept = media, color = "Media", linetype = "Media"),
                linewidth = 0.9) +
+    geom_text(data = estadisticos_histograma_lineas,
+              aes(x = Valor_estadistico, y = Inf, label = etiqueta, color = Estadistico),
+              inherit.aes = FALSE,
+              angle = 45,
+              hjust = 1.05,
+              vjust = -0.35,
+              size = 2.2,
+              show.legend = FALSE) +
+    geom_text(data = estadisticos_histograma,
+              aes(x = -Inf, y = -Inf, label = etiqueta_forma),
+              inherit.aes = FALSE,
+              hjust = -0.05,
+              vjust = 1.15,
+              color = "grey35",
+              size = 2.2,
+              lineheight = 0.9) +
     # 4. Dibujamos un punto naranja en la base (y = 0) para cada atípico
     geom_point(data = outliers_histograma,
                aes(x = Valor, y = 0), 
@@ -872,6 +844,7 @@ etiquetas_histograma <- etiquetas_graficos %>%
       y = "Densidad",
       caption = "Las marcas naranjas indican valores atípicos (Alejados de la media más de 3 desviaciones típicas)"
     ) +
+    coord_cartesian(clip = "off") +
     tema_graficos_univariantes +
     theme(
       axis.text.y = element_blank(),
@@ -879,7 +852,8 @@ etiquetas_histograma <- etiquetas_graficos %>%
       legend.position = "bottom",
       legend.title = element_text(face = "bold", size = 8),
       legend.text = element_text(size = 8),
-      plot.caption = element_text(color = "grey40", size = 7.5, hjust = 0.5, margin = margin(t = 10))
+      plot.caption = element_text(color = "grey40", size = 7.5, hjust = 0.5, margin = margin(t = 10)),
+      plot.margin = margin(t = 5, r = 5, b = 28, l = 5)
     )
 ```
 
@@ -940,14 +914,80 @@ datos_boxplot <- panel_analisis_2019 %>%
     )
   )
 
-# 4. Extraemos el subset de outliers con sus coordenadas Y ya transformadas
+# 4. Calculamos los estadísticos en la escala representada por el gráfico
+estadisticos_boxplot <- datos_boxplot %>%
+  group_by(Etiqueta, Periodo) %>%
+  summarise(
+    minimo = min(Valor, na.rm = TRUE),
+    maximo = max(Valor, na.rm = TRUE),
+    Q1 = quantile(Valor, 0.25, na.rm = TRUE),
+    Q3 = quantile(Valor, 0.75, na.rm = TRUE),
+    mediana = median(Valor, na.rm = TRUE),
+    IQR_val = IQR(Valor, na.rm = TRUE),
+    asimetria = calc_asimetria(Valor),
+    MADM = mad(Valor, constant = 1, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    etiqueta_forma = paste0(
+      "Asimetría: ", fmt_es(asimetria, 2),
+      " | MADM (factor 1): ", fmt_es(MADM, 2)
+    )
+  )
+
+estadisticos_boxplot_etiquetas <- estadisticos_boxplot %>%
+  pivot_longer(
+    cols = c(minimo, Q1, mediana, Q3, maximo),
+    names_to = "Estadistico",
+    values_to = "valor"
+  ) %>%
+  mutate(
+    y = valor,
+    Estadistico = recode(
+      Estadistico,
+      minimo = "Mín", Q1 = "Q1", mediana = "Mediana", Q3 = "Q3", maximo = "Máx"
+    ),
+    etiqueta = paste0(Estadistico, " = ", fmt_es(valor, 2))
+  ) %>%
+  bind_rows(
+    estadisticos_boxplot %>%
+      transmute(
+        Etiqueta, Periodo,
+        Estadistico = "IQR",
+        valor = IQR_val,
+        y = (Q1 + Q3) / 2,
+        etiqueta = paste0("IQR = ", fmt_es(IQR_val, 2))
+      )
+  )
+
+# 5. Extraemos el subset de outliers con sus coordenadas Y ya transformadas
 outliers_boxplot <- datos_boxplot %>% filter(es_outlier)
 
-# 5. Generación del gráfico
+# 6. Generación del gráfico
 ggplot(datos_boxplot, aes(x = Periodo, y = Valor)) +
   geom_jitter(width = 0.03, color = "grey65", alpha = 0.5, size = 0.9, na.rm = TRUE) +
   geom_boxplot(fill = "grey90", colour = "grey30", linewidth = 0.3,
                outlier.shape = NA, alpha = 0.7, na.rm = TRUE) +
+  geom_text_repel(data = estadisticos_boxplot_etiquetas,
+                  aes(x = Periodo, y = y, label = etiqueta),
+                  inherit.aes = FALSE,
+                  direction = "y",
+                  nudge_x = 0.22,
+                  hjust = 0,
+                  size = 1.9,
+                  box.padding = 0.15,
+                  point.padding = 0.1,
+                  force = 1,
+                  min.segment.length = 0,
+                  segment.size = 0.25,
+                  max.overlaps = Inf,
+                  seed = 123) +
+  geom_text(data = estadisticos_boxplot,
+            aes(x = Periodo, y = -Inf, label = etiqueta_forma),
+            inherit.aes = FALSE,
+            vjust = 1.15,
+            size = 2.0,
+            color = "grey35") +
   geom_point(data = outliers_boxplot, color = "firebrick", size = 1.3) +
   geom_text_repel(data = outliers_boxplot,
                   aes(label = Provincia),
@@ -965,18 +1005,22 @@ ggplot(datos_boxplot, aes(x = Periodo, y = Valor)) +
                   max.overlaps = Inf,
                   seed = 123) +
   facet_wrap(~ Etiqueta, scales = "free_y", ncol = 3, labeller = label_wrap_gen(width = 22)) +
-  scale_x_discrete(guide = guide_axis(angle = 45)) +
-  scale_y_continuous(labels = fmt_eje) +
+  scale_x_discrete(expand = expansion(add = 0.45), guide = guide_axis(angle = 45)) +
+  scale_y_continuous(labels = fmt_eje, expand = expansion(mult = c(0.12, 0.12))) +
   labs(
     y = NULL, 
     x = "Año",
     caption = paste(
       "Los puntos rojos indican valores atípicos evaluados mediante IQR (±1.5) sobre la escala original de los datos.",
-      "\nNota: La variable Migración Interior ha sido escalada con una transformación de raíz cúbica para su correcta visualización."
+      "\nNota: Los estadísticos se muestran en la escala representada; Migración Interior usa una transformación de raíz cúbica. MADM es la mediana de las desviaciones absolutas con factor 1."
     )
   ) +
+  coord_cartesian(clip = "off") +
   tema_graficos_univariantes +
-  theme(plot.caption = element_text(color = "grey40", size = 8, hjust = 0, margin = margin(t = 12)))
+  theme(
+    plot.caption = element_text(color = "grey40", size = 8, hjust = 0, margin = margin(t = 12)),
+    plot.margin = margin(t = 5, r = 35, b = 32, l = 5)
+  )
 ```
 Haciendo uso de esta representación, podemos observar de manera más clara la asimetría de los datos, ya que en la mayoría de casos los bigotes de los diagramas son significativamente más grandes que las cajas, lo que indica más valores agrupados en los extremos que entorno a medidas centrales como la mediana.
 
@@ -994,7 +1038,7 @@ datos_sectoriales <- panel_analisis_2019 %>%
   pivot_longer(cols = -Provincia, names_to = "Variable", values_to = "Valor") %>%
   mutate(
     # A. Creamos la variable que definirá las 2 filas (Facets)
-    Magnitud = ifelse(grepl("Ocupados", Variable), "Mercado Laboral (% Ocupados)", "Estructura Económica (% VAB)"),
+    Magnitud = ifelse(grepl("Ocupados", Variable), "Mercado Laboral (% total nacional)", "Estructura Económica (% total nacional)"),
     
     # B. Creamos la variable que definirá los 3 boxplots por fila (Eje Y)
     Sector = case_when(
@@ -1006,7 +1050,7 @@ datos_sectoriales <- panel_analisis_2019 %>%
     # Factorizamos. Ojo: ggplot dibuja el eje Y de abajo hacia arriba.
     # Ponemos el Terciario primero para que en el gráfico salga abajo y el Primario arriba.
     Sector = factor(Sector, levels = c("Terciario", "Secundario", "Primario")),
-    Magnitud = factor(Magnitud, levels = c("Mercado Laboral (% Ocupados)", "Estructura Económica (% VAB)"))
+    Magnitud = factor(Magnitud, levels = c("Mercado Laboral (% total nacional)", "Estructura Económica (% total nacional)"))
   )
 
 # 3. Calculamos Outliers agrupando por las dos nuevas dimensiones (Magnitud y Sector)
@@ -1054,19 +1098,20 @@ ggplot(datos_sectoriales, aes(x = Valor, y = Sector)) +
                   seed = 123) +
                   
   # E. Dividimos en 2 filas (Ocupados arriba, VAB abajo)
-  facet_wrap(~ Magnitud, ncol = 1, scales = "free_x") +
+  # Compartimos límites y marcas del eje X para comparar ambos porcentajes
+  facet_wrap(~ Magnitud, ncol = 1, scales = "fixed") +
   
   # Aplicamos el formato numérico español a tu eje (ahora el X)
   scale_x_continuous(labels = fmt_eje) +
   
   labs(
-    x = "Porcentaje provincial (%)",
+    x = "Peso relativo (%)",
     y = "Sector Económico",
     caption = "Los puntos rojos indican valores atípicos evaluados mediante la regla IQR (±1.5) calculada por sector."
   ) +
   tema_graficos_univariantes
 ``` 
-Podemos constatar que el sector que más pesa es el terciario, lo cual es lógico, pues incluye los servicios básicos de de la población, y que de manera general el porcentaje de ocupación y el valor bruto añadido tienen valores similares, pero podemos destacar las siguientes características. En el sector terciario el VAB presenta una cola larga a la derecha  que la ocupación no (¿turismo?), en el sector primario, el porcentaje valor añadido bruto por encima de la mediana está bastante más concentrado que el porcentaje de ocupación (¿provincias más mecanizadas/productivas?), y en el sector secundario el valor bruto está distribuido equitativamente en los cuartiles, pero la mayoría de datos se encuentran por debajo de la mediana.
+Podemos constatar que el sector que más pesa es el terciario, lo cual es lógico, pues incluye los servicios básicos de la población. Tanto en las variables laborales como en las de VAB, cada porcentaje representa la contribución de la provincia al total nacional de ese sector. En el sector terciario el VAB presenta una cola larga a la derecha que la ocupación no (¿turismo?), mientras que en el sector primario el VAB está bastante más concentrado que la ocupación (¿provincias más mecanizadas/productivas?).
 
 
 ## Análisis Bivariante y Multivariante
@@ -1088,24 +1133,21 @@ panel_bivariante_2019 <- panel_cluster_2019 %>%
   left_join(ine_provincias, by = c("Provincia" = "Provincia_clean")) %>%
   left_join(superficie_provincial, by = "id_prov") %>%
   mutate(
-    peso_primario     = VAB_Primario   / (VAB_Primario+VAB_Secundario+VAB_Terciario),
-    peso_secundario   = VAB_Secundario / (VAB_Primario+VAB_Secundario+VAB_Terciario),
-    peso_terciario    = VAB_Terciario  / (VAB_Primario+VAB_Secundario+VAB_Terciario),
-    emp_terciario     = Personas_Ocupadas_Terciario / (Personas_Ocupadas_Primario+Personas_Ocupadas_Secundario+Personas_Ocupadas_Terciario),
+    # Peso provincial sobre el total nacional de VAB de cada sector
+    peso_primario     = VAB_Primario /
+                        sum(VAB_Primario, na.rm = TRUE),
+    peso_secundario   = VAB_Secundario /
+                        sum(VAB_Secundario, na.rm = TRUE),
+    peso_terciario    = VAB_Terciario /
+                        sum(VAB_Terciario, na.rm = TRUE),
+    # Peso provincial sobre el total nacional de ocupados del sector terciario
+    emp_terciario     = Personas_Ocupadas_Terciario /
+                        sum(Personas_Ocupadas_Terciario, na.rm = TRUE),
     esfuerzo_vivienda = (Precio_m2 * 80) / Renta_bruta_media,
     mig_joven_1000    = (Migracion_Interior / Habitantes) * 1000,
     log_densidad      = log10(Habitantes / area_km2),
     brecha_pib_renta = (PIB_per_capita / mean(PIB_per_capita, na.rm = TRUE)) /
                        (Renta_bruta_media / mean(Renta_bruta_media, na.rm = TRUE))
-  ) %>%
-  mutate(
-    nivel_terciarizacion = case_when(
-      peso_terciario < 0.65 ~ "Baja (<65%)",
-      peso_terciario >= 0.65 & peso_terciario <= 0.75 ~ "Media (65-75%)",
-      peso_terciario > 0.75 ~ "Alta (>75%)"
-    ),
-    nivel_terciarizacion = factor(nivel_terciarizacion,
-                                  levels = c("Baja (<65%)", "Media (65-75%)", "Alta (>75%)"))
   ) %>%
   mutate(
     label_pib = ifelse(
@@ -1275,9 +1317,7 @@ colores_cluster <- c(
 ```
 
 ```{r,echo=FALSE}
-# ==============================================================================
-# 1. UNIÓN DE CAPA GEOGRÁFICA Y ASIGNACIÓN DE CLUSTERS
-# ==============================================================================
+#  UNIÓN DE CAPA GEOGRÁFICA Y ASIGNACIÓN DE CLUSTERS
 panel_cluster_2019_mapa <- panel_cluster_2019_asignado %>%
   left_join(ine_provincias, by = c("Provincia" = "Provincia_clean"))
   # Asegurar formato INE de 2 dígitos (ej: 1 -> "01")
@@ -1286,9 +1326,7 @@ mapa_prov_clusters <- esp_get_prov() %>%
   mutate(cpro = str_pad(cpro, width = 2, side = "left", pad = "0")) %>%
   left_join(panel_cluster_2019_mapa, by = c("cpro" = "id_prov"))
 
-# ==============================================================================
-# 2. REPRESENTACIÓN CARTOGRÁFICA CON GGPLOT2
-# ==============================================================================
+#  REPRESENTACIÓN CARTOGRÁFICA CON GGPLOT2
 ggplot(mapa_prov_clusters) +
   geom_sf(aes(fill = Cluster), color = "white", size = 0.3) +
   scale_fill_manual(
@@ -1317,199 +1355,9 @@ ggplot(mapa_prov_clusters) +
     legend.text = element_text(size = 9)
   )
 ```
-
-### El espejismo del PIB
-
-En relación a nuestras cuestiones planteadas, comenzamos explorando la relación intrínseca entre la capacidad productiva de una provincia y la riqueza real que llega a los bolsillos de sus ciudadanos. El objetivo es identificar si un alto Producto Interior Bruto (PIB) per cápita se traduce sistemáticamente en mayores rentas salariales, o si, por el contrario, existen modelos económicos donde esta transmisión se rompe.
-
-```{r,echo=FALSE}
-ggplot(panel_bivariante_2019, aes(x = PIB_per_capita, y = Renta_bruta_media)) +
-  geom_point(aes(colour = Cluster, size = peso_terciario), alpha = 0.8) + 
-  scale_color_manual(values = colores_cluster) +
-  geom_smooth(method = "lm", col = "black", linetype = "dashed") + 
-  geom_text_repel(aes(label = label_pib), size = 3, max.overlaps = Inf, na.rm = TRUE, box.padding = 0.5) + 
-  labs(
-    title = "Relación entre PIB per cápita y Renta Bruta Media",
-    x = "PIB per cápita (€)",
-    y = "Renta bruta media anual (€)",
-    color = "Tipología (Cluster)",
-    size = "Peso Terciario"
-  ) + 
-  theme_minimal()
-
-# Correlación Brecha PIB/Renta vs Peso del sector terciario
-
-panel_bivariante_2019 %>% ggplot(aes(x = brecha_pib_renta, y = peso_terciario)) +
-  geom_point(colour = "steelblue") + 
-  geom_smooth(method = "lm", col = "black", linetype = "dashed") +
-  geom_text_repel(aes(label = label_pib), size = 3, max.overlaps = Inf, na.rm = TRUE, box.padding = 0.5) +
-  labs(
-    title = "Relación entre la brecha PIB/Renta y el peso del sector terciario",
-    x = "Brecha PIB/Renta",
-    y = "Peso del sector terciario",
-    color = "Peso del\nSector Terciario"
-  ) + 
-  theme_minimal()
-
-correlacion_brecha_pearson <- cor(panel_bivariante_2019$brecha_pib_renta, panel_bivariante_2019$peso_terciario, method = "pearson")
-correlacion_brecha_spearman <- cor(panel_bivariante_2019$brecha_pib_renta, panel_bivariante_2019$peso_terciario, method = "spearman")
-
-cat("Brecha PIB/Renta vs Peso del sector terciario:\n Correlación de Pearson:", correlacion_brecha_pearson, "; Correlación de Spearman:", correlacion_brecha_spearman)
-```
-
-El gráfico de dispersión confirma la existencia de una correlación lineal positiva generalizada: a mayor PIB per cápita, mayor renta bruta media. Sin embargo, la disposición de las observaciones revela asimetrías regionales significativas. Provincias como Madrid, Gipuzkoa y Bizkaia (Clusters 1 y 3) lideran ambas magnitudes, consolidándose como motores económicos equilibrados. La anomalía surge al evaluar la "brecha" entre la generación de riqueza corporativa y la renta retenida. El modelo estadístico muestra una correlación negativa moderada ($cor = -0.41$) entre dicha brecha y el peso del sector terciario, sugiriendo que un tejido altamente industrializado o primario tiende a disociar el VAB generado de las nóminas locales, mientras que la terciarización modera esta desconexión.
-
-Para visualizar geográficamente dónde se produce más riqueza de la que repercute en los trabajadores locales, trasladamos esta métrica a un mapa provincial.
-
-```{r,echo=FALSE}
-# Unimos los datos espaciales con nuestro dataframe
-mapa_sf <- esp_get_prov() %>%
-  inner_join(panel_bivariante_2019, by = c("cpro" = "id_prov"))
-
-ggplot(mapa_sf) +
-  geom_sf(aes(fill = brecha_pib_renta), color = "white", size = 0.1) +
-  scale_fill_gradient2(
-    low = "steelblue", mid = "white", high = "darkred", 
-    midpoint = 1, name = "Brecha\n(>1 peor)"
-  ) +
-  labs(
-    title = "Mapa de la Brecha entre PIB y Renta Bruta",
-    subtitle = "Zonas en rojo indican mayor desconexión entre la riqueza generada y la renta percibida"
-  ) +
-  theme_void()
-```
-El mapa de calor evidencia una clara dicotomía territorial. Las provincias altamente terciarizadas (como los litorales mediterráneos y ambos archipiélagos) presentan ratios equilibrados en tonos claros o azulados. Esto no obedece necesariamente a que sus salarios sean elevados de forma absoluta, sino a que tanto el PIB como la renta crecen a la par. En contraste, las zonas teñidas de rojo oscuro revelan el "espejismo del PIB": territorios que generan un alto Valor Añadido Bruto corporativo que no se transfiere proporcionalmente a la renta de los residentes.
-
-### La trampa del sector servicios
-
-A continuación, analizamos cómo la hiperdependencia económica de los servicios presiona el coste de la vivienda y expulsa indirectamente a la población.
-
-```{r,echo=FALSE}
-ggplot(panel_bivariante_2019, aes(x = emp_terciario, y = esfuerzo_vivienda)) +
-  geom_point(aes(color = Cluster), alpha = 0.8, size = 3) +
-  scale_color_manual(values = colores_cluster) +
-  geom_smooth(method = "lm", se = TRUE, color = "black") +
-  geom_text_repel(aes(label = label_trampa), size = 3, max.overlaps = Inf, na.rm = TRUE, box.padding = 0.5) +
-  scale_x_continuous(labels = scales::percent) +
-  labs(
-    title = "Empleo en el Sector Terciario vs Esfuerzo Inmobiliario",
-    x = "Proporción de empleo en el sector terciario",
-    y = "Años de renta para vivienda de 80m²",
-    color = "Cluster"
-  ) +
-  theme_minimal()
-
-correlacion_esfuerzo_pearson <- cor(panel_bivariante_2019$emp_terciario, panel_bivariante_2019$esfuerzo_vivienda, method = "pearson")
-correlacion_esfuerzo_spearman <- cor(panel_bivariante_2019$emp_terciario, panel_bivariante_2019$esfuerzo_vivienda, method = "spearman")
-
-cat("Empleo en el Sector Terciario vs Esfuerzo Inmobiliario:\n Correlación de Pearson:", correlacion_esfuerzo_pearson, "; Correlación de Spearman:", correlacion_esfuerzo_spearman)
-```
-
-Los datos avalan de forma contundente el efecto inflacionario del modelo terciario sobre el mercado inmobiliario. El diagrama de dispersión exhibe una sólida correlación positiva ($cor = 0.62$) entre la proporción de empleo en los servicios y la cantidad de años de renta bruta íntegra necesarios para adquirir una vivienda estándar. Provincias fuertemente volcadas al turismo (como Illes Balears o Málaga) lideran el extremo superior del gráfico, configurando escenarios de inaccesibilidad aguda.
-
-Para contrastar cómo la tipología económica discrimina el acceso a la vivienda, aislamos el esfuerzo inmobiliario a través de los perfiles consolidados en nuestro clustering jerárquico.
-
-```{r, echo = FALSE}
-# Esfuerzo Inmobiliario por Cluster
-ggplot(panel_bivariante_2019, aes(x = Cluster, y = esfuerzo_vivienda, fill = Cluster)) +
-  geom_boxplot(alpha = 0.7, outlier.color = "red", outlier.size = 2) +
-  geom_jitter(width = 0.15, alpha = 0.5, color = "darkslategrey") +
-  scale_fill_manual(values = colores_cluster) +
-  labs(
-    title = "Presión Inmobiliaria según Tipología Provincial",
-    x = "Cluster Socioeconómico",
-    y = "Años de renta para vivienda (80m²)"
-  ) +
-  theme_minimal() +
-  theme(legend.position = "none")
-```
-
-Al segmentar los datos por tipología provincial, observamos un marcado contraste en las medianas de esfuerzo. Mientras que los perfiles primarios o forales (Clusters 2 y 4) mantienen la presión bajo control, el Cluster 3 (polos altamente turísticos) consolida la "trampa": un modelo productivo escorado hacia el turismo y la hostelería atrae una fuerte demanda flotante que encarece drásticamente el coste de vida, desacoplándolo de la capacidad adquisitiva que generan los salarios de ese mismo sector.
-
-### El coste de la maternidad
-
-Uno de los impactos más silenciosos de la tensión inmobiliaria recae directamente sobre el ciclo vital. En esta sección medimos cómo la barrera económica del acceso a la vivienda obliga a las familias a aplazar la edad a la que tienen su primer hijo.
-
-```{r,echo=FALSE}
-ggplot(panel_bivariante_2019, aes(x = esfuerzo_vivienda, y = Edad_Media_Maternidad)) +
-  geom_point(aes(size = Habitantes, color = Cluster), alpha = 0.7) +
-  scale_color_manual(values = colores_cluster) +
-  geom_smooth(method = "loess", color = "darkorange", fill = "lightgray") +
-  labs(
-    title = "Esfuerzo Inmobiliario vs Edad de Maternidad",
-    x = "Años de renta necesarios para comprar una vivienda de 80m²",
-    y = "Edad Media a la Maternidad",
-    size = "Población",
-    color = "Cluster"
-  ) + 
-  scale_size_continuous(labels = scales::comma) +
-  theme_minimal()
-
-correlacion_maternidad_pearson <- cor(panel_bivariante_2019$esfuerzo_vivienda, panel_bivariante_2019$Edad_Media_Maternidad, method = "pearson")
-correlacion_maternidad_spearman <- cor(panel_bivariante_2019$esfuerzo_vivienda, panel_bivariante_2019$Edad_Media_Maternidad, method = "spearman")
-
-cat("Esfuerzo Inmobiliario vs Edad de Maternidad:\n Correlación de Pearson:", correlacion_maternidad_pearson, "; Correlación de Spearman:", correlacion_maternidad_spearman)
-```
-
-### El refugio industrial
-
-Frente al vaciamiento rural de los modelos agrarios, evaluamos si un tejido industrial robusto funciona como mecanismo de retención de la población joven y favorece un equilibrio demográfico territorial.
-
-```{r,echo=FALSE}
-panel_bivariante_2019 %>% ggplot(aes(x = peso_secundario, y = mig_joven_1000)) +
-  geom_point(aes(color = Cluster), size = 3, alpha = 0.7) + 
-  scale_color_manual(values = colores_cluster) +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
-  geom_smooth(method = "lm", color = "black") +
-  scale_x_continuous(labels = scales::percent) +
-  labs(
-    title = "Peso del Sector Industrial vs Saldo Migratorio Joven",
-    x = "Peso del sector secundario en el VAB",
-    y = "Saldo migratorio interior (20-35 años) por mil hab."
-  ) +
-  theme_minimal()
-
-correlacion_migracion_pearson <- cor(panel_bivariante_2019$peso_secundario, panel_bivariante_2019$mig_joven_1000, method = "pearson")
-correlacion_migracion_spearman <- cor(panel_bivariante_2019$peso_secundario, panel_bivariante_2019$mig_joven_1000, method = "spearman")
-
-cat("Peso del Sector Industrial vs Saldo Migratorio Joven:\n Correlación de Pearson:", correlacion_migracion_pearson, "; Correlación de Spearman:", correlacion_migracion_spearman)
-
-correlacion_densidad_pearson <- cor(panel_bivariante_2019$peso_secundario, panel_bivariante_2019$log_densidad, method = "pearson")
-correlacion_densidad_spearman <- cor(panel_bivariante_2019$peso_secundario, panel_bivariante_2019$log_densidad, method = "spearman")
-
-cat("\nPeso del Sector Industrial vs Densidad poblacional:\n Correlación de Pearson:", correlacion_densidad_pearson, "; Correlación de Spearman:", correlacion_densidad_spearman)
-```
-
-Para dotar de contexto humano a estos flujos, aislamos en un diagrama divergente las provincias que lideran los extremos absolutos de atracción y expulsión del talento joven.
-
-```{r,echo=FALSE}
-panel_bivariante_2019 %>%
-  arrange(desc(mig_joven_1000)) %>%
-  filter(row_number() <= 10 | row_number() >= (n() - 9)) %>%
-  mutate(Provincia = fct_reorder(Provincia, mig_joven_1000)) %>%
-  ggplot(aes(x = mig_joven_1000, y = Provincia, fill = Cluster)) +
-  geom_col() +
-  scale_fill_manual(values = colores_cluster) +
-  labs(
-    title = "Top 10 Atracción vs Top 10 Expulsión de\nJóvenes (20-35 años)",
-    subtitle = "Saldo migratorio interno normalizado por mil habitantes",
-    x = "Migración Neta (Jóvenes / 1000 hab.)",
-    y = NULL,
-    fill = "Perfil Socioeconómico"
-  ) +
-  theme_minimal() +
-  theme(legend.position = "bottom")
-```
-
 # Conclusiones Finales
 
-A partir del análisis exploratorio realizado, podemos extraer las siguientes conclusiones:
 
-*   **Sobre el mercado inmobiliario y demografía:** (Respuesta a las preguntas 1 y 2).
-*   **Sobre el modelo productivo y migración:** (Respuesta a las preguntas 3 y 4).
-*   **Aportaciones adicionales:** (Limitaciones del estudio, posibles líneas futuras o reflexiones sobre los datos).
-
-\newpage
 # Referencias
 
 *   Instituto Nacional de Estadística (INE). (2026). *Bases de datos provinciales*. Recuperado de https://www.ine.es/dyngs/DAB/index.htm?cid=1722
