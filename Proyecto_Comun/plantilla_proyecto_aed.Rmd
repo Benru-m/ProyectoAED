@@ -1273,7 +1273,7 @@ colores_cluster <- c(
 ```
 ### El espejismo del PIB
 
-Analizamos la relación entre la riqueza generada (PIB per cápita) y la percibida (Renta Bruta Media), así como la influencia del sector terciario en la brecha entre ambas.
+En relación a nuestras cuestiones planteadas, comenzamos explorando la relación intrínseca entre la capacidad productiva de una provincia y la riqueza real que llega a los bolsillos de sus ciudadanos. El objetivo es identificar si un alto Producto Interior Bruto (PIB) per cápita se traduce sistemáticamente en mayores rentas salariales, o si, por el contrario, existen modelos económicos donde esta transmisión se rompe.
 
 ```{r,echo=FALSE}
 ggplot(panel_bivariante_2019, aes(x = PIB_per_capita, y = Renta_bruta_media)) +
@@ -1310,9 +1310,9 @@ correlacion_brecha_spearman <- cor(panel_bivariante_2019$brecha_pib_renta, panel
 cat("Brecha PIB/Renta vs Peso del sector terciario:\n Correlación de Pearson:", correlacion_brecha_pearson, "; Correlación de Spearman:", correlacion_brecha_spearman)
 ```
 
-El primer gráfico de dispersión confirma una correlación lineal positiva esperable: a mayor PIB per cápita, mayor renta bruta media. Sin embargo, la dispersión de los puntos revela importantes asimetrías regionales. Provincias como Madrid, Gipuzkoa y Bizkaia lideran ambas métricas, pero al observar la "brecha" (la proporción entre la riqueza generada y la renta percibida frente a la media nacional), el contraste estadístico revela un fenómeno contraintuitivo: existe una correlación negativa ($cor = -0.41$) entre la brecha PIB/Renta y el peso del sector terciario. 
+El gráfico de dispersión confirma la existencia de una correlación lineal positiva generalizada: a mayor PIB per cápita, mayor renta bruta media. Sin embargo, la disposición de las observaciones revela asimetrías regionales significativas. Provincias como Madrid, Gipuzkoa y Bizkaia (Clusters 1 y 3) lideran ambas magnitudes, consolidándose como motores económicos equilibrados. La anomalía surge al evaluar la "brecha" entre la generación de riqueza corporativa y la renta retenida. El modelo estadístico muestra una correlación negativa moderada ($cor = -0.41$) entre dicha brecha y el peso del sector terciario, sugiriendo que un tejido altamente industrializado o primario tiende a disociar el VAB generado de las nóminas locales, mientras que la terciarización modera esta desconexión.
 
-Para visualizar geográficamente dónde se concentra esta brecha (dónde se produce más de lo que repercute en el salario de los trabajadores), representamos los datos en un mapa a nivel provincial.
+Para visualizar geográficamente dónde se produce más riqueza de la que repercute en los trabajadores locales, trasladamos esta métrica a un mapa provincial.
 
 ```{r,echo=FALSE}
 # Unimos los datos espaciales con nuestro dataframe
@@ -1331,11 +1331,11 @@ ggplot(mapa_sf) +
   ) +
   theme_void()
 ```
-Como se aprecia en el mapa y en el gráfico de dispersión de la brecha, las provincias altamente terciarizadas (como la costa mediterránea o los archipiélagos) presentan ratios equilibrados o bajos. Esto no significa que sus salarios sean altos, sino que ambas métricas (PIB y Renta) están deprimidas y crecen a la par de forma moderada. Por el contrario, provincias con perfiles más industriales o energéticos, donde se genera un alto Valor Añadido Bruto corporativo que no se transfiere proporcionalmente a las nóminas de los residentes locales, presentan una mayor desconexión (brecha > 1).
+El mapa de calor evidencia una clara dicotomía territorial. Las provincias altamente terciarizadas (como los litorales mediterráneos y ambos archipiélagos) presentan ratios equilibrados en tonos claros o azulados. Esto no obedece necesariamente a que sus salarios sean elevados de forma absoluta, sino a que tanto el PIB como la renta crecen a la par. En contraste, las zonas teñidas de rojo oscuro revelan el "espejismo del PIB": territorios que generan un alto Valor Añadido Bruto corporativo que no se transfiere proporcionalmente a la renta de los residentes.
 
 ### La trampa del sector servicios
 
-Pasamos a evaluar cómo la dependencia del sector terciario presiona el coste de la vivienda y cómo afecta a la expulsión de población joven.
+A continuación, analizamos cómo la hiperdependencia económica de los servicios presiona el coste de la vivienda y expulsa indirectamente a la población.
 
 ```{r,echo=FALSE}
 ggplot(panel_bivariante_2019, aes(x = emp_terciario, y = esfuerzo_vivienda)) +
@@ -1358,7 +1358,9 @@ correlacion_esfuerzo_spearman <- cor(panel_bivariante_2019$emp_terciario, panel_
 cat("Empleo en el Sector Terciario vs Esfuerzo Inmobiliario:\n Correlación de Pearson:", correlacion_esfuerzo_pearson, "; Correlación de Spearman:", correlacion_esfuerzo_spearman)
 ```
 
-Para contrastar de forma más robusta si el modelo productivo discrimina el acceso a la vivienda, representamos mediante boxplots el esfuerzo inmobiliario en cada cluster. Además, realizamos una agrupación por peso del sector terciario.
+Los datos avalan de forma contundente el efecto inflacionario del modelo terciario sobre el mercado inmobiliario. El diagrama de dispersión exhibe una sólida correlación positiva ($cor = 0.62$) entre la proporción de empleo en los servicios y la cantidad de años de renta bruta íntegra necesarios para adquirir una vivienda estándar. Provincias fuertemente volcadas al turismo (como Illes Balears o Málaga) lideran el extremo superior del gráfico, configurando escenarios de inaccesibilidad aguda.
+
+Para contrastar cómo la tipología económica discrimina el acceso a la vivienda, aislamos el esfuerzo inmobiliario a través de los perfiles consolidados en nuestro clustering jerárquico.
 
 ```{r, echo = FALSE}
 # Esfuerzo Inmobiliario por Cluster
@@ -1375,27 +1377,11 @@ ggplot(panel_bivariante_2019, aes(x = Cluster, y = esfuerzo_vivienda, fill = Clu
   theme(legend.position = "none")
 ```
 
-```{r,echo=FALSE}
-ggplot(panel_bivariante_2019, aes(x = nivel_terciarizacion, y = esfuerzo_vivienda, fill = nivel_terciarizacion)) +
-  geom_boxplot(alpha = 0.7, outlier.color = "red", outlier.size = 2) +
-  geom_jitter(width = 0.15, alpha = 0.5, color = "darkslategrey") +
-  scale_fill_brewer(palette = "Oranges") +
-  labs(
-    title = "Distribución del Esfuerzo Inmobiliario según Grado de Terciarización",
-    x = "Peso del Sector Terciario en el VAB",
-    y = "Años de renta para vivienda (80m²)",
-    fill = "Terciarización"
-  ) +
-  theme_minimal() +
-  theme(legend.position = "none")
-```
-Los datos confirman de forma contundente la hipótesis de "la trampa del sector servicios". El diagrama de dispersión muestra una correlación estadística muy sólida y positiva ($cor = 0.58$, $p < 0.001$) entre la proporción de empleo terciario y el esfuerzo necesario para adquirir una vivienda. Provincias hiperdependientes del turismo como Illes Balears y Málaga se sitúan en el extremo superior de inaccesibilidad inmobiliaria. 
-
-Esta realidad se hace aún más evidente en el diagrama de cajas: al categorizar las provincias por su grado de terciarización, observamos un salto drástico en la mediana del esfuerzo inmobiliario en el tramo de "Alta terciarización (>75%)". Un modelo productivo fuertemente escorado hacia los servicios (especialmente hostelería y turismo) tensiona severamente el mercado de la vivienda al atraer demanda flotante (inversión, alquiler vacacional, turismo), encareciendo el coste de vida por encima de lo que los salarios de ese mismo sector pueden soportar.
+Al segmentar los datos por tipología provincial, observamos un marcado contraste en las medianas de esfuerzo. Mientras que los perfiles primarios o forales (Clusters 2 y 4) mantienen la presión bajo control, el Cluster 3 (polos altamente turísticos) consolida la "trampa": un modelo productivo escorado hacia el turismo y la hostelería atrae una fuerte demanda flotante que encarece drásticamente el coste de vida, desacoplándolo de la capacidad adquisitiva que generan los salarios de ese mismo sector.
 
 ### El coste de la maternidad
 
-Buscamos evidenciar si el endurecimiento del mercado inmobiliario (esfuerzo para acceder a una vivienda) retrasa la edad media a la maternidad.
+Uno de los impactos más silenciosos de la tensión inmobiliaria recae directamente sobre el ciclo vital. En esta sección medimos cómo la barrera económica del acceso a la vivienda obliga a las familias a aplazar la edad a la que tienen su primer hijo.
 
 ```{r,echo=FALSE}
 ggplot(panel_bivariante_2019, aes(x = esfuerzo_vivienda, y = Edad_Media_Maternidad)) +
@@ -1418,13 +1404,9 @@ correlacion_maternidad_spearman <- cor(panel_bivariante_2019$esfuerzo_vivienda, 
 cat("Esfuerzo Inmobiliario vs Edad de Maternidad:\n Correlación de Pearson:", correlacion_maternidad_pearson, "; Correlación de Spearman:", correlacion_maternidad_spearman)
 ```
 
-El análisis cruza el esfuerzo inmobiliario con la demografía vital, evidenciando una correlación positiva y significativa ($cor = 0.55$, $p < 0.001$). A medida que aumentan los años de renta necesarios para adquirir una vivienda, la edad media a la maternidad se retrasa.
-
-La curva de ajuste local (LOESS) es particularmente reveladora: muestra una fase de escalada abrupta en los niveles bajos y medios de esfuerzo, que luego parece estabilizarse en una "meseta" alta para las provincias más pobladas y tensionadas. Esto sugiere la existencia de un umbral crítico de emancipación; cuando el mercado de la vivienda supera ciertos límites de esfuerzo económico, se produce un aplazamiento sistemático de la decisión de tener hijos, alterando estructuralmente la pirámide poblacional.
-
 ### El refugio industrial
 
-Comprobamos si el tejido industrial funciona como fijador de población joven y si se correlaciona con una densidad demográfica más equilibrada.
+Frente al vaciamiento rural de los modelos agrarios, evaluamos si un tejido industrial robusto funciona como mecanismo de retención de la población joven y favorece un equilibrio demográfico territorial.
 
 ```{r,echo=FALSE}
 panel_bivariante_2019 %>% ggplot(aes(x = peso_secundario, y = mig_joven_1000)) +
@@ -1451,7 +1433,7 @@ correlacion_densidad_spearman <- cor(panel_bivariante_2019$peso_secundario, pane
 cat("\nPeso del Sector Industrial vs Densidad poblacional:\n Correlación de Pearson:", correlacion_densidad_pearson, "; Correlación de Spearman:", correlacion_densidad_spearman)
 ```
 
-Para observar con claridad cuáles son las provincias que lideran la atracción y expulsión de jóvenes, generamos un barplot divergente aislando el top 10 y bottom 10, donde el color corresponde al Cluster para apreciar la relación con el perfil socioeconómico.
+Para dotar de contexto humano a estos flujos, aislamos en un diagrama divergente las provincias que lideran los extremos absolutos de atracción y expulsión del talento joven.
 
 ```{r,echo=FALSE}
 panel_bivariante_2019 %>%
@@ -1472,31 +1454,33 @@ panel_bivariante_2019 %>%
   theme(legend.position = "bottom")
 ```
 
-La premisa de que la industria actúa como un imán demográfico absoluto debe ser matizada. El contraste de hipótesis muestra que la relación lineal entre el peso del sector secundario y la atracción neta de jóvenes no es estadísticamente significativa ($cor = 0.10$, $p = 0.46$). De hecho, el gráfico de barras divergente ilustra que las provincias que más jóvenes atraen (Illes Balears, Madrid, Las Palmas) son precisamente los grandes polos terciarios, a pesar de su elevada presión inmobiliaria. 
-
-Sin embargo, la industria sí cumple una función de "refugio" o fijación poblacional frente al vacío rural. La correlación negativa y significativa entre la industrialización y la densidad poblacional logarítmica ($cor = -0.35$, $p < 0.05$) indica que el tejido industrial ayuda a sostener demográficamente a provincias medianas, evitando la macrocefalia extrema y la despoblación masiva que sufren las provincias cuyo VAB depende casi exclusivamente del sector primario, como revelan los saldos negativos de Cáceres, Jaén o Zamora.
 
 ### Visión multivariante global
 
-Para resumir las dinámicas conjuntas, comenzamos con una matriz de correlación.
+Para sintetizar las múltiples interacciones macroeconómicas documentadas a lo largo de este bloque, proyectamos la totalidad del sistema mediante una matriz de correlación.
 
 ```{r,echo=FALSE}
 # Seleccionamos las variables continuas de interés
-variables_correlacion <- panel_bivariante_2019 %>%
+var_corr <- panel_bivariante_2019 %>%
   select(
-    PIB_per_capita, Renta_bruta_media, brecha_pib_renta, 
-    peso_primario, peso_secundario, peso_terciario,
-    esfuerzo_vivienda, Edad_Media_Maternidad, mig_joven_1000, log_densidad
+    `PIB per cápita` = PIB_per_capita, 
+    `Renta Bruta Media` = Renta_bruta_media, 
+    `Brecha PIB/Renta` = brecha_pib_renta, 
+    `Peso Primario` = peso_primario, 
+    `Peso Secundario` = peso_secundario, 
+    `Peso Terciario` = peso_terciario,
+    `Esfuerzo Vivienda` = esfuerzo_vivienda, 
+    `Edad Maternidad` = Edad_Media_Maternidad, 
+    `Migración Joven` = mig_joven_1000, 
+    `Densidad (log)` = log_densidad
   ) %>%
   drop_na()
 
-# Calculamos matriz de correlación
-matriz_correlacion <- cor(variables_correlacion)
+matriz_cor <- cor(var_corr)
 
-# Visualización
-corrplot(matriz_correlacion,
+corrplot(matriz_cor, 
          method = "color", 
-         type = "upper", 
+         type = "lower", 
          order = "hclust",
          tl.col = "black", 
          tl.srt = 45, 
@@ -1506,7 +1490,13 @@ corrplot(matriz_correlacion,
 ```
 
 
-La matriz de correlaciones consolida matemáticamente la narrativa del proyecto: el esfuerzo para acceder a la vivienda está fuertemente acoplado a la terciarización de la economía ($0.60$) y empuja al alza la edad de maternidad ($0.55$).
+La matriz consolida de manera ejecutiva y matemática los tres hallazgos vectoriales del análisis:
+
+* El esfuerzo de acceso a la vivienda está solidamente acoplado a la terciarización agresiva del modelo productivo (fuerte correlación positiva en el bloque inferior).
+
+* La escalada de inaccesibilidad económica empuja mecánicamente al alza la edad media al primer hijo, retrasando el ciclo vital y alterando las proyecciones demográficas.
+
+* Finalmente, un elevado PIB per cápita general no siempre evita el vaciamiento demográfico o la fuga de talento cuando dicha riqueza corporativa se divorcia de la renta efectivamente retenida por los ciudadanos (brecha salarial).
 
 # Conclusiones Finales
 
