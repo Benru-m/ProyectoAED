@@ -764,7 +764,8 @@ etiquetas_histograma <- etiquetas_graficos %>%
     ) %>%
     mutate(
       Estadistico = recode(Estadistico, mediana = "Mediana", media = "Media"),
-      etiqueta = paste0(Estadistico, " = ", fmt_es(Valor_estadistico, 2))
+      etiqueta = fmt_es(Valor_estadistico, 2),
+      justificacion = ifelse(Estadistico == "Media", 1.05, -0.05)
     )
 
   estadisticos_histograma <- estadisticos_histograma %>%
@@ -796,10 +797,10 @@ etiquetas_histograma <- etiquetas_graficos %>%
                aes(xintercept = media, color = "Media", linetype = "Media"),
                linewidth = 0.9) +
     geom_text(data = estadisticos_histograma_lineas,
-              aes(x = Valor_estadistico, y = Inf, label = etiqueta, color = Estadistico),
+              aes(x = Valor_estadistico, y = Inf, label = etiqueta,
+                  color = Estadistico, hjust = justificacion),
               inherit.aes = FALSE,
               angle = 45,
-              hjust = 1.05,
               vjust = -0.35,
               size = 2.2,
               show.legend = FALSE) +
@@ -807,7 +808,7 @@ etiquetas_histograma <- etiquetas_graficos %>%
               aes(x = -Inf, y = -Inf, label = etiqueta_forma),
               inherit.aes = FALSE,
               hjust = -0.05,
-              vjust = 1.15,
+              vjust = 1.8,
               color = "grey35",
               size = 2.2,
               lineheight = 0.9) +
@@ -823,7 +824,7 @@ etiquetas_histograma <- etiquetas_graficos %>%
                     fontface = "bold",
                     angle = 90,
                     hjust = -0.2,# Empuja el texto hacia arriba usando proporción, no coordenadas Y absolutas
-                    direction = "x",# Evita solapamientos desplazando solo en horizontal
+                    direction = "both",# Evita solapamientos desplazando solo en horizontal
                     segment.size = 0.4,
                     segment.color = "darkorange",
                     max.overlaps = Inf) +
@@ -853,7 +854,7 @@ etiquetas_histograma <- etiquetas_graficos %>%
       legend.title = element_text(face = "bold", size = 8),
       legend.text = element_text(size = 8),
       plot.caption = element_text(color = "grey40", size = 7.5, hjust = 0.5, margin = margin(t = 10)),
-      plot.margin = margin(t = 5, r = 5, b = 28, l = 5)
+      plot.margin = margin(t = 5, r = 5, b = 45, l = 5)
     )
 ```
 
@@ -890,7 +891,9 @@ datos_boxplot <- panel_analisis_2019 %>%
   left_join(etiquetas_boxplot, by = "Variable") %>%
   mutate(
     Etiqueta = factor(Etiqueta, levels = etiquetas_boxplot$Etiqueta),
-    Periodo = factor(Periodo)
+    Periodo = factor(Periodo),
+    Periodo_num = as.numeric(Periodo),
+    x_box = Periodo_num + 0.45
   ) %>%
   filter(!is.na(Valor)) %>%
   # Agrupamos y calculamos umbrales sobre la ESCALA ORIGINAL
@@ -916,7 +919,7 @@ datos_boxplot <- panel_analisis_2019 %>%
 
 # 4. Calculamos los estadísticos en la escala representada por el gráfico
 estadisticos_boxplot <- datos_boxplot %>%
-  group_by(Etiqueta, Periodo) %>%
+  group_by(Etiqueta, Periodo, Periodo_num, x_box) %>%
   summarise(
     minimo = min(Valor, na.rm = TRUE),
     maximo = max(Valor, na.rm = TRUE),
@@ -931,7 +934,7 @@ estadisticos_boxplot <- datos_boxplot %>%
   mutate(
     etiqueta_forma = paste0(
       "Asimetría: ", fmt_es(asimetria, 2),
-      " | MADM (factor 1): ", fmt_es(MADM, 2)
+      " | MADM: ", fmt_es(MADM, 2)
     )
   )
 
@@ -945,14 +948,14 @@ estadisticos_boxplot_etiquetas <- estadisticos_boxplot %>%
     y = valor,
     Estadistico = recode(
       Estadistico,
-      minimo = "Mín", Q1 = "Q1", mediana = "Mediana", Q3 = "Q3", maximo = "Máx"
+      minimo = "Mín", Q1 = "Q1", mediana = "Med.", Q3 = "Q3", maximo = "Máx"
     ),
     etiqueta = paste0(Estadistico, " = ", fmt_es(valor, 2))
   ) %>%
   bind_rows(
     estadisticos_boxplot %>%
       transmute(
-        Etiqueta, Periodo,
+        Etiqueta, Periodo, Periodo_num, x_box,
         Estadistico = "IQR",
         valor = IQR_val,
         y = (Q1 + Q3) / 2,
@@ -963,63 +966,77 @@ estadisticos_boxplot_etiquetas <- estadisticos_boxplot %>%
 # 5. Extraemos el subset de outliers con sus coordenadas Y ya transformadas
 outliers_boxplot <- datos_boxplot %>% filter(es_outlier)
 
+etiquetas_boxplot_repel <- bind_rows(
+  estadisticos_boxplot_etiquetas %>%
+    transmute(
+      Etiqueta,
+      x = x_box + 0.22,
+      y,
+      label = etiqueta,
+      Tipo = "Estadístico",
+      hjust = 0,
+      fontface = "plain"
+    ),
+  outliers_boxplot %>%
+    transmute(
+      Etiqueta,
+      x = x_box - 0.22,
+      y = Valor,
+      label = Provincia,
+      Tipo = "Outlier",
+      hjust = 1,
+      fontface = "bold"
+    )
+)
+
 # 6. Generación del gráfico
-ggplot(datos_boxplot, aes(x = Periodo, y = Valor)) +
-  geom_jitter(width = 0.03, color = "grey65", alpha = 0.5, size = 0.9, na.rm = TRUE) +
-  geom_boxplot(fill = "grey90", colour = "grey30", linewidth = 0.3,
+ggplot(datos_boxplot, aes(x = x_box, y = Valor)) +
+  geom_jitter(width = 0.02, color = "grey65", alpha = 0.5, size = 0.9, na.rm = TRUE) +
+  geom_boxplot(width = 0.28, fill = "grey90", colour = "grey30", linewidth = 0.3,
                outlier.shape = NA, alpha = 0.7, na.rm = TRUE) +
-  geom_text_repel(data = estadisticos_boxplot_etiquetas,
-                  aes(x = Periodo, y = y, label = etiqueta),
+  geom_text_repel(data = etiquetas_boxplot_repel,
+                  aes(x = x, y = y, label = label,
+                      color = Tipo, hjust = hjust, fontface = fontface),
                   inherit.aes = FALSE,
                   direction = "y",
-                  nudge_x = 0.22,
-                  hjust = 0,
+                  force_pull = 1,
                   size = 1.9,
-                  box.padding = 0.15,
-                  point.padding = 0.1,
-                  force = 1,
+                  box.padding = 0.6,
+                  point.padding = 0.2,
+                  force = 3,
                   min.segment.length = 0,
-                  segment.size = 0.25,
+                  segment.size = 0.3,
                   max.overlaps = Inf,
+                  show.legend = FALSE,
                   seed = 123) +
   geom_text(data = estadisticos_boxplot,
-            aes(x = Periodo, y = -Inf, label = etiqueta_forma),
+            aes(x = x_box, y = -Inf, label = etiqueta_forma),
             inherit.aes = FALSE,
             vjust = 1.15,
             size = 2.0,
             color = "grey35") +
   geom_point(data = outliers_boxplot, color = "firebrick", size = 1.3) +
-  geom_text_repel(data = outliers_boxplot,
-                  aes(label = Provincia),
-                  size = 2.2,
-                  color = "firebrick",
-                  fontface = "bold",
-                  direction = "both",             
-                  nudge_x = 0.45,              
-                  hjust = 0,
-                  box.padding = 0.5,           
-                  force = 4,                   
-                  min.segment.length = 0,      
-                  segment.size = 0.3,
-                  segment.color = "firebrick",
-                  max.overlaps = Inf,
-                  seed = 123) +
   facet_wrap(~ Etiqueta, scales = "free_y", ncol = 3, labeller = label_wrap_gen(width = 22)) +
-  scale_x_discrete(expand = expansion(add = 0.45), guide = guide_axis(angle = 45)) +
+  scale_x_continuous(
+    limits = c(0.15, 2.85),
+    breaks = 1.45,
+    labels = NULL,
+    expand = c(0, 0)
+  ) +
+  scale_color_manual(values = c("Estadístico" = "grey25", "Outlier" = "firebrick"), guide = "none") +
   scale_y_continuous(labels = fmt_eje, expand = expansion(mult = c(0.12, 0.12))) +
   labs(
     y = NULL, 
-    x = "Año",
+    x = NULL,
     caption = paste(
       "Los puntos rojos indican valores atípicos evaluados mediante IQR (±1.5) sobre la escala original de los datos.",
-      "\nNota: Los estadísticos se muestran en la escala representada; Migración Interior usa una transformación de raíz cúbica. MADM es la mediana de las desviaciones absolutas con factor 1."
+      "\nNota: Los estadísticos se muestran en la escala representada; Migración Interior usa una transformación de raíz cúbica. MADM es la mediana de las desviaciones absolutas."
     )
   ) +
   coord_cartesian(clip = "off") +
   tema_graficos_univariantes +
   theme(
-    plot.caption = element_text(color = "grey40", size = 8, hjust = 0, margin = margin(t = 12)),
-    plot.margin = margin(t = 5, r = 35, b = 32, l = 5)
+    plot.margin = margin(t = 5, r = 55, b = 32, l = 35)
   )
 ```
 Haciendo uso de esta representación, podemos observar de manera más clara la asimetría de los datos, ya que en la mayoría de casos los bigotes de los diagramas son significativamente más grandes que las cajas, lo que indica más valores agrupados en los extremos que entorno a medidas centrales como la mediana.
@@ -1086,7 +1103,7 @@ ggplot(datos_sectoriales, aes(x = Valor, y = Sector)) +
                   size = 2.2,
                   color = "firebrick",
                   fontface = "bold",
-                  direction = "x",             # Que se distribuyan a lo largo del eje X si chocan
+                  direction = "both",
                   nudge_y = 0.35,              # Empujamos el texto hacia ARRIBA del boxplot
                   hjust = 0.5,
                   box.padding = 0.3,
@@ -1172,22 +1189,36 @@ variables_cluster <- c(
   "log_densidad"
 )
 
+nombres_variables_cluster <- c(
+  "Brecha PIB/Renta", "Peso Primario", "Peso Secundario",
+  "Peso Terciario", "Empleo Terciario", "Esfuerzo Vivienda",
+  "Edad Maternidad", "Migración Joven", "Densidad (log)"
+)
+
 # Seleccionamos las variables continuas de interés
 var_corr <- panel_bivariante_2019 %>%
   select(all_of(variables_cluster)) %>%
-  setNames(c(
-    "Brecha PIB/Renta", "Peso Primario", "Peso Secundario",
-    "Peso Terciario", "Empleo Terciario", "Esfuerzo Vivienda",
-    "Edad Maternidad", "Migración Joven", "Densidad (log)"
-  )) %>%
+  setNames(nombres_variables_cluster) %>%
   drop_na()
 
 matriz_cor <- cor(var_corr,method="spearman")
 
+# Orden común de variables para comparar todas las matrices
+orden_variables_cor <- hclust(
+  as.dist(1 - abs(matriz_cor)),
+  method = "complete"
+)$order
+matriz_cor <- matriz_cor[orden_variables_cor, orden_variables_cor]
+
+paleta_correlacion <- colorRampPalette(
+  c("#F4B6B6", "#FCE4D6", "#FFFFFF", "#DDEBF7", "#9DC3E6")
+)(200)
+
 corrplot(matriz_cor,
          method = "color",
          type = "lower",
-         order = "hclust",
+         order = "original",
+         col = paleta_correlacion,
          tl.col = "black",
          tl.srt = 45,
          addCoef.col = "black",
@@ -1196,18 +1227,10 @@ corrplot(matriz_cor,
 ```
 
 
-La matriz consolida de manera ejecutiva y matemática los tres hallazgos vectoriales del análisis:
-
-* El esfuerzo de acceso a la vivienda está solidamente acoplado a la terciarización agresiva del modelo productivo (fuerte correlación positiva en el bloque inferior).
-
-* La escalada de inaccesibilidad económica empuja mecánicamente al alza la edad media al primer hijo, retrasando el ciclo vital y alterando las proyecciones demográficas.
-
-* Finalmente, un elevado PIB per cápita general no siempre evita el vaciamiento demográfico o la fuga de talento cuando dicha riqueza corporativa se divorcia de la renta efectivamente retenida por los ciudadanos (brecha salarial).
-
-
 ```{r,echo=FALSE,fig.height = 10}
 datos_cluster_2019 <- panel_bivariante_2019 %>%
   filter(!is.na(Provincia)) %>%
+  filter(!Provincia %in% c("Ceuta", "Melilla")) %>%
   select(Provincia, all_of(variables_cluster)) %>%
   na.omit() %>%
   column_to_rownames("Provincia")
@@ -1222,7 +1245,7 @@ distancia_provincias <- dist(datos_cluster_estandarizados, method = "euclidean")
 dendrograma_provincias <- hclust(distancia_provincias, method = "ward.D2")
 
 # Definir número óptimo de clusters (k = 4) y cortar el dendrograma
-numero_clusters <- 5
+numero_clusters <- 4
 asignacion_clusters <- cutree(dendrograma_provincias, k = numero_clusters)
 
 # ==============================================================================
@@ -1311,9 +1334,87 @@ colores_cluster <- c(
   "Cluster 1" = "#E74C3C",  # Metropolitano / Mercado Tensionado
   "Cluster 2" = "#3498DB",  # Servicios / Turístico
   "Cluster 3" = "#2ECC71",  # Polo Industrial / Foral
-  "Cluster 4" = "#F39C12",  # Interior / Sector Primario
-  "Cluster 5" = "#9B59B6"   # Excepciones / Macro-urbes
+  "Cluster 4" = "#F39C12"   # Interior / Sector Primario
 )
+```
+Si un cluster tiene dos elementos la correlación entre dos de sus variables cualesquiera será 1 0 -1 siempre.
+```{r correlaciones-por-cluster, echo=FALSE, fig.height=12, fig.width=12}
+# Matrices de correlación de Spearman por cluster
+datos_correlacion_cluster <- panel_bivariante_2019 %>%
+  filter(!is.na(Cluster)) %>%
+  select(Cluster, all_of(variables_cluster)) %>%
+  group_split(Cluster)
+
+matrices_list <- purrr::map(datos_correlacion_cluster, function(datos_cluster) {
+  datos_cor <- datos_cluster %>%
+    select(all_of(variables_cluster)) %>%
+    drop_na()
+
+  matriz_cor_cluster <- datos_cor %>%
+    setNames(nombres_variables_cluster) %>%
+    cor(method = "spearman")
+
+  matriz_cor_cluster[orden_variables_cor, orden_variables_cor]
+})
+
+nombres_matrices <- purrr::map_chr(
+  datos_correlacion_cluster,
+  ~ paste0(
+    as.character(unique(.x$Cluster)),
+    " (n = ",
+    sum(complete.cases(.x[variables_cluster])),
+    ")"
+  )
+)
+names(matrices_list) <- nombres_matrices
+
+df_correlaciones <- purrr::map_dfr(
+  matrices_list,
+  ~ as.data.frame(.x) %>%
+    tibble::rownames_to_column(var = "Var1") %>%
+    tidyr::pivot_longer(cols = -Var1, names_to = "Var2", values_to = "Correlacion"),
+  .id = "Grupo"
+) %>%
+  mutate(
+    fila = match(Var1, nombres_variables_cluster[orden_variables_cor]),
+    columna = match(Var2, nombres_variables_cluster[orden_variables_cor])
+  ) %>%
+  filter(fila > columna) %>%
+  mutate(
+    Grupo = factor(Grupo, levels = nombres_matrices),
+    Var1 = factor(Var1, levels = rev(nombres_variables_cluster[orden_variables_cor])),
+    Var2 = factor(Var2, levels = nombres_variables_cluster[orden_variables_cor]),
+    Contraste = abs(Correlacion) > 0.6
+  )
+
+ggplot(df_correlaciones, aes(x = Var2, y = Var1, fill = Correlacion)) +
+  geom_tile(color = "white", linewidth = 0.25) +
+  geom_text(
+    aes(label = sprintf("%.2f", Correlacion), color = Contraste),
+    size = 2.1
+  ) +
+  scale_fill_gradient2(
+    low = "#3B82F6",
+    mid = "white",
+    high = "#EF4444",
+    midpoint = 0,
+    limits = c(-1, 1)
+  ) +
+  scale_color_manual(
+    values = c(`FALSE` = "black", `TRUE` = "white"),
+    guide = "none"
+  ) +
+  facet_wrap(~ Grupo, ncol = 2, scales = "fixed") +
+  theme_minimal(base_size = 10) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1, size = 8),
+    axis.text.y = element_text(size = 8),
+    panel.grid = element_blank(),
+    strip.text = element_text(face = "bold", size = 10),
+    panel.spacing = grid::unit(1.2, "lines"),
+    legend.position = "bottom"
+  ) +
+  labs(x = NULL, y = NULL, fill = "Correlación")
 ```
 
 ```{r,echo=FALSE}
@@ -1334,8 +1435,7 @@ ggplot(mapa_prov_clusters) +
       "Cluster 1" = "#E74C3C",  # Rojo: Metropolitano / Mercado Tensionado
       "Cluster 2" = "#3498DB",  # Azul: Servicios / Turístico
       "Cluster 3" = "#2ECC71",  # Verde: Polo Industrial / Foral
-      "Cluster 4" = "#F39C12",   # Naranja: Interior / Sector Primario
-      "Cluster 5" = "#9B59B6"
+      "Cluster 4" = "#F39C12"   # Naranja: Interior / Sector Primario
     ),
     na.value = "grey85",
     name = "Tipología Provincial"
