@@ -136,6 +136,27 @@ A partir del cruce de datos, nos planteamos responder a las siguientes preguntas
 
 4. **El refugio industrial:** ¿Logran las provincias con un tejido industrial fuerte retener mejor a la población joven (saldo migratorio positivo) frente a aquellas con modelos primarios?
 
+Con el fin de responder las preguntas, se estudian las siguientes variables socioeconómicas, organizadas en cuatro dimensiones:
+
+1. **Dimensión de Renta y Riqueza Macro vs. Micro:**
+  * `PIB per cápita`: Producto Interior Bruto provincial por habitante (€/hab). Este indicador mide el valor monetario de todos los bienes y servicios finales producidos en un periodo en una región. 
+  * `Renta bruta media`: Renta bruta media por persona (€/hab). El concepto de renta bruta corresponde, el conjunto total de ingresos que percibe una persona durante un periodo determinado, antes de aplicar ningún tipo de impuesto.
+
+2. **Dimensión del Mercado Inmobiliario:**
+  * `Precio del metro cuadrado`: Valor medio del metro cuadrado de la vivienda (€/m²).
+
+3. **Dimensión Demográfica y Ciclo Vital:**
+  * `Edad media de maternidad`: Edad media de las madres al nacimiento de un hijo/a, considerando todos los órdenes de nacimiento (primer hijo/a, segundo hijo/a,...) (años).
+  * `Migracion Interior`: Saldo migratorio neto interprovincial (personas que pasan de vivir de una provincia a otra) en el rango de edad de 19 a 35 años (número neto de personas).
+  * `Habitantes`: Población provincial total residente (personas).
+
+4. **Dimensión de Estructura Productiva:**
+  * `Personas ocupadas por sector (Primario, Secundario, Terciario)`: Número de personas ocupadas en cada gran sector. Los ocupados están en miles de personas .
+  * ` VAB por sector (Primario, Secundario, Terciario)`: El valor bruto añadido mide el valor económico total que genera una empresa, sector, región o país durante un periodo de tiempo determinado.
+  
+Para la realización del informe se han recopilado todos los datos existentes de dichos registros en el INE (entre todas las variables hay registros desde 1975 a 2026). En particular, solamente hay registros de todas las variables en el periodo 2015-2021, y por cuestiones de espacio, en el informe solamente se muestra un análisis exploratorio de los datos correspondientes al año 2019, elegido ya que siendo uno de los años con más datos disponibles, es justamente previo a la pandemia de COVID-19, por lo que este análisis puede ser usado para estudiar los efectos de la pandemia en los factores estudiados.
+  
+
 #  Importación y Acondicionamiento de Datos
 
 El primer paso para el análisis es cargar los conjuntos de datos obtenidos del [INE](https://ine.es/dyngs/INEbase/listaoperaciones.htm). Los ficheros originales se encuentran almacenados en la carpeta local `data/raw`.
@@ -172,7 +193,7 @@ remove(list = c("ruta_archivo", "nombre_archivo", "urls_datos_ine"))
 ```
 
 
-La fuente de datos no proporciona los datos estrictamente adecuados para el análisis que queremos realizar (buscamos un análisis anual a nivel provincial de ciertas variables socioeconómicas). Por lo tanto, el primer paso será acondicionar los datos que más se ajustaban a los necesitados para seleccionar los que nos interesan y juntarlos todos en la misma estructura de datos. Uno de los factores principales a tener en cuenta es que los datos han sido tomados y guardados en español, por lo que hemos de tener cuidado con el indicador de millares y decimales en los datos numéricos.  Los datos han sido importados a `R` usando una función basada en `read_delim` de `readr` para tratar adecuadamente las variables numéricas, usando la función `locale`.
+La fuente de datos no proporciona los datos estrictamente adecuados para el análisis que queremos realizar (buscamos un análisis anual a nivel provincial de ciertas variables socioeconómicas). Por lo tanto, el primer paso es acondicionar los datos obtenidos para llegar a un conjunto de datos que contenga los datos que nos interesan. Uno de los factores principales a tener en cuenta es que los datos han sido tomados y guardados en español, por lo que hemos de tener cuidado con el indicador de millares y decimales en los datos numéricos.  Los datos han sido importados a `R` usando una función basada en `read_delim` de `readr` para tratar adecuadamente las variables numéricas, usando la función `locale`.
 
 ```{r lectura datos,include = FALSE}
 leer_archivo_ine <- function(fichero, separador, decimal = ",", grouping = ".") {
@@ -199,15 +220,13 @@ valor_bruto_sector_raw <- leer_archivo_ine("./data/raw/valor_bruto_sector.csv", 
 remove(list = c("leer_archivo_ine"))
 ```
 
-*Explicación de los pasos seguidos para homogeneizar los nombres de las columnas, filtrar los años de estudio (ej. 2015-2021 y el cruce de las tablas.*
-
 El proceso de preparación de los datos se hace siguiendo la filosofía tidy. Al ser un proceso mecánico y repetitivo, no se explicitarán todos y cada uno de los pasos hechos en el informe, aunque se pueden consultar en el script que lo genera. Los principales pasos que han sido necesarios para el acondicionamiento de los datos ha requerido han sido:
 
 + Acondicionamiento de nombres de variables para evitar errores de compilación, como `Año` que pasa a ser `Periodo` o `Comunidad Autónoma` a `Comunidad_Autonoma`.
 
 +  Es una práctica común en el INE incluir la variable `Provincias` que tiene la forma `xx Nombre_Provincia`, siendo `XX` el código de provincia oficial (asignados por orden alfabético, del 01 al 50, siendo Ceuta el 51 y Melilla el 52). Nosotros hemos separado esa variable en código provincial `cod_prov` y nombre provincial (`Provincia`).
 
-+ En el conjunto de datos que queremos estudiar cada instancia es una provincia en cierto año. Con el fin de unir instancias de distintas tablas, hemos asignado un identificador único (en el sentido de que cada provincia tiene uno por año) a todos los registros de los datos originales, usando el formato `yyyy_xx`, año (`yyyy`) y código provincial (`xx`).
++ En el conjunto de datos que queremos estudiar cada instancia es una provincia en cierto año. Para unir instancias de distintas tablas, hemos asignado un identificador único (en el sentido de que cada provincia tiene uno por año) a todos los registros de los datos originales, usando el formato `yyyy_xx`, año (`yyyy`) y código provincial (`xx`).
 ```{r identificador,include = FALSE}
 # Función para generar el ID único
 crear_id_provincia_anio <- function(df, col_anyo, col_prov) {
@@ -619,41 +638,14 @@ remove(list = c("imputar_valores_intermedios"))
 
 ## Análisis Univariante
 
-En esta sección procedemos a examinar la distribución individual de las principales variables socioeconómicas, demográficas y de estructura productiva obtenidas tras el acondicionamiento del conjunto de datos. El objetivo central de este análisis univariante es caracterizar el comportamiento estadístico de cada magnitud —evaluando su tendencia central, grado de dispersión, presencia de asimetrías y valores atípicos, antes de abordar las relaciones bivariantes.
+En esta sección procedemos a examinar la distribución individual de las variables recopiladas. El objetivo central de este análisis univariante es caracterizar el comportamiento estadístico de cada magnitud —evaluando su tendencia central, grado de dispersión, presencia de asimetrías y valores atípicos, antes de abordar las relaciones multivariantes.
 
-A partir del dataset unificado resultante del cruce de las tablas de datos socioeconómicos y laborales, seleccionamos y derivamos las variables cuantitativas continuas organizadas en cuatro dimensiones:
-
-* **Dimensión de Renta y Riqueza Macro vs. Micro:**
-  * `PIB_per_capita`: Producto Interior Bruto provincial por habitante (€/hab). Mide la producción agregada regional.
-  * `Renta_bruta_media`: Renta bruta media por persona (€/hab, antes de impuestos). 
-
-* **Dimensión del Mercado Inmobiliario:**
-  * `Precio_m2`: valor medio del metro cuadrado de la vivienda (€/m²), media anual de los cuatro trimestres.
-
-* **Dimensión Demográfica y Ciclo Vital:**
-  * `Edad_Media_Maternidad`: Edad media de las madres al nacimiento de un hijo, considerando todos los órdenes de nacimiento (años).
-  * `Migracion_Interior`: Saldo migratorio neto interprovincial en la cohorte joven de 19 a 35 años (número neto de personas).
-  * `Habitantes`: Población provincial total residente (personas).
-
-* **Dimensión de Estructura Productiva (Métricas Derivadas):**
-  * `% Ocupados (Primario, Secundario, Terciario)`: Porcentaje de personas ocupadas en cada sector sobre la suma de los tres sectores (\%). Los ocupados están en miles de personas (media anual de los valores trimestrales).
-  * `% VAB (Primario, Secundario, Terciario)`: Porcentaje del Valor Añadido Bruto aportado por cada sector sobre la suma del VAB de los tres sectores (\%).
-  
-Para caracterizar formalmente la distribución de cada variable $X$ evaluamos su posición (media $\bar{x}$, mediana y cuartiles), su dispersión (desviación típica muestral $s$, rango intercuartílico $\mathrm{RIC}=Q_3-Q_1$, extremos y coeficiente de variación $\mathrm{CV}=100\,s/\bar{x}$, solo para variables no negativas), y curtosis $\gamma_2$, con $m_k=\frac{1}{n}\sum_{i=1}^{n}(x_i-\bar{x})^k$):
+Empezaremos mostrando resúmenes estadísticos de cada una de las variables, tanto de localización como de dispersión.
 
 
 ```{r univariante-tabla, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
 #Funciones de apoyo 
 
-# Transforma el caracter % a \% para evitar errores de compilación a PDF con las tablas.
-tabla_pie <- function(df, caption, align) {
-  cap <- gsub("%", "\\\\%", caption)          
-  cat("\\begin{table}[H]\n\\centering\n\\small\n",
-      "\\resizebox{\\ifdim\\width>\\linewidth\\linewidth\\else\\width\\fi}{!}{%\n",
-      knitr::kable(df, format = "latex", booktabs = TRUE, align = align, linesep = ""),
-      "\n}\n\\caption{", cap, "}\n\\end{table}\n", sep = "")
-  invisible(NULL)
-}
 calc_asimetria <- function(x) {            
 # coeficiente de asimetría de Fisher (g1)
   x <- x[!is.na(x)]; m <- mean(x)
@@ -749,7 +741,20 @@ tabla_posicion_dispersion <- tabla_univariante %>%
             `Mín.` = fmt_es(Min, dec),
             `Máx.` = fmt_es(Max, dec))
 
-tabla_pie(tabla_posicion_dispersion, "Estadísticos de posición y dispersión del panel provincial (52 provincias, 2015–2021).", c("l", rep("r", 7)))
+knitr::kable(
+  tabla_posicion_dispersion,
+  format = "latex",
+  booktabs = TRUE,
+  caption = "Estadísticos de posición y dispersión del panel provincial (52 provincias, 2015–2021).",
+  align = c("l", rep("r", 6)),
+  escape = TRUE,
+  linesep = ""
+) |>
+  kableExtra::kable_styling(
+    latex_options = c("hold_position", "scale_down"),
+    position = "center",
+    font_size = 8
+  )
 
 # Tabla 4: cuartiles, forma de la distribución y estructura del panel
 tabla_cuartiles_forma <- tabla_univariante %>%
@@ -759,23 +764,26 @@ tabla_cuartiles_forma <- tabla_univariante %>%
             IQR = fmt_es(IQR, dec),
             Asimetria = fmt_es(Asimetria, 2),
             Curtosis = fmt_es(Curtosis, 2))
-tabla_pie(tabla_cuartiles_forma, "Cuartiles, forma de la distribución (asimetría y exceso de curtosis de Fisher) y porcentaje de la varianza total debido a diferencias entre provincias.", c("l", rep("r", 5)))
+knitr::kable(
+  tabla_cuartiles_forma,
+  format = "latex",
+  booktabs = TRUE,
+  caption = "Cuartiles y forma de la distribución (asimetría y exceso de curtosis de Fisher).",
+  align = c("l", rep("r", 5)),
+  escape = TRUE,
+  linesep = ""
+) |>
+  kableExtra::kable_styling(
+    latex_options = c("hold_position", "scale_down"),
+    position = "center",
+    font_size = 8
+  )
 ```
-Los estadísticos descriptivos (Tablas 3-6) revelan la estructura socioeconómica transversal del año 2019 a través de tres grandes rasgos.
+Los estadísticos descriptivos (Tablas 3-4) revelan la estructura socioeconómica transversal del año 2019 a través de tres grandes rasgos.
 
+Basándonos en el resumen estadístico, podemos decir, que en general, encontramos un conjunto de datos bastante heterogéneo, ya que el coeficiente de variación toma valores intermedios. Cabe destacar la homogeneidad de la edad media de maternidad, y el peso del sector terciario tanto a nivel de ocupación, como a nivel de valor bruto añadido. De la migración interior no se puede obtener el coeficiente de variación, ya que su media es 0, pero ahora después visualizaremos su dispersión. También podemos decir que las distribuciones son poco simétricas, la mayoría con colas a la derecha (asimetría positiva), y que la curtósis nos indica en la mayoría de casos una dispersión de los datos respecto a la media cercana a la normal, a excepción de la edad media de maternidad y la población, que presentan o bien una gran concentración en torno a la media, o valores atípicos muy notables.
 
-
-En primer lugar, las magnitudes económicas presentan asimetría positiva, aunque con diferencias notables en su dispersión. El PIB per cápita (media de $24.617$ € y mediana de $23.116$ €) y la renta bruta media (media de $14.144$ €) muestran coeficientes de variación moderados ($20,6\%$ y $15,0\%$, respectivamente) sin colas excesivamente pesadas. Sin embargo, el precio de la vivienda (Precio_m2) es mucho más heterogéneo: su CV alcanza el $26,2\%$ con un claro sesgo a la derecha (asimetría de $1,19$), abarcando desde un mínimo de $798,4$ €/m$^2$ hasta un máximo de $2.034,4$ €/m$^2$. Su media ($1.173,5$ €) supera a la mediana ($1.100,7$ €) precisamente por la tracción que ejercen las provincias más encarecidas.
-
-
-
-En segundo lugar, la demografía y los flujos migratorios están monopolizados por unos pocos núcleos. El volumen de habitantes exhibe un CV extremo del $131,4\%$ y una curtosis de $13,33$, evidenciando el salto desde ciudades autónomas de $84.777$ residentes hasta macro-urbes de más de $6,6$ millones. Esto se refleja de forma drástica en el saldo migratorio joven: aunque la mediana es de $-308$ personas (la mayor parte del territorio expulsa jóvenes), su enorme asimetría ($5,49$) y curtosis ($33,16$) muestran que el talento es absorbido por un número muy reducido de polos, con un pico de atracción neta máximo de $12.144$ jóvenes.
-
-
-
-En tercer lugar, se confirma la profunda terciarización del tejido productivo provincial. El sector servicios acapara de media el $72,0\%$ de la ocupación y el $70,9\%$ del VAB, mientras que el sector secundario ronda el $21\%-24\%$. El sector primario queda con un peso residual (en torno al $5\%-6,5\%$) pero muy desigual (CV cercano al $78\%-76\%$), ya que unas pocas provincias mantienen una dependencia agraria significativa que alcanza hasta el $23,9\%$ de sus ocupados.
-
-Para visualizar mejor estas distribuciones, las representamos gráficamente:
+Para salir de dudas, visualizamos los histogramas de los datos:
 
 ```{r univ-graficas-setup, echo=FALSE, message=FALSE, warning=FALSE}
 panel_histogramas <- panel_analisis_2019 %>% mutate(log10_Habitantes = log10(Habitantes))
@@ -882,11 +890,10 @@ etiquetas_histograma <- etiquetas_graficos %>%
     )
 ```
 
-En la primera figura, el PIB per cápita y la renta bruta muestran distribuciones unimodales, aunque en el PIB se insinúa un ligero abultamiento en la cola derecha (cerca de los $30.000$ €), reflejo de las provincias más ricas. El precio de la vivienda evidencia su fuerte asimetría: una gran masa concentrada en torno a los $1.000-1.200$ €/m$^2$ y una cola alargada hacia la derecha. La gráfica del saldo migratorio joven es especialmente reveladora, con un pico leptocúrtico masivo ligeramente por debajo de cero y una cola derecha extensa y casi plana que llega hasta los $12.000$. Por su parte, la aplicación de la escala logarítmica normaliza la campana de la población ($\log_{10}(\text{Habitantes})$), aislando de forma clara en la cola superior a las provincias millonarias.
+En los histogramas podemos observar la media, y mediana de cada variable, al igual que los outliers usando la regla de la desviación típica. Tal y como se esperaba, ninguna distribución es simétrica, siendo el caso más extremo el del saldo migratorio, en el que se concentra la mayoría de provincias por debajo de 0, mientras que Madrid es un valor atípico.
 
-En la segunda figura, la distribución de la estructura productiva muestra cómo el peso del primario (tanto en VAB como en ocupados) se agolpa contra el cero con una larga cola derecha, mientras que los sectores secundario y terciario adoptan formas más amplias y centradas en valores considerablemente más altos.
-
-```{r fig-univ-3, echo=FALSE, message=FALSE, warning=FALSE, fig.height=4.5, out.width="100%", fig.cap="Distribución provincial por año de las variables clave. Los puntos rojos son valores fuera de 1,5 veces el rango intercuartílico."}
+Para complementar el análisis, representamos visualmente los histogramas de las variables socioeconómicas, y la detección de valores atípicos, hacemos uso también de diagramas de caja y la regla del rango intercuartílico.
+```{r fig-univ-3, echo=FALSE, message=FALSE, warning=FALSE, fig.height=4.5, out.width="100%", fig.cap="Distribución de las variables socioeconómicas."}
 
 # 1. Definimos las nuevas variables del panel
 variables_boxplot <- c("PIB_per_capita", "Renta_bruta_media", "Precio_m2",
@@ -954,7 +961,7 @@ ggplot(datos_boxplot, aes(x = Periodo, y = Valor)) +
                   size = 2.2,
                   color = "firebrick",
                   fontface = "bold",
-                  direction = "y",             
+                  direction = "both",             
                   nudge_x = 0.45,              
                   hjust = 0,
                   box.padding = 0.5,           
@@ -978,7 +985,9 @@ ggplot(datos_boxplot, aes(x = Periodo, y = Valor)) +
   tema_graficos_univariantes +
   theme(plot.caption = element_text(color = "grey40", size = 8, hjust = 0, margin = margin(t = 12)))
 ```
-La distribución mediante diagramas de caja (Figura 3), circunscrita al único año de observación (2019), subraya el peso que tienen los valores extremos (marcados en rojo) en la distorsión de las medias. El precio del metro cuadrado destaca por concentrar cuatro valores atípicos superiores a los $1.600$ €/m$^2$. El saldo migratorio ilustra de forma prístina la macrocefalia demográfica del país: mientras la inmensa mayoría de las provincias ven sus cajas comprimidas por debajo del cero, un atípico extremo se dispara por encima de los $12.000$ jóvenes retenidos, acompañado de un segundo valor atípico cercano a los $2.000$. En el ámbito productivo, el VAB terciario exhibe un atípico inferior por debajo del $60\%$, apuntando a la existencia de alguna provincia altamente especializada fuera de los servicios.
+Haciendo uso de esta representación, podemos observar de manera más clara la asimetría de los datos, ya que en la mayoría de casos los bigotes de los diagramas son significativamente más grandes que las cajas, lo que indica más valores agrupados en los extremos que entorno a medidas centrales como la mediana.
+
+Para visualizar la distribución de las variables laborales, hacemos uso de diagramas de cajas para comparar por sector cada una de las variables.
 ```{r,echo=FALSE}
 # 1. Definimos las 6 variables sectoriales
 variables_sectoriales <- c(
@@ -1064,6 +1073,9 @@ ggplot(datos_sectoriales, aes(x = Valor, y = Sector)) +
   ) +
   tema_graficos_univariantes
 ``` 
+Podemos constatar que el sector que más pesa es el terciario, lo cual es lógico, pues incluye los servicios básicos de de la población, y que de manera general el porcentaje de ocupación y el valor bruto añadido tienen valores similares, pero podemos destacar las siguientes características. En el sector terciario el VAB presenta una cola larga a la derecha  que la ocupación no (¿turismo?), en el sector primario, el porcentaje valor añadido bruto por encima de la mediana está bastante más concentrado que el porcentaje de ocupación (¿provincias más mecanizadas/productivas?), y en el sector secundario el valor bruto está distribuido equitativamente en los cuartiles, pero la mayoría de datos se encuentran por debajo de la mediana.
+
+
 ## Análisis Bivariante y Multivariante
 
 En esta sección cruzamos las variables para dar respuesta a las preguntas planteadas en la introducción. Para ello, fijamos el análisis en el año 2019. 
