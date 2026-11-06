@@ -126,19 +126,12 @@ remove(list = c("paquetes_requeridos", "paquetes_faltantes"))
 
 El objetivo de este proyecto es realizar un análisis exploratorio de distintos indicadores socioeconómicos a nivel provincial en España, y sus posibles relaciones. En particular, los indicadores estudiados corresponden a el modelo productivo de las diferentes provincias, sus mercados laborales e inmobiliarios, y el ciclo vital y demográfico de sus habitantes.
 
-A partir del cruce de datos, nos planteamos responder a las siguientes preguntas de investigación:
+A partir del cruce de datos, nos planteamos responder a la siguiente pregunta:
+¿Cómo se relacionan la estructura productiva de cada provincia y los principales indicadores socioeconómicos?¿Lo hacen de manera homogénea o heterogénea a nivel nacional?
 
-1. **El espejismo del PIB:** ¿En qué provincias es mayor la brecha entre la riqueza generada (PIB per cápita) y la riqueza percibida por los trabajadores (salario medio)?
+Para responder a la pregunta hemos considerado que los datos más indicados corresponden a las siguientes variables, organizadas en cuatro dimensiones:
 
-2. **La trampa del sector servicios:** ¿Existe una correlación entre el porcentaje de empleo en hostelería/turismo y el encarecimiento de la vivienda respecto al salario medio?¿Genera la hiperdependencia del sector turismo una expulsión de la población joven nativa (saldo migratorio interior negativo para la franja de 20-35 años)?
-
-3. **El coste de la maternidad:** ¿Hay un umbral crítico en la ratio Salario/Vivienda a partir del cual la edad media a la maternidad aumenta significativamente?
-
-4. **El refugio industrial:** ¿Logran las provincias con un tejido industrial fuerte retener mejor a la población joven (saldo migratorio positivo) frente a aquellas con modelos primarios?
-
-Con el fin de responder las preguntas, se estudian las siguientes variables socioeconómicas, organizadas en cuatro dimensiones:
-
-1. **Dimensión de Renta y Riqueza Macro vs. Micro:**
+1. **Dimensión de Renta y Riqueza:**
   * `PIB per cápita`: Producto Interior Bruto provincial por habitante (€/hab). Este indicador mide el valor monetario de todos los bienes y servicios finales producidos en un periodo en una región. 
   * `Renta bruta media`: Renta bruta media por persona (€/hab). El concepto de renta bruta corresponde, el conjunto total de ingresos que percibe una persona durante un periodo determinado, antes de aplicar ningún tipo de impuesto.
 
@@ -151,8 +144,8 @@ Con el fin de responder las preguntas, se estudian las siguientes variables soci
   * `Habitantes`: Población provincial total residente (personas).
 
 4. **Dimensión de Estructura Productiva:**
-  * `Personas ocupadas por sector (Primario, Secundario, Terciario)`: Número de personas ocupadas en cada gran sector. Los ocupados están en miles de personas .
-  * ` VAB por sector (Primario, Secundario, Terciario)`: El valor bruto añadido mide el valor económico total que genera una empresa, sector, región o país durante un periodo de tiempo determinado.
+  * `Personas ocupadas por sector (Primario, Secundario, Terciario)`: Número de personas ocupadas en cada gran sector económico.
+  * ` VAB por sector (Primario, Secundario, Terciario)`: El valor bruto añadido (VAB) mide el valor económico total que genera una empresa, sector, región o país durante un periodo de tiempo determinado.
   
 Para la realización del informe se han recopilado todos los datos existentes de dichos registros en el INE (entre todas las variables hay registros desde 1975 a 2026). En particular, solamente hay registros de todas las variables en el periodo 2015-2021, y por cuestiones de espacio, en el informe solamente se muestra un análisis exploratorio de los datos correspondientes al año 2019, elegido ya que siendo uno de los años con más datos disponibles, es justamente previo a la pandemia de COVID-19, por lo que este análisis puede ser usado para estudiar los efectos de la pandemia en los factores estudiados.
   
@@ -1078,14 +1071,102 @@ Podemos constatar que el sector que más pesa es el terciario, lo cual es lógic
 
 ## Análisis Bivariante y Multivariante
 
-En esta sección cruzamos las variables para dar respuesta a las preguntas planteadas en la introducción. Para ello, fijamos el análisis en el año 2019. 
+Una vez constatada la heteoregeidad de los datos en el análisis univariante, en esta sección buscamos cruzar las variables para dar respuesta a las preguntas planteadas en la introducción.
+
+Para sintetizar las múltiples interacciones entre distintas variables, hacemos uso de la matriz de correlación. Como hemos visto en el análisis univariante, las distribuciones presentan asimetrías, colas pesadas, y en varios casos outliers. Para que esto no afecte de manera significativa a las correlaciones, en algunos casos usaremos medidas derivadas de los datos, como la densidad de población en lugar del número de habitantes, el esfuerzo de compra la vivienda, o la brecha renta-PIB. Usamos la correlación de Spearman, ya que al aplicar estas transformaciones no lineales, la correlación de Pearson se distorsiona.
+
+```{r preparacion-bivariante, echo=FALSE}
+# Preparar las variables derivadas usadas por la matriz de correlación
+panel_cluster_2019 <- panel_provincial %>% filter(Periodo == 2019)
+
+superficie_provincial <- esp_get_prov() %>%
+  mutate(area_km2 = as.numeric(st_area(geometry)) / 1e6) %>%
+  st_drop_geometry() %>%
+  select(id_prov = cpro, area_km2)
+
+panel_bivariante_2019 <- panel_cluster_2019 %>%
+  left_join(ine_provincias, by = c("Provincia" = "Provincia_clean")) %>%
+  left_join(superficie_provincial, by = "id_prov") %>%
+  mutate(
+    peso_primario     = VAB_Primario   / (VAB_Primario+VAB_Secundario+VAB_Terciario),
+    peso_secundario   = VAB_Secundario / (VAB_Primario+VAB_Secundario+VAB_Terciario),
+    peso_terciario    = VAB_Terciario  / (VAB_Primario+VAB_Secundario+VAB_Terciario),
+    emp_terciario     = Personas_Ocupadas_Terciario / (Personas_Ocupadas_Primario+Personas_Ocupadas_Secundario+Personas_Ocupadas_Terciario),
+    esfuerzo_vivienda = (Precio_m2 * 80) / Renta_bruta_media,
+    mig_joven_1000    = (Migracion_Interior / Habitantes) * 1000,
+    log_densidad      = log10(Habitantes / area_km2),
+    brecha_pib_renta = (PIB_per_capita / mean(PIB_per_capita, na.rm = TRUE)) /
+                       (Renta_bruta_media / mean(Renta_bruta_media, na.rm = TRUE))
+  ) %>%
+  mutate(
+    nivel_terciarizacion = case_when(
+      peso_terciario < 0.65 ~ "Baja (<65%)",
+      peso_terciario >= 0.65 & peso_terciario <= 0.75 ~ "Media (65-75%)",
+      peso_terciario > 0.75 ~ "Alta (>75%)"
+    ),
+    nivel_terciarizacion = factor(nivel_terciarizacion,
+                                  levels = c("Baja (<65%)", "Media (65-75%)", "Alta (>75%)"))
+  ) %>%
+  mutate(
+    label_pib = ifelse(
+      rank(brecha_pib_renta, ties.method = "first") <= 5 | rank(desc(brecha_pib_renta), ties.method = "first") <= 5,
+      as.character(Provincia),
+      NA
+    ),
+    label_trampa = ifelse(
+      rank(esfuerzo_vivienda, ties.method = "first") <= 5 | rank(desc(esfuerzo_vivienda), ties.method = "first") <= 5,
+      as.character(Provincia),
+      NA
+    )
+  )
+```
+
+```{r,echo=FALSE}
+# Variables comunes a la matriz de correlación y al clustering
+variables_cluster <- c(
+  "brecha_pib_renta", "peso_primario", "peso_secundario",
+  "peso_terciario", "emp_terciario",
+  "esfuerzo_vivienda", "Edad_Media_Maternidad", "mig_joven_1000",
+  "log_densidad"
+)
+
+# Seleccionamos las variables continuas de interés
+var_corr <- panel_bivariante_2019 %>%
+  select(all_of(variables_cluster)) %>%
+  setNames(c(
+    "Brecha PIB/Renta", "Peso Primario", "Peso Secundario",
+    "Peso Terciario", "Empleo Terciario", "Esfuerzo Vivienda",
+    "Edad Maternidad", "Migración Joven", "Densidad (log)"
+  )) %>%
+  drop_na()
+
+matriz_cor <- cor(var_corr,method="spearman")
+
+corrplot(matriz_cor,
+         method = "color",
+         type = "lower",
+         order = "hclust",
+         tl.col = "black",
+         tl.srt = 45,
+         addCoef.col = "black",
+         number.cex = 0.7,
+         diag = FALSE)
+```
+
+
+La matriz consolida de manera ejecutiva y matemática los tres hallazgos vectoriales del análisis:
+
+* El esfuerzo de acceso a la vivienda está solidamente acoplado a la terciarización agresiva del modelo productivo (fuerte correlación positiva en el bloque inferior).
+
+* La escalada de inaccesibilidad económica empuja mecánicamente al alza la edad media al primer hijo, retrasando el ciclo vital y alterando las proyecciones demográficas.
+
+* Finalmente, un elevado PIB per cápita general no siempre evita el vaciamiento demográfico o la fuga de talento cuando dicha riqueza corporativa se divorcia de la renta efectivamente retenida por los ciudadanos (brecha salarial).
+
 
 ```{r,echo=FALSE,fig.height = 10}
-panel_cluster_2019 <- panel_provincial %>% filter(Periodo == 2019)
-datos_cluster_2019 <- panel_cluster_2019 %>%
+datos_cluster_2019 <- panel_bivariante_2019 %>%
   filter(!is.na(Provincia)) %>%
-  # Filtrar columnas numéricas válidas con varianza positiva
-  select(Provincia, where(~ is.numeric(.x) && !all(is.na(.x)) && sd(.x, na.rm = TRUE) > 0)) %>%
+  select(Provincia, all_of(variables_cluster)) %>%
   na.omit() %>%
   column_to_rownames("Provincia")
 
@@ -1131,7 +1212,8 @@ pheatmap(
 # 4. REINCORPORACIÓN DE CLUSTERS Y TABLA DESCRIPTIVA DE PERFILES
 # ==============================================================================
 # Agregar la etiqueta de cluster al dataframe de trabajo
-panel_cluster_2019_asignado <- panel_cluster_2019 %>%
+panel_cluster_2019_asignado <- panel_bivariante_2019 %>%
+  select(Provincia, all_of(variables_cluster)) %>%
   filter(Provincia %in% names(asignacion_clusters)) %>%
   mutate(Cluster = factor(asignacion_clusters[Provincia], labels = paste("Cluster", 1:numero_clusters)))
 
@@ -1146,15 +1228,14 @@ perfil_promedio <- panel_cluster_2019_asignado %>%
 
 perfil_promedio %>%
   select(
-    Cluster, Num_Provincias, Periodo, Precio_m2, Habitantes,
-    Edad_Media_Maternidad, Migracion_Interior, PIB_per_capita,
-    Renta_bruta_media
+    Cluster, Num_Provincias, brecha_pib_renta, esfuerzo_vivienda,
+    Edad_Media_Maternidad, mig_joven_1000, log_densidad
   ) %>%
   kable(
     format = "latex",
     booktabs = TRUE,
     longtable = FALSE,
-    caption = paste("Perfil demográfico y económico por Cluster (Año", 2019, ")"),
+    caption = paste("Perfil socioeconómico por Cluster (Año", 2019, ")"),
     digits = 2
   ) %>%
   kable_styling(
@@ -1165,21 +1246,32 @@ perfil_promedio %>%
 perfil_promedio %>%
   select(
     Cluster, Num_Provincias,
-    Personas_Ocupadas_Primario, Personas_Ocupadas_Secundario,
-    Personas_Ocupadas_Terciario, VAB_Primario, VAB_Secundario,
-    VAB_Terciario
+    peso_primario, peso_secundario, peso_terciario, emp_terciario
   ) %>%
   kable(
     format = "latex",
     booktabs = TRUE,
     longtable = FALSE,
-    caption = paste("Perfil laboral y productivo por Cluster (Año", 2019, ")"),
+    caption = paste("Perfil de estructura productiva por Cluster (Año", 2019, ")"),
     digits = 2
   ) %>%
   kable_styling(
     latex_options = c("hold_position", "scale_down"),
     full_width = FALSE
   )
+
+# Incorporar la asignación de clusters para los análisis posteriores
+panel_bivariante_2019 <- panel_bivariante_2019 %>%
+  left_join(panel_cluster_2019_asignado %>% select(Provincia, Cluster), by = "Provincia")
+
+# Paleta de colores consistente con el mapa
+colores_cluster <- c(
+  "Cluster 1" = "#E74C3C",  # Metropolitano / Mercado Tensionado
+  "Cluster 2" = "#3498DB",  # Servicios / Turístico
+  "Cluster 3" = "#2ECC71",  # Polo Industrial / Foral
+  "Cluster 4" = "#F39C12",  # Interior / Sector Primario
+  "Cluster 5" = "#9B59B6"   # Excepciones / Macro-urbes
+)
 ```
 
 ```{r,echo=FALSE}
@@ -1226,63 +1318,6 @@ ggplot(mapa_prov_clusters) +
   )
 ```
 
-```{r preparacion-bivariante, echo=FALSE}
-# Superficie provincial a partir de mapSpain (para la densidad)
-superficie_provincial <- esp_get_prov() %>%
-  mutate(area_km2 = as.numeric(st_area(geometry)) / 1e6) %>%
-  st_drop_geometry() %>%
-  select(id_prov = cpro, area_km2)
-
-panel_bivariante_2019 <- panel_cluster_2019 %>%
-  left_join(ine_provincias, by = c("Provincia" = "Provincia_clean")) %>% 
-  left_join(superficie_provincial, by = "id_prov") %>%
-  mutate(
-    peso_primario     = VAB_Primario   / (VAB_Primario+VAB_Secundario+VAB_Terciario),
-    peso_secundario   = VAB_Secundario / (VAB_Primario+VAB_Secundario+VAB_Terciario),
-    peso_terciario    = VAB_Terciario  / (VAB_Primario+VAB_Secundario+VAB_Terciario),
-    emp_terciario     = Personas_Ocupadas_Terciario / (Personas_Ocupadas_Primario+Personas_Ocupadas_Secundario+Personas_Ocupadas_Terciario),
-    # Años de renta bruta media necesarios para una vivienda de 80 m2
-    esfuerzo_vivienda = (Precio_m2 * 80) / Renta_bruta_media,
-    mig_joven_1000    = (Migracion_Interior / Habitantes) * 1000,
-    log_densidad      = log10(Habitantes / area_km2),
-    # Brecha: si es >1, la provincia genera más PIB que renta percibe vs la media nacional
-    brecha_pib_renta = (PIB_per_capita / mean(PIB_per_capita, na.rm = TRUE)) /
-                       (Renta_bruta_media / mean(Renta_bruta_media, na.rm = TRUE))
-  ) %>%
-  mutate(
-    nivel_terciarizacion = case_when(
-      peso_terciario < 0.65 ~ "Baja (<65%)",
-      peso_terciario >= 0.65 & peso_terciario <= 0.75 ~ "Media (65-75%)",
-      peso_terciario > 0.75 ~ "Alta (>75%)"
-    ),
-    nivel_terciarizacion = factor(nivel_terciarizacion, 
-                                  levels = c("Baja (<65%)", "Media (65-75%)", "Alta (>75%)"))
-  ) %>%
-  mutate(
-    # Filtramos el top 5 por arriba y por abajo para la Brecha PIB/Renta
-    label_pib = ifelse(
-      rank(brecha_pib_renta, ties.method = "first") <= 5 | rank(desc(brecha_pib_renta), ties.method = "first") <= 5,
-      as.character(Provincia), 
-      NA
-    ),
-    # Filtramos el top 5 por arriba y por abajo para el Esfuerzo Inmobiliario
-    label_trampa = ifelse(
-      rank(esfuerzo_vivienda, ties.method = "first") <= 5 | rank(desc(esfuerzo_vivienda), ties.method = "first") <= 5,
-      as.character(Provincia), 
-      NA
-    )
-  ) %>%
-  left_join(panel_cluster_2019_asignado %>% select(Provincia, Cluster), by = "Provincia")
-
-# Paleta de colores consistente con el mapa
-colores_cluster <- c(
-  "Cluster 1" = "#E74C3C",  # Metropolitano / Mercado Tensionado
-  "Cluster 2" = "#3498DB",  # Servicios / Turístico
-  "Cluster 3" = "#2ECC71",  # Polo Industrial / Foral
-  "Cluster 4" = "#F39C12",  # Interior / Sector Primario
-  "Cluster 5" = "#9B59B6"   # Excepciones / Macro-urbes
-)
-```
 ### El espejismo del PIB
 
 En relación a nuestras cuestiones planteadas, comenzamos explorando la relación intrínseca entre la capacidad productiva de una provincia y la riqueza real que llega a los bolsillos de sus ciudadanos. El objetivo es identificar si un alto Producto Interior Bruto (PIB) per cápita se traduce sistemáticamente en mayores rentas salariales, o si, por el contrario, existen modelos económicos donde esta transmisión se rompe.
@@ -1465,50 +1500,6 @@ panel_bivariante_2019 %>%
   theme_minimal() +
   theme(legend.position = "bottom")
 ```
-
-
-### Visión multivariante global
-
-Para sintetizar las múltiples interacciones macroeconómicas documentadas a lo largo de este bloque, proyectamos la totalidad del sistema mediante una matriz de correlación.
-
-```{r,echo=FALSE}
-# Seleccionamos las variables continuas de interés
-var_corr <- panel_bivariante_2019 %>%
-  select(
-    `PIB per cápita` = PIB_per_capita, 
-    `Renta Bruta Media` = Renta_bruta_media, 
-    `Brecha PIB/Renta` = brecha_pib_renta, 
-    `Peso Primario` = peso_primario, 
-    `Peso Secundario` = peso_secundario, 
-    `Peso Terciario` = peso_terciario,
-    `Esfuerzo Vivienda` = esfuerzo_vivienda, 
-    `Edad Maternidad` = Edad_Media_Maternidad, 
-    `Migración Joven` = mig_joven_1000, 
-    `Densidad (log)` = log_densidad
-  ) %>%
-  drop_na()
-
-matriz_cor <- cor(var_corr)
-
-corrplot(matriz_cor, 
-         method = "color", 
-         type = "lower", 
-         order = "hclust",
-         tl.col = "black", 
-         tl.srt = 45, 
-         addCoef.col = "black", 
-         number.cex = 0.7,
-         diag = FALSE)
-```
-
-
-La matriz consolida de manera ejecutiva y matemática los tres hallazgos vectoriales del análisis:
-
-* El esfuerzo de acceso a la vivienda está solidamente acoplado a la terciarización agresiva del modelo productivo (fuerte correlación positiva en el bloque inferior).
-
-* La escalada de inaccesibilidad económica empuja mecánicamente al alza la edad media al primer hijo, retrasando el ciclo vital y alterando las proyecciones demográficas.
-
-* Finalmente, un elevado PIB per cápita general no siempre evita el vaciamiento demográfico o la fuga de talento cuando dicha riqueza corporativa se divorcia de la renta efectivamente retenida por los ciudadanos (brecha salarial).
 
 # Conclusiones Finales
 
