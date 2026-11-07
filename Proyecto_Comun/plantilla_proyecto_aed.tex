@@ -212,7 +212,8 @@ para dar respuesta a las preguntas planteadas.}
 \usepackage{float}
 \usepackage{colortbl}
 \usepackage{pdflscape}
-\usepackage{tabu}
+\usepackage{tabularx}
+\usepackage{xltabular}
 \usepackage{threeparttable}
 \usepackage{threeparttablex}
 \usepackage[normalem]{ulem}
@@ -535,7 +536,6 @@ correlaciones, en algunos casos usaremos medidas derivadas de los datos.
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
-\tightlist
 \item
   La densidad de población en lugar del número de habitantes,es decir
   \[Densidad\_Pobl. = \frac{Num\_Habitantes}{Superficie\_Provincia}.\]
@@ -548,6 +548,9 @@ correlaciones, en algunos casos usaremos medidas derivadas de los datos.
   La brecha renta/PIB. Es decir, la magnitud de la renta bruta media con
   respecto al PIB per cápita.
   \[Brecha~ Renta/PIB = \frac{Renta~Bruta~Media}{PIB~per~cápita}.\]
+\item
+  La migración joven por cada 1.000 habitantes:
+  \[Mig\_Joven = \frac{Migracion\_Interior}{Num\_Habitantes}\cdot 1000.\]
 \end{enumerate}
 
 Usamos la correlación de Spearman, ya que al aplicar estas

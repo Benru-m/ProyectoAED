@@ -1025,6 +1025,8 @@ Una vez constatada la heteoregeidad de los datos en el análisis univariante, en
 2. El esfuerzo de compra la vivienda, caclulada como el número de años de renta bruta media que se requieren para alcanzar el valor de una casa de $90 m^2$. $$Esf\_Vivienda = \frac{90*Precio~m^2}{Renta~Bruta~Media}.$$
 3. La brecha renta/PIB. Es decir, la magnitud de la renta bruta media con respecto al PIB per cápita. $$Brecha~ Renta/PIB = \frac{Renta~Bruta~Media}{PIB~per~cápita}.$$
 
+4. La migración joven por cada 1.000 habitantes: $$Mig\_Joven = \frac{Migracion\_Interior}{Num\_Habitantes}\cdot 1000.$$
+
 Usamos la correlación de Spearman, ya que al aplicar estas transformaciones no lineales, la correlación de Pearson se distorsiona.
 
 ```{r preparacion-bivariante, echo=FALSE}
