@@ -624,7 +624,11 @@ imputar_valores_intermedios <- function(x){
 }
 
 panel_provincial <- panel_provincial %>%
-  mutate(across(.cols = c(Renta_bruta_media, Personas_Ocupadas_Primario), imputar_valores_intermedios))
+  arrange(Provincia, Periodo) %>%
+  group_by(Provincia) %>%
+  mutate(across(c(Renta_bruta_media, Personas_Ocupadas_Primario),
+                imputar_valores_intermedios)) %>%
+  ungroup()
 
 remove(list = c("imputar_valores_intermedios"))
 ```
