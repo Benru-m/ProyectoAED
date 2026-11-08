@@ -16,9 +16,9 @@ MDPI journal: "Máster Universitario de ciencia de datos"
 type: "article"
 status: "submit"
 simplesummary: |
-  Este proyecto de Análisis Exploratorio de Datos evalúa la hmogeneidad de los indicadores socioeconómicos de España y sus relaciones.
+  Este proyecto de Análisis Exploratorio de Datos evalúa la homogeneidad de los indicadores socioeconómicos de España y sus relaciones.
 abstract: |
-  El presente trabajo desarrolla un Análisis Exploratorio de Datos (AED) cruzando dimensiones económicas, inmobiliarias y sociodemográficas a nivel provincial en España. Se emplean datos del Instituto Nacional de Estadística (INE) para analizar distintos indicadores socioeconómicos, sus relaciones y su homogeneidad a lo largo de España. El análisis cubre la importación y limpieza de datos, el tratamiento de valores perdidos, y un análisis univariante y bivariante para dar respuesta a las preguntas planteadas.
+  El presente trabajo desarrolla un Análisis Exploratorio de Datos (AED) cruzando dimensiones económicas, inmobiliarias y sociodemográficas a nivel provincial en España. Se emplean datos del Instituto Nacional de Estadística (INE) y del Ministerio de Vivienda y Agenda Urbana (MIVAU) para analizar distintos indicadores socioeconómicos, sus relaciones y su homogeneidad a lo largo de España. El análisis cubre la importación y limpieza de datos, el tratamiento de valores perdidos, y un análisis univariante y bivariante para dar respuesta a las preguntas planteadas.
 keywords: "Análisis Exploratorio de Datos; Demografía"
 output: rticles::mdpi_article
 header-includes:
@@ -117,13 +117,13 @@ remove(list = c("paquetes_requeridos", "paquetes_faltantes"))
 
 # Introducción y Planteamiento de Preguntas
 
-El objetivo de este proyecto es realizar un análisis exploratorio de distintos indicadores socioeconómicos a nivel provincial en España, y sus posibles relaciones. En particular, los indicadores estudiados corresponden a el modelo productivo de las diferentes provincias, sus mercados laborales e inmobiliarios, y el ciclo vital y demográfico de sus habitantes. A partir del cruce de datos, nos planteamos responder a la siguiente pregunta: ¿Cómo se relacionan la estructura productiva de cada provincia y los principales indicadores socioeconómicos?¿Lo hacen de manera homogénea o heterogénea a nivel nacional?
+El objetivo de este proyecto es realizar un análisis exploratorio de distintos indicadores socioeconómicos a nivel provincial en España, y sus posibles relaciones. En particular, los indicadores estudiados corresponden al modelo productivo de las diferentes provincias, sus mercados laborales e inmobiliarios, y el ciclo vital y demográfico de sus habitantes. A partir del cruce de datos, nos planteamos responder a la siguiente pregunta: ¿Cómo se relacionan la estructura productiva de cada provincia y los principales indicadores socioeconómicos?¿Lo hacen de manera homogénea o heterogénea a nivel nacional?
 
 Para responder a la pregunta hemos considerado que los datos más indicados corresponden a las siguientes variables, organizadas en cuatro dimensiones:
 
 1. **Dimensión de Renta y Riqueza:**
    * `PIB per cápita`: Producto Interior Bruto provincial por habitante (€/hab). Este indicador mide el valor monetario de todos los bienes y servicios finales producidos en un periodo en una región.
-   * `Renta bruta media`: Renta bruta media por persona (€/hab). El concepto de renta bruta corresponde, el conjunto total de ingresos que percibe una persona durante un periodo determinado, antes de aplicar ningún tipo de impuesto.
+   * `Renta bruta media`: Renta bruta media por persona (€/hab). El concepto de renta bruta corresponde al conjunto total de ingresos que percibe una persona durante un periodo determinado, antes de aplicar ningún tipo de impuesto.
 2. **Dimensión del Mercado Inmobiliario:**
    * `Precio del metro cuadrado`: Valor medio del metro cuadrado de la vivienda (€/m²).
 3. **Dimensión Demográfica y Ciclo Vital:**
@@ -134,11 +134,11 @@ Para responder a la pregunta hemos considerado que los datos más indicados corr
    * `Personas ocupadas por sector (Primario, Secundario, Terciario)`: Número de personas ocupadas en cada gran sector económico.
    * `VAB por sector (Primario, Secundario, Terciario)`: El valor bruto añadido (VAB) mide el valor económico total que genera una empresa, sector, región o país durante un periodo de tiempo determinado.
 
-Para la realización del informe se han recopilado todos los datos existentes de dichos registros en el INE (entre todas las variables hay registros desde 1975 a 2026). En particular, solamente hay registros de todas las variables en el periodo 2015-2021, y por cuestiones de espacio, en el informe solamente se muestra un análisis exploratorio de los datos correspondientes al año 2019, elegido ya que siendo uno de los años con más datos disponibles, es justamente previo a la pandemia de COVID-19, por lo que este análisis puede ser usado para estudiar los efectos de la pandemia en los factores estudiados.
+Para la realización del informe se han recopilado todos los datos existentes de dichos registros en el INE y, para el precio de la vivienda, en el MIVAU (entre todas las variables hay registros desde 1975 a 2026). En particular, solamente hay registros de todas las variables en el periodo 2015-2021, y por cuestiones de espacio, en el informe solamente se muestra un análisis exploratorio de los datos correspondientes al año 2019, elegido ya que siendo uno de los años con más datos disponibles, es justamente previo a la pandemia de COVID-19, por lo que este análisis puede ser usado para estudiar los efectos de la pandemia en los factores estudiados.
 
 # Importación y Acondicionamiento de Datos
 
-El primer paso para el análisis es cargar los conjuntos de datos obtenidos del [INE](https://ine.es/dyngs/INEbase/listaoperaciones.htm). Los ficheros originales se encuentran almacenados en la carpeta local `data/raw`.
+El primer paso para el análisis es cargar los conjuntos de datos obtenidos del [INE](https://ine.es/dyngs/INEbase/listaoperaciones.htm) y, en el caso del precio de la vivienda, del Ministerio de Vivienda y Agenda Urbana (MIVAU). Los ficheros originales se encuentran almacenados en la carpeta local `data/raw`.
 
 ```{r descarga datos,include = FALSE}
 #Aún así, en caso de que por algún casual los archivos no se encuentren como tal, incluimos este chunk de código que crea la carpeta e intenta realizar la descarga directamente del INE, para evitar que haya errores antes de cargarlos.
@@ -586,6 +586,8 @@ remove(list = c("panel_faltantes"))
 
 Observamos que los valores faltantes afectan solamente a 5 provincias, además, cada instancia tiene como mucho un valor faltante, las variables afectadas son series temporales de valores numéricos (valores anuales de 2015 a 2021), y en todos los casos tenemos al menos un registro de toda la serie, por lo que la decisión sobre los valores faltantes es imputarlos siguiendo la siguiente norma. Se imputan los valores faltantes con la media del primer valor anterior no faltante, y el primer valor posterior no faltante. En caso de no haber valores anteriores o posteriores faltantes, se imputará el dato usando el primer dato posterior o respectivamente anterior no faltante.
 
+Conviene precisar el alcance de esta imputación. Los huecos no parecen aleatorios: los de renta bruta media afectan a Araba/Álava, Gipuzkoa y Navarra, territorios forales cuya información tributaria se trata de forma distinta, lo que probablemente explica su ausencia en los primeros años de la serie, y los de ocupados del sector primario afectan a Ceuta y Melilla, probablemente por el reducido tamaño muestral de la Encuesta de Población Activa en esos territorios. En el año 2019 que analizamos solo se imputan tres observaciones de 52 (la renta de Araba/Álava y de Navarra, y los ocupados del sector primario de Melilla), por lo que el efecto sobre los resultados es acotado.
+
 ```{r,include=FALSE}
 imputar_valores_intermedios <- function(x){
   # Si el vector está completamente vacío (solo NAs) o no tiene faltantes, se devuelve igual
@@ -799,11 +801,11 @@ ggplot(datos_histograma, aes(x = Valor)) +
   )
 ```
 
-En los histogramas podemos observar la media, y mediana de cada variable, al igual que los outliers usando la regla de la desviación típica. Tal y como se esperaba, ninguna distribución es simétrica, siendo el caso más extremo el del saldo migratorio, en el que se concentra la mayoría de provincias por debajo de 0, mientras que Madrid es un valor atípico. En conjunto, las distribuciones muestran una heterogeneidad moderada y, en muchos casos, asimetría positiva. La edad media de maternidad presenta una dispersión reducida, mientras que la migración interior y la población concentran valores atípicos más marcados. Estas características se incorporan directamente en los histogramas y diagramas de caja mediante sus estadísticos descriptivos.
+En los histogramas observamos la media y la mediana de cada variable, así como los valores atípicos según la regla de la desviación típica. La edad media de maternidad, la renta bruta media y el logaritmo de la población son las variables más próximas a la simetría (media y mediana casi coinciden), mientras que el PIB per cápita y el precio del metro cuadrado presentan asimetría positiva, con la media por encima de la mediana por la cola de provincias de renta y precios altos. El caso más extremo es el del saldo migratorio: su media es nula (como cabe esperar al tratarse de saldos netos entre provincias) pero su mediana es negativa (-308 personas), es decir, la mayoría de provincias pierde población joven y Madrid, único valor atípico según este criterio, concentra las ganancias, lo que explica en buena medida una curtosis de 33,16. En conjunto, las distribuciones muestran una heterogeneidad moderada; la edad media de maternidad presenta la menor dispersión, mientras que la migración interior y la población concentran los valores atípicos más marcados.
 
 Para complementar el análisis, representamos también diagramas de caja y detectamos los valores atípicos usando la regla del rango intercuartílico.
 
-```{r fig-univ-3, echo=FALSE, message=FALSE, warning=FALSE, fig.height=4.5, out.width="100%", fig.cap="Distribución de las variables socioeconómicas."}
+```{r fig-univ-3, echo=FALSE, message=FALSE, warning=FALSE, fig.height=5.5, out.width="100%", fig.cap="Distribución de las variables socioeconómicas."}
 # Variables del panel
 variables_boxplot <- c("PIB_per_capita", "Renta_bruta_media", "Precio_m2", "Edad_Media_Maternidad", "Migracion_Interior", "log10_Habitantes")
 
@@ -936,11 +938,13 @@ ggplot(datos_boxplot, aes(x = x_box, y = Valor))  +
   coord_cartesian(clip = "off") +
   tema_graficos_univariantes +
   theme(
-    plot.margin = margin(t = 5, r = 55, b = 32, l = 35)
+    plot.margin = margin(t = 5, r = 55, b = 32, l = 35),
+    panel.spacing.y = unit(2.2, "lines"),
+    plot.caption = element_text(size = 6.5, colour = "grey40", margin = margin(t = 16))
   )
 ```
 
-Haciendo uso de esta representación, podemos observar de manera más clara la asimetría de los datos, apareciendo una mayor cantidad de outliers. En la mayoría de casos los bigotes de los diagramas son significativamente más grandes que las cajas, lo que indica más valores agrupados en los extremos que entorno a medidas centrales como la mediana.
+Con el criterio del rango intercuartílico aparecen más valores atípicos que con la regla de las tres desviaciones, al ser un criterio más sensible a las colas. El precio del metro cuadrado destaca por varios atípicos por encima del bigote superior (entre ellos Gipuzkoa, Madrid, Barcelona, Bizkaia e Illes Balears), lo que refleja la tensión del mercado inmobiliario en las provincias más pobladas, turísticas y del País Vasco. En la migración interior destacan Madrid, Illes Balears y Barcelona como receptoras y Jaén como la provincia con mayor pérdida, mientras que en la edad de maternidad el único atípico es Ceuta, con la edad más baja (30,47 años).
 
 Para visualizar la distribución de las variables laborales, hacemos uso de diagramas de cajas para comparar por sector cada una de las variables.
 
@@ -1015,19 +1019,20 @@ ggplot(datos_sectoriales, aes(x = Valor, y = Sector)) +
 rm(list  = setdiff(ls(), c("panel_analisis_2019","ine_provincias","etiquetas_variables")))
 ```
 
-Podemos observar de nuevo datos muy heterogéneos, y valores extremos muy altos.
+Podemos observar de nuevo datos muy heterogéneos y valores extremos muy altos. En los sectores secundario y terciario los atípicos son siempre las mismas provincias de gran tamaño (Madrid, Barcelona y Valencia/València), que concentran una parte desproporcionada del empleo y del valor añadido nacional (Madrid supera el 20 % del VAB terciario), mientras que en el sector primario destacan Almería y Murcia en empleo, y Sevilla y Almería en VAB, provincias de agricultura intensiva. Al expresar estas variables como porcentaje del total nacional, su magnitud depende en gran medida del tamaño de la provincia, algo que condiciona la lectura de las correlaciones posteriores.
+
 
 ## Análisis Bivariante y Multivariante
 
-Una vez constatada la heteoregeidad de los datos en el análisis univariante, en esta sección buscamos cruzar las variables para dar respuesta a las preguntas planteadas en la introducción. Para sintetizar las múltiples interacciones entre distintas variables, hacemos uso de la matriz de correlación. Como hemos visto en el análisis univariante, las distribuciones presentan asimetrías, colas pesadas, y en varios casos outliers. Para que esto no afecte de manera significativa a las correlaciones, en algunos casos usaremos medidas derivadas de los datos.
+Una vez constatada la heterogeneidad de los datos en el análisis univariante, en esta sección buscamos cruzar las variables para dar respuesta a las preguntas planteadas en la introducción. Para sintetizar las múltiples interacciones entre distintas variables, hacemos uso de la matriz de correlación. Como hemos visto en el análisis univariante, las distribuciones presentan asimetrías, colas pesadas, y en varios casos outliers. Para que esto no afecte de manera significativa a las correlaciones, en algunos casos usaremos medidas derivadas de los datos.
 
-1. La densidad de población en lugar del número de habitantes,es decir $$Densidad\_Pobl. = \frac{Num\_Habitantes}{Superficie\_Provincia}.$$
-2. El esfuerzo de compra la vivienda, caclulada como el número de años de renta bruta media que se requieren para alcanzar el valor de una casa de $90 m^2$. $$Esf\_Vivienda = \frac{90*Precio~m^2}{Renta~Bruta~Media}.$$
-3. La brecha renta/PIB. Es decir, la magnitud de la renta bruta media con respecto al PIB per cápita. $$Brecha~ Renta/PIB = \frac{Renta~Bruta~Media}{PIB~per~cápita}.$$
+1. La densidad de población en lugar del número de habitantes, es decir $$\text{Densidad\_Pobl.} = \frac{\text{Num\_Habitantes}}{\text{Superficie\_Provincia}}.$$
+2. El esfuerzo de compra la vivienda, calculada como el número de años de renta bruta media que se requieren para alcanzar el valor de una casa de $90 m^2$. $$Esf\_Vivienda = \frac{90*Precio~m^2}{Renta~Bruta~Media}.$$
+3. La brecha renta/PIB. Es decir, la magnitud de la renta bruta media con respecto al PIB per cápita. $$\text{Brecha Renta/PIB} = \frac{\text{Renta Bruta Media}}{\text{PIB per cápita}}.$$
 
 4. La migración joven por cada 1.000 habitantes: $$Mig\_Joven = \frac{Migracion\_Interior}{Num\_Habitantes}\cdot 1000.$$
 
-Usamos la correlación de Spearman, ya que al aplicar estas transformaciones no lineales, la correlación de Pearson se distorsiona.
+Usamos la correlación de Spearman, que trabaja con los rangos de las observaciones y es por tanto robusta frente a las asimetrías y los valores atípicos que hemos detectado, además de captar relaciones monótonas aunque no sean lineales; la correlación de Pearson, en cambio, estaría muy influida por Madrid y Barcelona.
 
 ```{r preparacion-bivariante, echo=FALSE}
 # Preparar las variables derivadas usadas por la matriz de correlación
@@ -1083,7 +1088,7 @@ corrplot(matriz_cor, method = "color", type = "lower", order = "original",
          addCoef.col = "black", number.cex = 0.7, diag = FALSE)
 ```
 
-Observamos valores de correlaciones muy variados, algunos esperados como la correlación entre el porcentaje de ocupación el VAB en cada uno de los sectores. Hay otros que llaman la atención, como la correlación entre la densidad de población y el esfuerzo de acceso a la vivienda. Sin embargo, como hemos visto en el análisis univariante de los datos, tenemos datos muy heterogéneos con valores extremos, y distribuciones asimétricas, por lo que para estudiar con más exactitud las relaciones entre los distintos indicadores realizamos un cluster de las provincias para separarlas en 4 grupos con características socioeconómicas similares, para que se reflejen de manera más clara las dinámicas entre estas, y no se contaminen por la heterogeneidad de los datos.
+Observamos valores de correlaciones muy variados. Algunos son esperables, como la elevada correlación entre el porcentaje de ocupados y el de VAB de cada sector (0,99 en el terciario, 0,96 en el secundario y 0,85 en el primario), aunque en parte refleja que ambas magnitudes dependen del tamaño de la provincia. Otros llaman la atención, como la correlación de 0,85 entre la densidad de población y el esfuerzo de acceso a la vivienda: las provincias más densas son también aquellas en las que comprar una vivienda exige más años de renta. La migración joven se asocia positivamente con el peso de los sectores secundario y terciario (entre 0,60 y 0,67) y negativamente con la brecha renta/PIB (-0,38), mientras que la edad de maternidad apenas guarda relación con la estructura productiva. Su correlación negativa con el esfuerzo de acceso a la vivienda (-0,46) resulta contraintuitiva y probablemente refleja diferencias de composición de la población más que un efecto directo de la vivienda. Sin embargo, como hemos visto en el análisis univariante de los datos, tenemos datos muy heterogéneos con valores extremos, y distribuciones asimétricas, por lo que para estudiar con más exactitud las relaciones entre los distintos indicadores realizamos un cluster de las provincias para separarlas en 4 grupos con características socioeconómicas similares, para que se reflejen de manera más clara las dinámicas entre estas, y no se contaminen por la heterogeneidad de los datos.
 
 Representamos los grupos en un mapa
 
@@ -1139,7 +1144,7 @@ ggplot(mapa_prov_clusters) +
   ) +
   theme_void(base_size = 11) +
   labs(
-    title = paste("Distribución Espacial de Clusters Socioeconómicos (Año", 2019, ")"),
+    title = paste0("Distribución Espacial de Clusters Socioeconómicos (Año ", 2019, ")"),
     subtitle = paste0("Agrupamiento jerárquico interprovincial (Ward.D2, k = ", numero_clusters, ")"),
     caption = "Fuente: Elaboración propia a partir de datos socioeconómicos provinciales | Capa geográfica: mapSpain"
   ) +
@@ -1153,7 +1158,7 @@ ggplot(mapa_prov_clusters) +
   )
 ```
 
-Por el mapa nos podemos hacer una idea de las características por las que se ha formado cada grupo. Calculamos los valores promedios de cada variable por grupo para observar las características de cada grupo.
+Por el mapa nos podemos hacer una idea de las características por las que se ha formado cada grupo. Ceuta y Melilla se han excluido del clustering por ser ciudades autónomas de características muy particulares y con datos incompletos, de modo que se agrupan las 50 provincias restantes. Calculamos los valores promedios de cada variable por grupo para observar las características de cada grupo.
 
 ```{r,echo=FALSE}
 # REINCORPORACIÓN DE CLUSTERS Y TABLA DESCRIPTIVA DE PERFILES
@@ -1182,7 +1187,7 @@ perfil_promedio %>%
 
 perfil_promedio %>%
   select(
-    Cluster, Num_Provincias, pct_Ocupados_Primario,pct_Ocupados_Secundario,pct_Ocupados_Terciario,pct_VAB_Primario,pct_VAB_Secundario,pct_VAB_Primario
+    Cluster, Num_Provincias, pct_Ocupados_Primario,pct_Ocupados_Secundario,pct_Ocupados_Terciario,pct_VAB_Primario,pct_VAB_Secundario,pct_VAB_Terciario
   ) %>%
   kable(
     format = "latex", booktabs = TRUE, longtable = FALSE,
@@ -1204,6 +1209,8 @@ colores_cluster <- c(
   "Cluster 4" = "#F39C12"   # Interior / Sector Primario
 )
 ```
+
+Las tablas permiten caracterizar los cuatro grupos. El Cluster 1 (26 provincias) reúne provincias de baja densidad (46 hab./km² de media), con el mercado de vivienda más accesible (6,3 años de renta para 90 m²) y pérdida neta de población joven; su peso en cada sector es inferior al 1,4 % del total nacional, por lo que son provincias pequeñas. El Cluster 2 (20 provincias) es el grupo intermedio, con mayor densidad (183 hab./km²), un esfuerzo de acceso a la vivienda de 8,1 años y pesos sectoriales en torno al 2 %. El Cluster 3 (Murcia y Almería, según el mapa) se distingue por su especialización primaria (8,9 % de los ocupados y 6,5 % del VAB agrario nacional) y por la maternidad más temprana (31,2 años). Por último, el Cluster 4 (Madrid y Barcelona) combina la mayor densidad (782 hab./km²), el mayor esfuerzo de acceso a la vivienda (9,1 años), la maternidad más tardía (32,8 años) y el único saldo migratorio joven positivo (1,1 por mil), con entre el 13 % y el 15 % del empleo secundario y terciario del país. Como las variables sectoriales se miden sobre el total nacional, la agrupación está influida por el tamaño de las provincias y los grupos 3 y 4 recogen, en la práctica, los valores extremos ya identificados.
 
 Ahora calculamos las correlaciones por cluster.
 
@@ -1277,6 +1284,12 @@ ggplot(df_correlaciones, aes(x = Var2, y = Var1, fill = Correlacion)) +
   labs(x = NULL, y = NULL, fill = "Correlación")
 ```
 
-Estas nuevas matrices de correlación poco tienen que ver con la original. Observamos valores de correlación bastante altos que antes no aparecían. En el grupo 4 al estar formado por dos elementos la correlación entre dos de sus variables cualesquiera será 1 o -1 siempre, por lo que la información que nos aporta no es de gran utilidad.
+Estas nuevas matrices de correlación difieren de la global en varios aspectos. Los grupos 3 y 4, al estar formados por solo dos provincias, producen correlaciones iguales a 1 o -1 para cualquier par de variables, por lo que no aportan información y no se interpretan. En los grupos 1 y 2 se mantiene la fuerte correlación entre ocupación y VAB en los sectores secundario y terciario (por encima de 0,84), pero emergen relaciones que la matriz global diluía. En el Cluster 2, el peso del empleo primario se correlaciona negativamente con la densidad (-0,56) y con la migración joven (-0,60), es decir, las provincias más agrarias de este grupo son también las que más población joven pierden, y la edad de maternidad se asocia positivamente con el peso del VAB secundario (0,67). Estas diferencias apoyan que la relación entre estructura productiva e indicadores socioeconómicos no es homogénea a escala nacional. Aun así, como los grupos se han construido con las mismas variables que después se correlacionan, conviene leer estas correlaciones de forma descriptiva y no inferencial.
 
 # Conclusiones Finales
+
+Este trabajo ha explorado, para el año 2019, la relación entre la estructura productiva de las provincias españolas y un conjunto de indicadores de renta, vivienda, demografía y migración. La respuesta a la pregunta planteada es que la relación **no es homogénea** a escala nacional: la matriz de correlación global es una síntesis engañosa de situaciones muy distintas y, al separar las provincias en grupos, aparecen asociaciones de signo y magnitud diferentes (por ejemplo, el peso del empleo primario se relaciona con la pérdida de población joven en el Cluster 2, pero apenas lo hace en el conjunto del país).
+
+Destacan tres resultados. Primero, los indicadores son muy heterogéneos y están dominados por unas pocas provincias (Madrid, Barcelona y, en menor medida, Illes Balears y el País Vasco) que concentran los valores extremos de población, precio de la vivienda, migración y peso sectorial. Segundo, el esfuerzo de acceso a la vivienda crece con la densidad de población (0,85), de modo que la presión inmobiliaria se concentra en las provincias densas, mientras que los saldos migratorios jóvenes positivos más destacados se limitan a Madrid, Barcelona e Illes Balears. Tercero, la edad media de maternidad es la variable más homogénea y la que menos se relaciona con la estructura productiva.
+
+Los resultados deben leerse con cautela. Se trata de asociaciones y no de relaciones causales; se analiza un único año; hay datos imputados (tres observaciones en 2019); y al medir la estructura productiva como porcentaje del total nacional, las variables reflejan en buena medida el tamaño de cada provincia, lo que infla las correlaciones y hace que dos de los cuatro grupos recojan simplemente valores extremos. Como líneas de mejora proponemos medir la estructura productiva como composición interna de cada provincia (porcentaje de ocupados o de VAB de cada sector sobre el total provincial), justificar el número de grupos con criterios como el coeficiente de silueta, aplicar transformaciones o excluir Madrid y Barcelona para reducir el efecto de los extremos, y repetir el análisis con los años 2015-2021 para estudiar la evolución antes y después de la pandemia.
