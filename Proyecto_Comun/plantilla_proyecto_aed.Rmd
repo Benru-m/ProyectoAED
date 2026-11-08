@@ -6,11 +6,16 @@ author:
   - name: "Rubén Sánchez Munuera"
     affil: 1
   - name: "Pablo Gallart Carbonell"
-    affil: 1
+    affil: 1, *
 affiliation:
   - num: 1
     address: |
       Universitat de València (UV), España.
+    email: pagacaclot@gmail.com
+authorcitation: |
+  Molina Villar, L.; Sánchez Munuera, R.; Gallart Carbonell, P.
+correspondence: |
+  pagacaclot@gmail.com (P. Gallart Carbonell)
 # Variables obligatorias para la plantilla
 MDPI journal: "Máster Universitario de ciencia de datos"
 type: "article"
@@ -24,6 +29,7 @@ output: rticles::mdpi_article
 header-includes:
   - \usepackage{geometry}
   - \geometry{left=5.85cm,right=1.9cm}
+  - \pubyear{2026}
 ---
 
 ```{r setup, include=FALSE}
@@ -44,7 +50,7 @@ knitr::opts_chunk$set(
 #AVISO: Es normal que la librería MapSpain tarde cierto tiempo en descargarse, por lo que se recomienda hacerlo antes de querer compilar el archivo.
 paquetes_requeridos <- c(
   "rmarkdown", "rticles", "knitr", "tidyverse", "mapSpain", "sf",
-  "corrplot", "scales", "ggrepel", "pheatmap", "kableExtra", "RColorBrewer"
+  "corrplot", "scales", "ggrepel", "pheatmap", "kableExtra", "RColorBrewer", "cluster"
 )
 
 paquetes_faltantes <- paquetes_requeridos[!paquetes_requeridos %in% rownames(installed.packages())]
@@ -932,7 +938,7 @@ ggplot(datos_boxplot, aes(x = x_box, y = Valor))  +
     y = NULL, x = NULL,
     caption = paste(
       "Los puntos rojos indican valores atípicos evaluados mediante IQR (±1.5) sobre la escala original de los datos.",
-      "\nNota: Los estadísticos se muestran en la escala representada; Migración Interior usa una transformación de raíz cúbica. MADM es la mediana de las desviaciones absolutas."
+      "\nNota: estadísticos en la escala representada (Migración Interior en raíz cúbica).\nMADM: mediana de las desviaciones absolutas."
     )
   ) +
   coord_cartesian(clip = "off") +
@@ -940,7 +946,7 @@ ggplot(datos_boxplot, aes(x = x_box, y = Valor))  +
   theme(
     plot.margin = margin(t = 5, r = 55, b = 32, l = 35),
     panel.spacing.y = unit(2.2, "lines"),
-    plot.caption = element_text(size = 6.5, colour = "grey40", margin = margin(t = 16))
+    plot.caption = element_text(size = 6.5, colour = "grey40", hjust = 0.5, margin = margin(t = 16))
   )
 ```
 
@@ -1027,10 +1033,10 @@ Podemos observar de nuevo datos muy heterogéneos y valores extremos muy altos. 
 Una vez constatada la heterogeneidad de los datos en el análisis univariante, en esta sección buscamos cruzar las variables para dar respuesta a las preguntas planteadas en la introducción. Para sintetizar las múltiples interacciones entre distintas variables, hacemos uso de la matriz de correlación. Como hemos visto en el análisis univariante, las distribuciones presentan asimetrías, colas pesadas, y en varios casos outliers. Para que esto no afecte de manera significativa a las correlaciones, en algunos casos usaremos medidas derivadas de los datos.
 
 1. La densidad de población en lugar del número de habitantes, es decir $$\text{Densidad\_Pobl.} = \frac{\text{Num\_Habitantes}}{\text{Superficie\_Provincia}}.$$
-2. El esfuerzo de compra la vivienda, calculada como el número de años de renta bruta media que se requieren para alcanzar el valor de una casa de $90 m^2$. $$Esf\_Vivienda = \frac{90*Precio~m^2}{Renta~Bruta~Media}.$$
+2. El esfuerzo de compra la vivienda, calculada como el número de años de renta bruta media que se requieren para alcanzar el valor de una casa de $90 m^2$. $$\text{Esf\_Vivienda} = \frac{90 \cdot \text{Precio m}^2}{\text{Renta Bruta Media}}.$$
 3. La brecha renta/PIB. Es decir, la magnitud de la renta bruta media con respecto al PIB per cápita. $$\text{Brecha Renta/PIB} = \frac{\text{Renta Bruta Media}}{\text{PIB per cápita}}.$$
 
-4. La migración joven por cada 1.000 habitantes: $$Mig\_Joven = \frac{Migracion\_Interior}{Num\_Habitantes}\cdot 1000.$$
+4. La migración joven por cada 1.000 habitantes: $$\text{Mig\_Joven} = \frac{\text{Migracion\_Interior}}{\text{Num\_Habitantes}}\cdot 1000.$$
 
 Usamos la correlación de Spearman, que trabaja con los rangos de las observaciones y es por tanto robusta frente a las asimetrías y los valores atípicos que hemos detectado, además de captar relaciones monótonas aunque no sean lineales; la correlación de Pearson, en cambio, estaría muy influida por Madrid y Barcelona.
 
@@ -1088,7 +1094,7 @@ corrplot(matriz_cor, method = "color", type = "lower", order = "original",
          addCoef.col = "black", number.cex = 0.7, diag = FALSE)
 ```
 
-Observamos valores de correlaciones muy variados. Algunos son esperables, como la elevada correlación entre el porcentaje de ocupados y el de VAB de cada sector (0,99 en el terciario, 0,96 en el secundario y 0,85 en el primario), aunque en parte refleja que ambas magnitudes dependen del tamaño de la provincia. Otros llaman la atención, como la correlación de 0,85 entre la densidad de población y el esfuerzo de acceso a la vivienda: las provincias más densas son también aquellas en las que comprar una vivienda exige más años de renta. La migración joven se asocia positivamente con el peso de los sectores secundario y terciario (entre 0,60 y 0,67) y negativamente con la brecha renta/PIB (-0,38), mientras que la edad de maternidad apenas guarda relación con la estructura productiva. Su correlación negativa con el esfuerzo de acceso a la vivienda (-0,46) resulta contraintuitiva y probablemente refleja diferencias de composición de la población más que un efecto directo de la vivienda. Sin embargo, como hemos visto en el análisis univariante de los datos, tenemos datos muy heterogéneos con valores extremos, y distribuciones asimétricas, por lo que para estudiar con más exactitud las relaciones entre los distintos indicadores realizamos un cluster de las provincias para separarlas en 4 grupos con características socioeconómicas similares, para que se reflejen de manera más clara las dinámicas entre estas, y no se contaminen por la heterogeneidad de los datos.
+Observamos valores de correlaciones muy variados. Algunos son esperables, como la elevada correlación entre el porcentaje de ocupados y el de VAB de cada sector (0,99 en el terciario, 0,96 en el secundario y 0,85 en el primario), aunque en parte refleja que ambas magnitudes dependen del tamaño de la provincia. Otros llaman la atención, como la correlación de 0,85 entre la densidad de población y el esfuerzo de acceso a la vivienda: las provincias más densas son también aquellas en las que comprar una vivienda exige más años de renta. La migración joven se asocia positivamente con el peso de los sectores secundario y terciario (entre 0,60 y 0,67) y negativamente con la brecha renta/PIB (-0,38), mientras que la edad de maternidad apenas guarda relación con la estructura productiva. Su correlación negativa con el esfuerzo de acceso a la vivienda (-0,46) resulta contraintuitiva y probablemente refleja diferencias de composición de la población más que un efecto directo de la vivienda. Sin embargo, como hemos visto en el análisis univariante de los datos, tenemos datos muy heterogéneos con valores extremos, y distribuciones asimétricas, por lo que para estudiar con más exactitud las relaciones entre los distintos indicadores realizamos un cluster de las provincias para separarlas en grupos con características socioeconómicas similares, para que se reflejen de manera más clara las dinámicas entre estas, y no se contaminen por la heterogeneidad de los datos.
 
 Representamos los grupos en un mapa
 
@@ -1107,8 +1113,13 @@ datos_cluster_estandarizados <- scale(datos_cluster_2019)
 distancia_provincias <- dist(datos_cluster_estandarizados, method = "euclidean")
 dendrograma_provincias <- hclust(distancia_provincias, method = "ward.D2")
 
-# Definir número óptimo de clusters (k = 4) y cortar el dendrograma
-numero_clusters <- 4
+# Número de clusters: se elige el k con mayor coeficiente de silueta medio (k = 2, ..., 8)
+ks_candidatos <- 2:8
+silueta_media <- sapply(ks_candidatos, function(k) {
+  mean(cluster::silhouette(cutree(dendrograma_provincias, k = k), distancia_provincias)[, "sil_width"])
+})
+names(silueta_media) <- ks_candidatos
+numero_clusters <- ks_candidatos[which.max(silueta_media)]
 asignacion_clusters <- cutree(dendrograma_provincias, k = numero_clusters)
 ```
 
@@ -1130,15 +1141,14 @@ mapa_prov_clusters <- esp_get_prov() %>%
   left_join(panel_analisis_2019_mapa, by = c("cpro" = "id_prov"))
 
 # REPRESENTACIÓN CARTOGRÁFICA CON GGPLOT2
+colores_cluster <- setNames(
+  c("#E74C3C", "#3498DB", "#2ECC71", "#F39C12", "#9B59B6", "#1ABC9C", "#34495E", "#E67E22")[1:numero_clusters],
+  paste("Cluster", 1:numero_clusters)
+)
 ggplot(mapa_prov_clusters) +
   geom_sf(aes(fill = Cluster), color = "white", size = 0.3) +
   scale_fill_manual(
-    values = c(
-      "Cluster 1" = "#E74C3C",  # Rojo: Metropolitano / Mercado Tensionado
-      "Cluster 2" = "#3498DB",  # Azul: Servicios / Turístico
-      "Cluster 3" = "#2ECC71",  # Verde: Polo Industrial / Foral
-      "Cluster 4" = "#F39C12"   # Naranja: Interior / Sector Primario
-    ),
+    values = colores_cluster,
     na.value = "grey85",
     name = "Tipología Provincial"
   ) +
@@ -1158,7 +1168,7 @@ ggplot(mapa_prov_clusters) +
   )
 ```
 
-Por el mapa nos podemos hacer una idea de las características por las que se ha formado cada grupo. Ceuta y Melilla se han excluido del clustering por ser ciudades autónomas de características muy particulares y con datos incompletos, de modo que se agrupan las 50 provincias restantes. Calculamos los valores promedios de cada variable por grupo para observar las características de cada grupo.
+Por el mapa nos podemos hacer una idea de las características por las que se ha formado cada grupo. Ceuta y Melilla se han excluido del clustering por ser ciudades autónomas de características muy particulares y con datos incompletos, de modo que se agrupan las 50 provincias restantes. El número de grupos se ha elegido mediante el coeficiente de silueta medio, calculado para $k = 2, \dots, 8$, que alcanza su máximo con $k =$ `r numero_clusters` (silueta media de `r format(round(max(silueta_media), 2), decimal.mark = ",")`). Calculamos los valores promedios de cada variable por grupo para observar las características de cada grupo.
 
 ```{r,echo=FALSE}
 # REINCORPORACIÓN DE CLUSTERS Y TABLA DESCRIPTIVA DE PERFILES

@@ -84,7 +84,7 @@ en el Ciclo Vital y Migratorio en España}
 
 % Authors, for the paper (add full first names)
 \Author{Luis Molina Villar$^{1}$, Rubén Sánchez Munuera$^{1}$, Pablo
-Gallart Carbonell$^{1}$}
+Gallart Carbonell$^{1, *}$}
 
 
 %\longauthorlist{yes}
@@ -95,14 +95,20 @@ Gallart Carbonell$^{1}$}
 Carbonell}
 
 % MDPI internal command: Authors, for citation in the left column
+%\AuthorCitation{Lastname, F.; Lastname, F.; Lastname, F.}
+% If this is a Chicago style journal: Lastname, Firstname, Firstname Lastname, and Firstname Lastname.
+\AuthorCitation{Molina Villar, L.; Sánchez Munuera, R.; Gallart
+Carbonell, P.}
 
 % Affiliations / Addresses (Add [1] after \address if there is only one affiliation.)
 \address{%
-$^{1}$ \quad Universitat de València (UV), España.; \\
+$^{1}$ \quad Universitat de València (UV),
+España.; \href{mailto:pagacaclot@gmail.com}{\nolinkurl{pagacaclot@gmail.com}}\\
 }
 
 % Contact information of the corresponding author
-\corres{Correspondence: }
+\corres{Correspondence: \href{mailto:pagacaclot@gmail.com}{\nolinkurl{pagacaclot@gmail.com}}
+(P. Gallart Carbonell)}
 
 % Current address and/or shared authorship
 
@@ -205,6 +211,7 @@ respuesta a las preguntas planteadas.}
 
 \usepackage{geometry}
 \geometry{left=5.85cm,right=1.9cm}
+\pubyear{2026}
 \usepackage{booktabs}
 \usepackage{longtable}
 \usepackage{array}
@@ -574,14 +581,14 @@ correlaciones, en algunos casos usaremos medidas derivadas de los datos.
   El esfuerzo de compra la vivienda, calculada como el número de años de
   renta bruta media que se requieren para alcanzar el valor de una casa
   de \(90 m^2\).
-  \[Esf\_Vivienda = \frac{90*Precio~m^2}{Renta~Bruta~Media}.\]
+  \[\text{Esf\_Vivienda} = \frac{90 \cdot \text{Precio m}^2}{\text{Renta Bruta Media}}.\]
 \item
   La brecha renta/PIB. Es decir, la magnitud de la renta bruta media con
   respecto al PIB per cápita.
   \[\text{Brecha Renta/PIB} = \frac{\text{Renta Bruta Media}}{\text{PIB per cápita}}.\]
 \item
   La migración joven por cada 1.000 habitantes:
-  \[Mig\_Joven = \frac{Migracion\_Interior}{Num\_Habitantes}\cdot 1000.\]
+  \[\text{Mig\_Joven} = \frac{\text{Migracion\_Interior}}{\text{Num\_Habitantes}}\cdot 1000.\]
 \end{enumerate}
 
 Usamos la correlación de Spearman, que trabaja con los rangos de las
@@ -610,10 +617,10 @@ directo de la vivienda. Sin embargo, como hemos visto en el análisis
 univariante de los datos, tenemos datos muy heterogéneos con valores
 extremos, y distribuciones asimétricas, por lo que para estudiar con más
 exactitud las relaciones entre los distintos indicadores realizamos un
-cluster de las provincias para separarlas en 4 grupos con
-características socioeconómicas similares, para que se reflejen de
-manera más clara las dinámicas entre estas, y no se contaminen por la
-heterogeneidad de los datos.
+cluster de las provincias para separarlas en grupos con características
+socioeconómicas similares, para que se reflejen de manera más clara las
+dinámicas entre estas, y no se contaminen por la heterogeneidad de los
+datos.
 
 Representamos los grupos en un mapa
 
@@ -623,8 +630,11 @@ Por el mapa nos podemos hacer una idea de las características por las
 que se ha formado cada grupo. Ceuta y Melilla se han excluido del
 clustering por ser ciudades autónomas de características muy
 particulares y con datos incompletos, de modo que se agrupan las 50
-provincias restantes. Calculamos los valores promedios de cada variable
-por grupo para observar las características de cada grupo.
+provincias restantes. El número de grupos se ha elegido mediante el
+coeficiente de silueta medio, calculado para \(k = 2, \dots, 8\), que
+alcanza su máximo con \(k =\) 2 (silueta media de 0,67). Calculamos los
+valores promedios de cada variable por grupo para observar las
+características de cada grupo.
 
 \begin{table}[!h]
 \centering
@@ -635,10 +645,8 @@ por grupo para observar las características de cada grupo.
 \toprule
 Cluster & Num\_Provincias & brecha\_pib\_renta & esfuerzo\_vivienda & Edad\_Media\_Maternidad & mig\_joven\_1000 & Densidad\\
 \midrule
-Cluster 1 & 26 & 0.58 & 6.32 & 32.34 & -1.02 & 45.95\\
-Cluster 2 & 20 & 0.60 & 8.07 & 32.11 & -0.36 & 182.92\\
-Cluster 3 & 2 & 0.53 & 8.10 & 31.16 & -0.59 & 106.89\\
-Cluster 4 & 2 & 0.55 & 9.08 & 32.75 & 1.11 & 782.32\\
+Cluster 1 & 48 & 0.59 & 7.13 & 32.20 & -0.72 & 105.56\\
+Cluster 2 & 2 & 0.55 & 9.08 & 32.75 & 1.11 & 782.32\\
 \bottomrule
 \end{tabular}}
 \end{table}
@@ -652,10 +660,8 @@ Cluster 4 & 2 & 0.55 & 9.08 & 32.75 & 1.11 & 782.32\\
 \toprule
 Cluster & Num\_Provincias & pct\_Ocupados\_Primario & pct\_Ocupados\_Secundario & pct\_Ocupados\_Terciario & pct\_VAB\_Primario & pct\_VAB\_Secundario & pct\_VAB\_Terciario\\
 \midrule
-Cluster 1 & 26 & 1.19 & 0.95 & 0.74 & 1.37 & 0.99 & 0.71\\
-Cluster 2 & 20 & 2.48 & 2.24 & 2.29 & 2.40 & 2.12 & 2.04\\
-Cluster 3 & 2 & 8.90 & 1.92 & 2.00 & 6.51 & 2.06 & 1.75\\
-Cluster 4 & 2 & 0.85 & 13.29 & 15.26 & 1.68 & 13.86 & 18.37\\
+Cluster 1 & 48 & 2.05 & 1.53 & 1.44 & 2.01 & 1.50 & 1.31\\
+Cluster 2 & 2 & 0.85 & 13.29 & 15.26 & 1.68 & 13.86 & 18.37\\
 \bottomrule
 \end{tabular}}
 \end{table}
