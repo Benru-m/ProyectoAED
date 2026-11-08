@@ -476,17 +476,6 @@ primer valor posterior no faltante. En caso de no haber valores
 anteriores o posteriores faltantes, se imputará el dato usando el primer
 dato posterior o respectivamente anterior no faltante.
 
-Conviene precisar el alcance de esta imputación. Los huecos no parecen
-aleatorios: los de renta bruta media afectan a Araba/Álava, Gipuzkoa y
-Navarra, territorios forales cuya información tributaria se trata de
-forma distinta, lo que probablemente explica su ausencia en los primeros
-años de la serie, y los de ocupados del sector primario afectan a Ceuta
-y Melilla, probablemente por el reducido tamaño muestral de la Encuesta
-de Población Activa en esos territorios. En el año 2019 que analizamos
-solo se imputan tres observaciones de 52 (la renta de Araba/Álava y de
-Navarra, y los ocupados del sector primario de Melilla), por lo que el
-efecto sobre los resultados es acotado.
-
 \subsection{Análisis Univariante}\label{anuxe1lisis-univariante}
 
 En esta sección procedemos a examinar la distribución individual de las
@@ -514,10 +503,7 @@ al tratarse de saldos netos entre provincias) pero su mediana es
 negativa (-308 personas), es decir, la mayoría de provincias pierde
 población joven y Madrid, único valor atípico según este criterio,
 concentra las ganancias, lo que explica en buena medida una curtosis de
-33,16. En conjunto, las distribuciones muestran una heterogeneidad
-moderada; la edad media de maternidad presenta la menor dispersión,
-mientras que la migración interior y la población concentran los valores
-atípicos más marcados.
+33,16.
 
 Para complementar el análisis, representamos también diagramas de caja y
 detectamos los valores atípicos usando la regla del rango
@@ -563,7 +549,7 @@ la lectura de las correlaciones posteriores.
 \subsection{Análisis Bivariante y
 Multivariante}\label{anuxe1lisis-bivariante-y-multivariante}
 
-Una vez constatada la heterogeneidad de los datos en el análisis
+Una vez constatada la heteoregeidad de los datos en el análisis
 univariante, en esta sección buscamos cruzar las variables para dar
 respuesta a las preguntas planteadas en la introducción. Para sintetizar
 las múltiples interacciones entre distintas variables, hacemos uso de la
@@ -575,66 +561,46 @@ correlaciones, en algunos casos usaremos medidas derivadas de los datos.
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
 \item
-  La densidad de población en lugar del número de habitantes, es decir
-  \[\text{Densidad\_Pobl.} = \frac{\text{Num\_Habitantes}}{\text{Superficie\_Provincia}}.\]
+  La densidad de población en lugar del número de habitantes,es decir
+  \[Densidad\_Pobl. = \frac{Num\_Habitantes}{Superficie\_Provincia}.\]
 \item
-  El esfuerzo de compra la vivienda, calculada como el número de años de
+  El esfuerzo de compra la vivienda, caclulada como el número de años de
   renta bruta media que se requieren para alcanzar el valor de una casa
   de \(90 m^2\).
-  \[\text{Esf\_Vivienda} = \frac{90 \cdot \text{Precio m}^2}{\text{Renta Bruta Media}}.\]
+  \[Esf\_Vivienda = \frac{90*Precio~m^2}{Renta~Bruta~Media}.\]
 \item
   La brecha renta/PIB. Es decir, la magnitud de la renta bruta media con
   respecto al PIB per cápita.
-  \[\text{Brecha Renta/PIB} = \frac{\text{Renta Bruta Media}}{\text{PIB per cápita}}.\]
+  \[Brecha~ Renta/PIB = \frac{Renta~Bruta~Media}{PIB~per~cápita}.\]
 \item
   La migración joven por cada 1.000 habitantes:
-  \[\text{Mig\_Joven} = \frac{\text{Migracion\_Interior}}{\text{Num\_Habitantes}}\cdot 1000.\]
+  \[Mig\_Joven = \frac{Migracion\_Interior}{Num\_Habitantes}\cdot 1000.\]
 \end{enumerate}
 
-Usamos la correlación de Spearman, que trabaja con los rangos de las
-observaciones y es por tanto robusta frente a las asimetrías y los
-valores atípicos que hemos detectado, además de captar relaciones
-monótonas aunque no sean lineales; la correlación de Pearson, en cambio,
-estaría muy influida por Madrid y Barcelona.
+Usamos la correlación de Spearman, ya que al aplicar estas
+transformaciones no lineales, la correlación de Pearson se distorsiona.
 
 \begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-6-1} \end{center}
 
-Observamos valores de correlaciones muy variados. Algunos son
-esperables, como la elevada correlación entre el porcentaje de ocupados
-y el de VAB de cada sector (0,99 en el terciario, 0,96 en el secundario
-y 0,85 en el primario), aunque en parte refleja que ambas magnitudes
-dependen del tamaño de la provincia. Otros llaman la atención, como la
-correlación de 0,85 entre la densidad de población y el esfuerzo de
-acceso a la vivienda: las provincias más densas son también aquellas en
-las que comprar una vivienda exige más años de renta. La migración joven
-se asocia positivamente con el peso de los sectores secundario y
-terciario (entre 0,60 y 0,67) y negativamente con la brecha renta/PIB
-(-0,38), mientras que la edad de maternidad apenas guarda relación con
-la estructura productiva. Su correlación negativa con el esfuerzo de
-acceso a la vivienda (-0,46) resulta contraintuitiva y probablemente
-refleja diferencias de composición de la población más que un efecto
-directo de la vivienda. Sin embargo, como hemos visto en el análisis
-univariante de los datos, tenemos datos muy heterogéneos con valores
-extremos, y distribuciones asimétricas, por lo que para estudiar con más
-exactitud las relaciones entre los distintos indicadores realizamos un
-cluster de las provincias para separarlas en grupos con características
-socioeconómicas similares, para que se reflejen de manera más clara las
-dinámicas entre estas, y no se contaminen por la heterogeneidad de los
-datos.
+Observamos valores de correlaciones muy variados, algunos esperados como
+la correlación entre el porcentaje de ocupación el VAB en cada uno de
+los sectores. Hay otros que llaman la atención, como la correlación
+entre la densidad de población y el esfuerzo de acceso a la vivienda.
+Sin embargo, como hemos visto en el análisis univariante de los datos,
+tenemos datos muy heterogéneos con valores extremos, y distribuciones
+asimétricas, por lo que para estudiar con más exactitud las relaciones
+entre los distintos indicadores realizamos un cluster de las provincias
+para separarlas en 4 grupos con características socioeconómicas
+similares, para que se reflejen de manera más clara las dinámicas entre
+estas, y no se contaminen por la heterogeneidad de los datos.
 
 Representamos los grupos en un mapa
 
 \begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-8-1} \end{center}
 
 Por el mapa nos podemos hacer una idea de las características por las
-que se ha formado cada grupo. Ceuta y Melilla se han excluido del
-clustering por ser ciudades autónomas de características muy
-particulares y con datos incompletos, de modo que se agrupan las 50
-provincias restantes. El número de grupos se ha elegido mediante el
-coeficiente de silueta medio, calculado para \(k = 2, \dots, 8\), que
-alcanza su máximo con \(k =\) 2 (silueta media de 0,67). Calculamos los
-valores promedios de cada variable por grupo para observar las
-características de cada grupo.
+que se ha formado cada grupo. Calculamos los valores promedios de cada
+variable por grupo para observar las características de cada grupo.
 
 \begin{table}[!h]
 \centering
@@ -645,8 +611,10 @@ características de cada grupo.
 \toprule
 Cluster & Num\_Provincias & brecha\_pib\_renta & esfuerzo\_vivienda & Edad\_Media\_Maternidad & mig\_joven\_1000 & Densidad\\
 \midrule
-Cluster 1 & 48 & 0.59 & 7.13 & 32.20 & -0.72 & 105.56\\
-Cluster 2 & 2 & 0.55 & 9.08 & 32.75 & 1.11 & 782.32\\
+Cluster 1 & 26 & 0.58 & 6.32 & 32.34 & -1.02 & 45.95\\
+Cluster 2 & 20 & 0.60 & 8.07 & 32.11 & -0.36 & 182.92\\
+Cluster 3 & 2 & 0.53 & 8.10 & 31.16 & -0.59 & 106.89\\
+Cluster 4 & 2 & 0.55 & 9.08 & 32.75 & 1.11 & 782.32\\
 \bottomrule
 \end{tabular}}
 \end{table}
@@ -656,93 +624,55 @@ Cluster 2 & 2 & 0.55 & 9.08 & 32.75 & 1.11 & 782.32\\
 \caption{\label{tab:unnamed-chunk-9}Perfil de estructura productiva por Cluster }
 \centering
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{
-\begin{tabular}[t]{lrrrrrrr}
+\begin{tabular}[t]{lrrrrrr}
 \toprule
-Cluster & Num\_Provincias & pct\_Ocupados\_Primario & pct\_Ocupados\_Secundario & pct\_Ocupados\_Terciario & pct\_VAB\_Primario & pct\_VAB\_Secundario & pct\_VAB\_Terciario\\
+Cluster & Num\_Provincias & pct\_Ocupados\_Primario & pct\_Ocupados\_Secundario & pct\_Ocupados\_Terciario & pct\_VAB\_Primario & pct\_VAB\_Secundario\\
 \midrule
-Cluster 1 & 48 & 2.05 & 1.53 & 1.44 & 2.01 & 1.50 & 1.31\\
-Cluster 2 & 2 & 0.85 & 13.29 & 15.26 & 1.68 & 13.86 & 18.37\\
+Cluster 1 & 26 & 1.19 & 0.95 & 0.74 & 1.37 & 0.99\\
+Cluster 2 & 20 & 2.48 & 2.24 & 2.29 & 2.40 & 2.12\\
+Cluster 3 & 2 & 8.90 & 1.92 & 2.00 & 6.51 & 2.06\\
+Cluster 4 & 2 & 0.85 & 13.29 & 15.26 & 1.68 & 13.86\\
 \bottomrule
 \end{tabular}}
 \end{table}
-
-Las tablas permiten caracterizar los cuatro grupos. El Cluster 1 (26
-provincias) reúne provincias de baja densidad (46 hab./km² de media),
-con el mercado de vivienda más accesible (6,3 años de renta para 90 m²)
-y pérdida neta de población joven; su peso en cada sector es inferior al
-1,4 \% del total nacional, por lo que son provincias pequeñas. El
-Cluster 2 (20 provincias) es el grupo intermedio, con mayor densidad
-(183 hab./km²), un esfuerzo de acceso a la vivienda de 8,1 años y pesos
-sectoriales en torno al 2 \%. El Cluster 3 (Murcia y Almería, según el
-mapa) se distingue por su especialización primaria (8,9 \% de los
-ocupados y 6,5 \% del VAB agrario nacional) y por la maternidad más
-temprana (31,2 años). Por último, el Cluster 4 (Madrid y Barcelona)
-combina la mayor densidad (782 hab./km²), el mayor esfuerzo de acceso a
-la vivienda (9,1 años), la maternidad más tardía (32,8 años) y el único
-saldo migratorio joven positivo (1,1 por mil), con entre el 13 \% y el
-15 \% del empleo secundario y terciario del país. Como las variables
-sectoriales se miden sobre el total nacional, la agrupación está
-influida por el tamaño de las provincias y los grupos 3 y 4 recogen, en
-la práctica, los valores extremos ya identificados.
 
 Ahora calculamos las correlaciones por cluster.
 
 \begin{center}\includegraphics[width=1\linewidth]{plantilla_proyecto_aed_files/figure-latex/correlaciones-por-cluster-1} \end{center}
 
-Estas nuevas matrices de correlación difieren de la global en varios
-aspectos. Los grupos 3 y 4, al estar formados por solo dos provincias,
-producen correlaciones iguales a 1 o -1 para cualquier par de variables,
-por lo que no aportan información y no se interpretan. En los grupos 1 y
-2 se mantiene la fuerte correlación entre ocupación y VAB en los
-sectores secundario y terciario (por encima de 0,84), pero emergen
-relaciones que la matriz global diluía. En el Cluster 2, el peso del
-empleo primario se correlaciona negativamente con la densidad (-0,56) y
-con la migración joven (-0,60), es decir, las provincias más agrarias de
-este grupo son también las que más población joven pierden, y la edad de
-maternidad se asocia positivamente con el peso del VAB secundario
-(0,67). Estas diferencias apoyan que la relación entre estructura
-productiva e indicadores socioeconómicos no es homogénea a escala
-nacional. Aun así, como los grupos se han construido con las mismas
-variables que después se correlacionan, conviene leer estas
-correlaciones de forma descriptiva y no inferencial.
+Estas nuevas matrices de correlación poco tienen que ver con la
+original. Observamos valores de correlación bastante altos que antes no
+aparecían. En el grupo 4 al estar formado por dos elementos la
+correlación entre dos de sus variables cualesquiera será 1 o -1 siempre,
+por lo que la información que nos aporta no es de gran utilidad.
 
 \section{Conclusiones Finales}\label{conclusiones-finales}
 
-Este trabajo ha explorado, para el año 2019, la relación entre la
-estructura productiva de las provincias españolas y un conjunto de
-indicadores de renta, vivienda, demografía y migración. La respuesta a
-la pregunta planteada es que la relación \textbf{no es homogénea} a
-escala nacional: la matriz de correlación global es una síntesis
-engañosa de situaciones muy distintas y, al separar las provincias en
-grupos, aparecen asociaciones de signo y magnitud diferentes (por
-ejemplo, el peso del empleo primario se relaciona con la pérdida de
-población joven en el Cluster 2, pero apenas lo hace en el conjunto del
-país).
+El análisis provincial de España (2019) revela que la relación entre
+estructura productiva e indicadores socioeconómicos es heterogénea. La
+matriz global oculta realidades territoriales distintas que exigen
+dividir el país en cuatro clústeres.
 
-Destacan tres resultados. Primero, los indicadores son muy heterogéneos
-y están dominados por unas pocas provincias (Madrid, Barcelona y, en
-menor medida, Illes Balears y el País Vasco) que concentran los valores
-extremos de población, precio de la vivienda, migración y peso
-sectorial. Segundo, el esfuerzo de acceso a la vivienda crece con la
-densidad de población (0,85), de modo que la presión inmobiliaria se
-concentra en las provincias densas, mientras que los saldos migratorios
-jóvenes positivos más destacados se limitan a Madrid, Barcelona e Illes
-Balears. Tercero, la edad media de maternidad es la variable más
-homogénea y la que menos se relaciona con la estructura productiva.
+Destacan tres hallazgos clave:
 
-Los resultados deben leerse con cautela. Se trata de asociaciones y no
-de relaciones causales; se analiza un único año; hay datos imputados
-(tres observaciones en 2019); y al medir la estructura productiva como
-porcentaje del total nacional, las variables reflejan en buena medida el
-tamaño de cada provincia, lo que infla las correlaciones y hace que dos
-de los cuatro grupos recojan simplemente valores extremos. Como líneas
-de mejora proponemos medir la estructura productiva como composición
-interna de cada provincia (porcentaje de ocupados o de VAB de cada
-sector sobre el total provincial), justificar el número de grupos con
-criterios como el coeficiente de silueta, aplicar transformaciones o
-excluir Madrid y Barcelona para reducir el efecto de los extremos, y
-repetir el análisis con los años 2015-2021 para estudiar la evolución
-antes y después de la pandemia.
+1. Peso de los valores atípicos: Una minoría de provincias (Madrid,
+Barcelona, Illes Balears, País Vasco) concentra los máximos demográficos
+y económicos, distorsionando las medias nacionales y forzando la
+creación de clústeres exclusivos (3 y 4) para aislar estos extremos.
+
+2. Vivienda vs.~Migración: El esfuerzo inmobiliario crece drásticamente
+con la densidad poblacional (correlación 0,85). Pese a esta barrera,
+solo los grandes núcleos (Clúster 4: Madrid y Barcelona) logran atraer
+migración joven.
+
+3. Estabilidad demográfica: La edad media de maternidad es la variable
+más homogénea del país y la menos condicionada por la estructura
+productiva.
+
+Estas asociaciones no causales reflejan en gran medida el tamaño
+absoluto de las provincias. Para futuros estudios, se sugiere medir la
+estructura productiva a nivel interno (para evitar sesgos de tamaño) y
+ampliar el análisis al periodo 2015-2021.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
