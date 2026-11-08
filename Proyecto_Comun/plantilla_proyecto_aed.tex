@@ -303,7 +303,7 @@ dimensiones:
   \tightlist
   \item
     \texttt{Personas\ ocupadas\ por\ sector\ (Primario,\ Secundario,\ Terciario)}:
-    Número de personas ocupadas en cada gran sector económico.
+    \(\quad\) Número de personas ocupadas en cada gran sector económico.
   \item
     \texttt{VAB\ por\ sector\ (Primario,\ Secundario,\ Terciario)}: El
     valor bruto añadido (VAB) mide el valor económico total que genera
@@ -328,10 +328,9 @@ Datos}\label{importaciuxf3n-y-acondicionamiento-de-datos}
 
 El primer paso para el análisis es cargar los conjuntos de datos
 obtenidos del
-\href{https://ine.es/dyngs/INEbase/listaoperaciones.htm}{INE} y, en el
-caso del precio de la vivienda, del Ministerio de Vivienda y Agenda
-Urbana (MIVAU). Los ficheros originales se encuentran almacenados en la
-carpeta local \texttt{data/raw}.
+\href{https://ine.es/dyngs/INEbase/listaoperaciones.htm}{INE} y del
+MIVAU. Los ficheros originales se encuentran almacenados en la carpeta
+local \texttt{data/raw}.
 
 La fuente de datos no proporciona los datos estrictamente adecuados para
 el análisis que queremos realizar (buscamos un análisis anual a nivel
@@ -470,11 +469,13 @@ además, cada instancia tiene como mucho un valor faltante, las variables
 afectadas son series temporales de valores numéricos (valores anuales de
 2015 a 2021), y en todos los casos tenemos al menos un registro de toda
 la serie, por lo que la decisión sobre los valores faltantes es
-imputarlos siguiendo la siguiente norma. Se imputan los valores
-faltantes con la media del primer valor anterior no faltante, y el
-primer valor posterior no faltante. En caso de no haber valores
-anteriores o posteriores faltantes, se imputará el dato usando el primer
-dato posterior o respectivamente anterior no faltante.
+imputarlos siguiendo la siguiente norma:
+
+\emph{Se imputan los valores faltantes con la media del primer valor
+anterior no faltante, y el primer valor posterior no faltante. En caso
+de no haber valores anteriores o posteriores no faltantes, se imputará
+el dato usando el primer dato posterior o respectivamente anterior no
+faltante.}
 
 \subsection{Análisis Univariante}\label{anuxe1lisis-univariante}
 
@@ -571,7 +572,7 @@ correlaciones, en algunos casos usaremos medidas derivadas de los datos.
 \item
   La brecha renta/PIB. Es decir, la magnitud de la renta bruta media con
   respecto al PIB per cápita.
-  \[Brecha~ Renta/PIB = \frac{Renta~Bruta~Media}{PIB~per~cápita}.\]
+  \[Brecha~ Renta/PIB = \frac{Renta~Bruta~Media}{PIB~per~capita}.\]
 \item
   La migración joven por cada 1.000 habitantes:
   \[Mig\_Joven = \frac{Migracion\_Interior}{Num\_Habitantes}\cdot 1000.\]
@@ -642,7 +643,7 @@ Ahora calculamos las correlaciones por cluster.
 
 Estas nuevas matrices de correlación poco tienen que ver con la
 original. Observamos valores de correlación bastante altos que antes no
-aparecían. En el grupo 4 al estar formado por dos elementos la
+aparecían. En los grupos 3 y 4 al estar formados por dos elementos la
 correlación entre dos de sus variables cualesquiera será 1 o -1 siempre,
 por lo que la información que nos aporta no es de gran utilidad.
 

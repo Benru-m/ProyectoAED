@@ -137,14 +137,14 @@ Para responder a la pregunta hemos considerado que los datos más indicados corr
    * `Migracion Interior`: Saldo migratorio neto interprovincial (personas que pasan de vivir de una provincia a otra) en el rango de edad de 19 a 35 años (número neto de personas).
    * `Habitantes`: Población provincial total residente (personas).
 4. **Dimensión de Estructura Productiva:**
-   * `Personas ocupadas por sector (Primario, Secundario, Terciario)`: Número de personas ocupadas en cada gran sector económico.
+   * `Personas ocupadas por sector (Primario, Secundario, Terciario)`: $\quad$ Número de personas ocupadas en cada gran sector económico.
    * `VAB por sector (Primario, Secundario, Terciario)`: El valor bruto añadido (VAB) mide el valor económico total que genera una empresa, sector, región o país durante un periodo de tiempo determinado.
 
 Para la realización del informe se han recopilado todos los datos existentes de dichos registros en el INE y, para el precio de la vivienda, en el MIVAU (entre todas las variables hay registros desde 1975 a 2026). En particular, solamente hay registros de todas las variables en el periodo 2015-2021, y por cuestiones de espacio, en el informe solamente se muestra un análisis exploratorio de los datos correspondientes al año 2019, elegido ya que siendo uno de los años con más datos disponibles, es justamente previo a la pandemia de COVID-19, por lo que este análisis puede ser usado para estudiar los efectos de la pandemia en los factores estudiados.
 
 # Importación y Acondicionamiento de Datos
 
-El primer paso para el análisis es cargar los conjuntos de datos obtenidos del [INE](https://ine.es/dyngs/INEbase/listaoperaciones.htm) y, en el caso del precio de la vivienda, del Ministerio de Vivienda y Agenda Urbana (MIVAU). Los ficheros originales se encuentran almacenados en la carpeta local `data/raw`.
+El primer paso para el análisis es cargar los conjuntos de datos obtenidos del [INE](https://ine.es/dyngs/INEbase/listaoperaciones.htm) y del MIVAU. Los ficheros originales se encuentran almacenados en la carpeta local `data/raw`.
 
 ```{r descarga datos,include = FALSE}
 #Aún así, en caso de que por algún casual los archivos no se encuentren como tal, incluimos este chunk de código que crea la carpeta e intenta realizar la descarga directamente del INE, para evitar que haya errores antes de cargarlos.
@@ -590,7 +590,9 @@ kable(panel_faltantes, caption = "Instancias con valores faltantes")
 remove(list = c("panel_faltantes"))
 ```
 
-Observamos que los valores faltantes afectan solamente a 5 provincias, además, cada instancia tiene como mucho un valor faltante, las variables afectadas son series temporales de valores numéricos (valores anuales de 2015 a 2021), y en todos los casos tenemos al menos un registro de toda la serie, por lo que la decisión sobre los valores faltantes es imputarlos siguiendo la siguiente norma. Se imputan los valores faltantes con la media del primer valor anterior no faltante, y el primer valor posterior no faltante. En caso de no haber valores anteriores o posteriores faltantes, se imputará el dato usando el primer dato posterior o respectivamente anterior no faltante.
+Observamos que los valores faltantes afectan solamente a 5 provincias, además, cada instancia tiene como mucho un valor faltante, las variables afectadas son series temporales de valores numéricos (valores anuales de 2015 a 2021), y en todos los casos tenemos al menos un registro de toda la serie, por lo que la decisión sobre los valores faltantes es imputarlos siguiendo la siguiente norma:
+
+*Se imputan los valores faltantes con la media del primer valor anterior no faltante, y el primer valor posterior no faltante. En caso de no haber valores anteriores o posteriores no faltantes, se imputará el dato usando el primer dato posterior o respectivamente anterior no faltante.*
 
 ```{r,include=FALSE}
 imputar_valores_intermedios <- function(x){
@@ -1032,7 +1034,7 @@ Una vez constatada la heteoregeidad de los datos en el análisis univariante, en
 
 1. La densidad de población en lugar del número de habitantes,es decir $$Densidad\_Pobl. = \frac{Num\_Habitantes}{Superficie\_Provincia}.$$
 2. El esfuerzo de compra la vivienda, caclulada como el número de años de renta bruta media que se requieren para alcanzar el valor de una casa de $90 m^2$. $$Esf\_Vivienda = \frac{90*Precio~m^2}{Renta~Bruta~Media}.$$
-3. La brecha renta/PIB. Es decir, la magnitud de la renta bruta media con respecto al PIB per cápita. $$Brecha~ Renta/PIB = \frac{Renta~Bruta~Media}{PIB~per~cápita}.$$
+3. La brecha renta/PIB. Es decir, la magnitud de la renta bruta media con respecto al PIB per cápita. $$Brecha~ Renta/PIB = \frac{Renta~Bruta~Media}{PIB~per~capita}.$$
 
 4. La migración joven por cada 1.000 habitantes: $$Mig\_Joven = \frac{Migracion\_Interior}{Num\_Habitantes}\cdot 1000.$$
 
@@ -1286,7 +1288,7 @@ ggplot(df_correlaciones, aes(x = Var2, y = Var1, fill = Correlacion)) +
   labs(x = NULL, y = NULL, fill = "Correlación")
 ```
 
-Estas nuevas matrices de correlación poco tienen que ver con la original. Observamos valores de correlación bastante altos que antes no aparecían. En el grupo 4 al estar formado por dos elementos la correlación entre dos de sus variables cualesquiera será 1 o -1 siempre, por lo que la información que nos aporta no es de gran utilidad.
+Estas nuevas matrices de correlación poco tienen que ver con la original. Observamos valores de correlación bastante altos que antes no aparecían. En los grupos 3 y 4 al estar formados por dos elementos la correlación entre dos de sus variables cualesquiera será 1 o -1 siempre, por lo que la información que nos aporta no es de gran utilidad.
 
 # Conclusiones Finales
 
