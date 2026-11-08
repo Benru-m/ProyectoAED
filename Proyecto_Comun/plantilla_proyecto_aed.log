@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.11.5)  8 NOV 2026 18:17
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.11.5)  8 NOV 2026 23:15
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1053,10 +1053,10 @@ LaTeX Font Info:    Trying to load font information for T1+ppl on input line 271
 File: t1ppl.fd 2001/06/04 font definitions for T1/ppl.
 ) (./plantilla_proyecto_aed.aux
 
-LaTeX Warning: Label `tab:unnamed-chunk-11' multiply defined.
+LaTeX Warning: Label `tab:unnamed-chunk-12' multiply defined.
 
 
-LaTeX Warning: Label `tab:unnamed-chunk-11@cref' multiply defined.
+LaTeX Warning: Label `tab:unnamed-chunk-12@cref' multiply defined.
 
 )
 \openout1 = `plantilla_proyecto_aed.aux'.
@@ -1314,18 +1314,6 @@ Overfull \hbox (1.75311pt too wide) in paragraph at lines 348--352
 []\T1/cmtt/m/n/10 VAB por sector (Primario, Secundario, Terciario)\T1/ppl/m/n/10 (-20) : El valor bruto aña-
  []
 
-LaTeX Font Info:    Font shape `T1/cmtt/bx/n' in size <10> not available
-(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 389.
-
-Overfull \hbox (48.14716pt too wide) detected at line 389
-[]\T1/cmtt/m/n/10 leer_archivo_ine []<-[] []function[](fichero, separador, []decimal =[] []","[], []grouping =[] []"."[]) { 
- []
-
-
-Overfull \hbox (42.89844pt too wide) detected at line 439
-[]      []\T1/cmtt/m/n/10 str_pad[]([]as.character[]({{ col_prov }}), []width =[] []2[], []side =[] []"left"[], []pad =[] []"0"[]) 
- []
-
 
 Overfull \hbox (17.0714pt too wide) has occurred while \output is active
 [][]|  
@@ -1344,20 +1332,18 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-4.18796pt}.
 
 [2]
-Overfull \hbox (7.8931pt too wide) detected at line 471
-[][]\T1/cmtt/m/it/10 # En las comunidades uniprovinciales, el fichero incluye filas regionales[] 
+LaTeX Font Info:    Font shape `T1/cmtt/bx/n' in size <10> not available
+(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 443.
+
+Overfull \hbox (53.39587pt too wide) detected at line 525
+[]\T1/cmtt/m/n/10 panel_analisis_2019 []<-[] []crear_panel_analisis_2019[](panel_provincial, []periodo =[] []2019[]) 
  []
 
-
-Overfull \hbox (18.39053pt too wide) detected at line 472
-[][]\T1/cmtt/m/it/10 # (CPRO vacio) cuyo valor coincide con el de la provincia. Las incorporamos[] 
- []
-
-
-Overfull \hbox (132.12665pt too wide) detected at line 488
-[]    []\T1/cmtt/m/n/10 codigo_ccaa =[] []str_pad[]([]as.character[](.data[[[]"CODAUTO"[]]]), []width =[] []2[], []side =[] []"left"[], []pad =[] []"0"[]), 
- []
-
+<plantilla_proyecto_aed_files/figure-latex/histograma-1.pdf, id=73, 420.57124pt x 272.01625pt>
+File: plantilla_proyecto_aed_files/figure-latex/histograma-1.pdf Graphic file (type pdf)
+<use plantilla_proyecto_aed_files/figure-latex/histograma-1.pdf>
+Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/histograma-1.pdf  used on input line 531.
+(pdftex.def)             Requested size: 376.99902pt x 243.83696pt.
 
 Overfull \hbox (17.0714pt too wide) has occurred while \output is active
 [][]|  
@@ -1376,33 +1362,16 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-4.18796pt}.
 
 [3]
-Overfull \hbox (17.0714pt too wide) has occurred while \output is active
-[][]|  
- []
-
-
-Overfull \hbox (17.0714pt too wide) has occurred while \output is active
- [][]|
- []
-
-
-Package fancyhdr Warning: \headheight is too small (12.0pt): 
-(fancyhdr)                Make it at least 16.18796pt, for example:
-(fancyhdr)                \setlength{\headheight}{16.18796pt}.
-(fancyhdr)                You might also make \topmargin smaller:
-(fancyhdr)                \addtolength{\topmargin}{-4.18796pt}.
-
-[4]
-<plantilla_proyecto_aed_files/figure-latex/univ-graficas-setup-1.pdf, id=142, 425.59pt x 227.85126pt>
-File: plantilla_proyecto_aed_files/figure-latex/univ-graficas-setup-1.pdf Graphic file (type pdf)
-<use plantilla_proyecto_aed_files/figure-latex/univ-graficas-setup-1.pdf>
-Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/univ-graficas-setup-1.pdf  used on input line 614.
-(pdftex.def)             Requested size: 376.99902pt x 201.84825pt.
-<plantilla_proyecto_aed_files/figure-latex/fig-univ-3-1.pdf, id=143, 354.32375pt x 353.32pt>
-File: plantilla_proyecto_aed_files/figure-latex/fig-univ-3-1.pdf Graphic file (type pdf)
-<use plantilla_proyecto_aed_files/figure-latex/fig-univ-3-1.pdf>
-Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/fig-univ-3-1.pdf  used on input line 636.
-(pdftex.def)             Requested size: 376.99902pt x 375.9407pt.
+<plantilla_proyecto_aed_files/figure-latex/boxplots-1.pdf, id=87, 425.59pt x 278.03876pt>
+File: plantilla_proyecto_aed_files/figure-latex/boxplots-1.pdf Graphic file (type pdf)
+<use plantilla_proyecto_aed_files/figure-latex/boxplots-1.pdf>
+Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/boxplots-1.pdf  used on input line 553.
+(pdftex.def)             Requested size: 376.99902pt x 246.30823pt.
+<plantilla_proyecto_aed_files/figure-latex/boxplots-2.pdf, id=88, 425.59pt x 278.03876pt>
+File: plantilla_proyecto_aed_files/figure-latex/boxplots-2.pdf Graphic file (type pdf)
+<use plantilla_proyecto_aed_files/figure-latex/boxplots-2.pdf>
+Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/boxplots-2.pdf  used on input line 561.
+(pdftex.def)             Requested size: 376.99902pt x 246.30823pt.
 
 Overfull \hbox (17.0714pt too wide) has occurred while \output is active
 [][]|  
@@ -1420,11 +1389,11 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-4.18796pt}.
 
-[5 <./plantilla_proyecto_aed_files/figure-latex/univ-graficas-setup-1.pdf>]
-<plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-7-1.pdf, id=156, 427.5975pt x 278.03876pt>
-File: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-7-1.pdf Graphic file (type pdf)
-<use plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-7-1.pdf>
-Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-7-1.pdf  used on input line 658.
+[4 <./plantilla_proyecto_aed_files/figure-latex/histograma-1.pdf> <./plantilla_proyecto_aed_files/figure-latex/boxplots-1.pdf>]
+<plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-8-1.pdf, id=113, 427.5975pt x 278.03876pt>
+File: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-8-1.pdf Graphic file (type pdf)
+<use plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-8-1.pdf>
+Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-8-1.pdf  used on input line 587.
 (pdftex.def)             Requested size: 376.99902pt x 245.13728pt.
 
 Overfull \hbox (17.0714pt too wide) has occurred while \output is active
@@ -1443,7 +1412,13 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-4.18796pt}.
 
-[6 <./plantilla_proyecto_aed_files/figure-latex/fig-univ-3-1.pdf>]
+[5 <./plantilla_proyecto_aed_files/figure-latex/boxplots-2.pdf> <./plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-8-1.pdf>]
+<plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-9-1.pdf, id=144, 324.21124pt x 260.975pt>
+File: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-9-1.pdf Graphic file (type pdf)
+<use plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-9-1.pdf>
+Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-9-1.pdf  used on input line 648.
+(pdftex.def)             Requested size: 376.99902pt x 303.48782pt.
+
 Overfull \hbox (17.0714pt too wide) has occurred while \output is active
 [][]|  
  []
@@ -1460,16 +1435,11 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-4.18796pt}.
 
-[7 <./plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-7-1.pdf>]
-<plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-8-1.pdf, id=197, 324.21124pt x 265.99374pt>
-File: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-8-1.pdf Graphic file (type pdf)
-<use plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-8-1.pdf>
-Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-8-1.pdf  used on input line 705.
-(pdftex.def)             Requested size: 376.99902pt x 309.32411pt.
-<plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-10-1.pdf, id=198, 405.515pt x 289.08pt>
-File: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-10-1.pdf Graphic file (type pdf)
-<use plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-10-1.pdf>
-Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-10-1.pdf  used on input line 723.
+[6]
+<plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-11-1.pdf, id=163, 405.515pt x 289.08pt>
+File: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-11-1.pdf Graphic file (type pdf)
+<use plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-11-1.pdf>
+Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-11-1.pdf  used on input line 665.
 (pdftex.def)             Requested size: 376.99902pt x 268.7578pt.
 
 Overfull \hbox (17.0714pt too wide) has occurred while \output is active
@@ -1488,12 +1458,29 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-4.18796pt}.
 
-[8 <./plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-8-1.pdf>]
-<plantilla_proyecto_aed_files/figure-latex/correlaciones-por-cluster-1.pdf, id=211, 854.19125pt x 847.165pt>
+[7 <./plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-9-1.pdf>]
+Overfull \hbox (17.0714pt too wide) has occurred while \output is active
+[][]|  
+ []
+
+
+Overfull \hbox (17.0714pt too wide) has occurred while \output is active
+ [][]|
+ []
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 16.18796pt, for example:
+(fancyhdr)                \setlength{\headheight}{16.18796pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-4.18796pt}.
+
+[8 <./plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-11-1.pdf>]
+<plantilla_proyecto_aed_files/figure-latex/correlaciones-por-cluster-1.pdf, id=195, 854.19125pt x 702.625pt>
 File: plantilla_proyecto_aed_files/figure-latex/correlaciones-por-cluster-1.pdf Graphic file (type pdf)
 <use plantilla_proyecto_aed_files/figure-latex/correlaciones-por-cluster-1.pdf>
-Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/correlaciones-por-cluster-1.pdf  used on input line 791.
-(pdftex.def)             Requested size: 376.99902pt x 373.8913pt.
+Package pdftex.def Info: plantilla_proyecto_aed_files/figure-latex/correlaciones-por-cluster-1.pdf  used on input line 743.
+(pdftex.def)             Requested size: 376.99902pt x 310.09941pt.
 
 Overfull \hbox (17.0714pt too wide) has occurred while \output is active
 [][]|  
@@ -1511,7 +1498,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-4.18796pt}.
 
-[9 <./plantilla_proyecto_aed_files/figure-latex/unnamed-chunk-10-1.pdf>]
+[9 <./plantilla_proyecto_aed_files/figure-latex/correlaciones-por-cluster-1.pdf>]
 Overfull \hbox (17.0714pt too wide) has occurred while \output is active
 [][]|  
  []
@@ -1528,24 +1515,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-4.18796pt}.
 
-[10 <./plantilla_proyecto_aed_files/figure-latex/correlaciones-por-cluster-1.pdf>]
-Overfull \hbox (17.0714pt too wide) has occurred while \output is active
-[][]|  
- []
-
-
-Overfull \hbox (17.0714pt too wide) has occurred while \output is active
- [][]|
- []
-
-
-Package fancyhdr Warning: \headheight is too small (12.0pt): 
-(fancyhdr)                Make it at least 16.18796pt, for example:
-(fancyhdr)                \setlength{\headheight}{16.18796pt}.
-(fancyhdr)                You might also make \topmargin smaller:
-(fancyhdr)                \addtolength{\topmargin}{-4.18796pt}.
-
-[11] 
+[10] 
 enddocument/afterlastpage (AED): lastpage setting LastPage.
 (./plantilla_proyecto_aed.aux)
  ***********
@@ -1559,18 +1529,18 @@ Package rerunfilecheck Info: File `plantilla_proyecto_aed.out' has not changed.
 (rerunfilecheck)             Checksum: 3571504DE1A2BA5EF1595B9F1B074299;1510.
  ) 
 Here is how much of TeX's memory you used:
- 35485 strings out of 468958
- 671342 string characters out of 5452778
- 1166643 words of memory out of 5000000
- 63648 multiletter control sequences out of 15000+600000
- 687621 words of font info for 315 fonts, out of 8000000 for 9000
+ 35469 strings out of 468958
+ 671271 string characters out of 5452778
+ 1166642 words of memory out of 5000000
+ 63656 multiletter control sequences out of 15000+600000
+ 687762 words of font info for 323 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
  123i,13n,121p,1019b,1047s stack positions out of 10000i,1000n,20000p,200000b,200000s
- <c:/Users/luis/AppData/Roaming/TinyTeX/texmf-var/fonts/pk/ljfour/jknappen/ec/ecit1000.600pk> <c:/Users/luis/AppData/Roaming/TinyTeX/texmf-var/fonts/pk/ljfour/jknappen/ec/ectt1000.600pk> <c:/Users/luis/AppData/Roaming/TinyTeX/texmf-var/fonts/pk/ljfour/jknappen/ec/ecss0800.375pk><c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmbsy10.pfb><c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb><c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb><c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/mathpazo/fplmr.pfb><c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/urw/palatino/uplb8a.pfb><c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/urw/palatino/uplr8a.pfb><c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/urw/palatino/uplri8a.pfb>
-Output written on plantilla_proyecto_aed.pdf (11 pages, 446923 bytes).
+ <c:/Users/luis/AppData/Roaming/TinyTeX/texmf-var/fonts/pk/ljfour/jknappen/ec/ectt1000.600pk> <c:/Users/luis/AppData/Roaming/TinyTeX/texmf-var/fonts/pk/ljfour/jknappen/ec/ecss0800.375pk><c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmbsy10.pfb><c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb><c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb><c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/mathpazo/fplmr.pfb><c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/urw/palatino/uplb8a.pfb><c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/urw/palatino/uplr8a.pfb><c:/Users/luis/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/urw/palatino/uplri8a.pfb>
+Output written on plantilla_proyecto_aed.pdf (10 pages, 429953 bytes).
 PDF statistics:
- 438 PDF objects out of 1000 (max. 8388607)
- 253 compressed objects within 3 object streams
- 94 named destinations out of 1000 (max. 500000)
- 95336 words of extra memory for PDF output out of 106986 (max. 10000000)
+ 340 PDF objects out of 1000 (max. 8388607)
+ 214 compressed objects within 3 object streams
+ 58 named destinations out of 1000 (max. 500000)
+ 94829 words of extra memory for PDF output out of 106986 (max. 10000000)
 

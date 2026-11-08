@@ -1,0 +1,853 @@
+---
+title: "Utilidades"
+author: "Luis Molina Villar"
+date: "2026-11-08"
+output: html_document
+---
+
+Este archivo .Rmd contiene todo el código auxiliar utilizado para el análisis exploratorio de los datos socioeconómicos de España.
+# Preparación Paquetes
+```{r}
+
+# Mapeo de las 50 provincias objeto del análisis.
+# Ceuta y Melilla quedan fuera
+ine_provincias <- tibble::tribble(
+  ~id_prov, ~Provincia_clean,
+  "01", "Araba/Álava",
+  "02", "Albacete",
+  "03", "Alicante/Alacant",
+  "04", "Almería",
+  "05", "Ávila",
+  "06", "Badajoz",
+  "07", "Balears, Illes",
+  "08", "Barcelona",
+  "09", "Burgos",
+  "10", "Cáceres",
+  "11", "Cádiz",
+  "12", "Castellón/Castelló",
+  "13", "Ciudad Real",
+  "14", "Córdoba",
+  "15", "Coruña, A",
+  "16", "Cuenca",
+  "17", "Girona",
+  "18", "Granada",
+  "19", "Guadalajara",
+  "20", "Gipuzkoa",
+  "21", "Huelva",
+  "22", "Huesca",
+  "23", "Jaén",
+  "24", "León",
+  "25", "Lleida",
+  "26", "Rioja, La",
+  "27", "Lugo",
+  "28", "Madrid",
+  "29", "Málaga",
+  "30", "Murcia",
+  "31", "Navarra",
+  "32", "Ourense",
+  "33", "Asturias",
+  "34", "Palencia",
+  "35", "Palmas, Las",
+  "36", "Pontevedra",
+  "37", "Salamanca",
+  "38", "Santa Cruz de Tenerife",
+  "39", "Cantabria",
+  "40", "Segovia",
+  "41", "Sevilla",
+  "42", "Soria",
+  "43", "Tarragona",
+  "44", "Teruel",
+  "45", "Toledo",
+  "46", "Valencia/València",
+  "47", "Valladolid",
+  "48", "Bizkaia",
+  "49", "Zamora",
+  "50", "Zaragoza"
+)
+
+``` 
+# Importación de datos
+```{r descarga datos}
+comprobacion_descarga_datos <- function(ruta_base = "./data/raw") {
+#Aún así, en caso de que por algún casual los archivos no se encuentren como tal, incluimos este chunk de código que crea la carpeta e intenta realizar la descarga directamente del INE, para evitar que haya errores antes de cargarlos.
+dir.create(ruta_base, showWarnings = FALSE, recursive = TRUE)
+
+urls_datos_ine <- c(
+  "coste_vivienda.csv" = "https://cdn.mivau.gob.es/portal-web-mivau/Datos_MIVAU/CSV/VDP006_01.csv",
+  "distribucion_poblacional.csv" = "https://www.ine.es/jaxi/files/t/es/csv_bd/2852.csv?nocab=1",
+  "edad_maternidad.csv" = "https://www.ine.es/jaxiT3/files/t/es/csv_bd/1581.csv?nocab=1",
+  "migracion_interior.csv" = "https://www.ine.es/jaxiT3/files/t/es/csv_bd/24380.csv?nocab=1",
+  "Ocupados_Sector_Provincia.csv" = "https://www.ine.es/jaxiT3/files/t/es/csv_bd/65354.csv?nocab=1",
+  "pib_per_capita.csv" = "https://www.ine.es/jaxiT3/files/t/es/csv_bdsc/80110.csv",
+  "renta_bruta_media.csv" = "https://www.ine.es/jaxiT3/files/t/es/csv_bd/53689.csv?nocab=1",
+  "valor_bruto_sector.csv" = "https://www.ine.es/jaxi/files/tpx/es/csv_bd/76926.csv?nocab=1"
+)
+
+for (nombre_archivo in names(urls_datos_ine)) {
+  ruta_archivo <- file.path(ruta_base, nombre_archivo)
+  if (!file.exists(ruta_archivo) || file.info(ruta_archivo)$size == 0) {
+    download.file(
+      url = urls_datos_ine[[nombre_archivo]],
+      destfile = ruta_archivo,
+      mode = "wb",
+      quiet = FALSE
+    )
+  }
+}
+archivos_faltantes <- names(urls_datos_ine)[vapply(
+  file.path(ruta_base, names(urls_datos_ine)),
+  function(x) !file.exists(x) || file.info(x)$size == 0,
+  logical(1)
+)]
+if (length(archivos_faltantes) > 0) {
+  stop("No se pudieron obtener los ficheros: ", paste(archivos_faltantes, collapse = ", "))
+}
+invisible(file.path(ruta_base, names(urls_datos_ine)))
+}
+```
+# Lectura de datos
+```{r lectura datos}
+leer_archivo_ine <- function(fichero, separador, decimal = ",", grouping = ".") {
+  readr::read_delim(
+    file = fichero,
+    delim = separador,
+    locale = readr::locale(decimal_mark = decimal, grouping_mark = grouping),
+    # El INE utiliza distintas etiquetas para los datos perdidos
+    na = c("", "NA", "null",".."),
+    name_repair = "minimal",
+    show_col_types = FALSE,
+    progress = FALSE
+  )
+}
+
+leer_datos <- function(ruta_base = "./data/raw") {
+  comprobacion_descarga_datos(ruta_base)
+  datos <- list(
+    coste_vivienda_raw = leer_archivo_ine(file.path(ruta_base, "coste_vivienda.csv"), ";", decimal = ".", grouping = ""),
+    distribucion_poblacional_raw = leer_archivo_ine(file.path(ruta_base, "distribucion_poblacional.csv"), "\t"),
+    edad_maternidad_raw = leer_archivo_ine(file.path(ruta_base, "edad_maternidad.csv"), "\t"),
+    migracion_interior_raw = leer_archivo_ine(file.path(ruta_base, "migracion_interior.csv"), "\t"),
+    ocupacion_sector_raw = leer_archivo_ine(file.path(ruta_base, "Ocupados_Sector_Provincia.csv"), "\t"),
+    pib_per_capita_raw = leer_archivo_ine(file.path(ruta_base, "pib_per_capita.csv"), ";"),
+    renta_bruta_media_raw = leer_archivo_ine(file.path(ruta_base, "renta_bruta_media.csv"), "\t"),
+    valor_bruto_sector_raw = leer_archivo_ine(file.path(ruta_base, "valor_bruto_sector.csv"), "\t")
+  )
+  list2env(datos, envir = parent.frame())
+  message("Los datos se han descargado/leÃ­do correctamente")
+  invisible(datos)
+}
+
+leer_datos_comprobar_existencia <- function(){
+  if(all(
+    exists("coste_vivienda_raw"),
+    exists("distribucion_poblacional_raw"),
+    exists("edad_maternidad_raw"),
+    exists("migracion_interior_raw"),
+    exists("ocupacion_sector_raw"),
+    exists("pib_per_capita_raw"),
+    exists("renta_bruta_media_raw"),
+    exists("valor_bruto_sector_raw")
+  )){
+    print("Los datos se han leído correctamente")
+  }else{
+    print("Ha habido un error en la lectura de datos")
+  }
+}
+```
+# Preparación datos
+```{r identificador}
+# Función para generar el ID único
+crear_id_provincia_anio <- function(df, col_anyo, col_prov) {
+  df %>% mutate(
+    id = paste0(
+      as.numeric({{ col_anyo }}),
+      "_",
+      str_pad(as.character({{ col_prov }}), width = 2, side = "left", pad = "0")
+    )
+  )
+}
+```
+
+```{r tratamiento uniprovinciales}
+codigos_uniprov <- c(
+  "03" = "33", # Asturias
+  "04" = "07", # Illes Balears
+  "06" = "39", # Cantabria
+  "13" = "28", # Madrid
+  "14" = "30", # Murcia
+  "15" = "31", # Navarra
+  "17" = "26"  # La Rioja
+)
+tratamiento_uniprovinciales <- function(df, variable, uniprov = codigos_uniprov){
+  df <- df %>%
+    mutate(
+      codigo_ccaa = str_pad(as.character(.data[["CODAUTO"]]), width = 2, side = "left", pad = "0"),
+      codigo_ccaa = case_when(
+        str_detect(str_to_lower(.data[[variable]]), "astur") ~ "03",
+        str_detect(str_to_lower(.data[[variable]]), "balear") ~ "04",
+        str_detect(str_to_lower(.data[[variable]]), "cantabr") ~ "06",
+        str_detect(str_to_lower(.data[[variable]]), "madrid") ~ "13",
+        str_detect(str_to_lower(.data[[variable]]), "murcia") ~ "14",
+        str_detect(str_to_lower(.data[[variable]]), "navarr") ~ "15",
+        str_detect(str_to_lower(.data[[variable]]), "rioja") ~ "17",
+        str_detect(str_to_lower(.data[[variable]]), "ceuta") ~ "18",
+        str_detect(str_to_lower(.data[[variable]]), "melilla") ~ "19",
+        TRUE ~ codigo_ccaa
+      ),
+      CPRO = if_else(
+        is.na(CPRO) | CPRO == "",
+        unname(codigos_uniprov[codigo_ccaa]),
+        as.character(CPRO)
+      )
+    )
+  return(df)
+}
+``` 
+
+```{r filtro_provincias}
+filtrar_provincias_ine <- function(df) {
+  df %>%
+    mutate(id_prov = str_pad(as.character(id_prov), width = 2, side = "left", pad = "0")) %>%
+    filter(id_prov %in% ine_provincias$id_prov)
+}
+```
+
+```{r validaciones}
+validar_clave_unica <- function(df, claves, nombre = "datos") {
+  duplicados <- df %>%
+    group_by(across(all_of(claves))) %>%
+    summarise(n = n(), .groups = "drop") %>%
+    filter(n > 1)
+
+  if (nrow(duplicados) > 0) {
+    stop(
+      "Hay claves duplicadas en ", nombre, " (",
+      paste(claves, collapse = ", "), "): ", nrow(duplicados),
+      " grupos. Ejemplos: ",
+      paste(apply(head(duplicados, 10)[claves], 1, paste, collapse = " | "), collapse = "; ")
+    )
+  }
+
+  invisible(df)
+}
+
+validar_provincias_50 <- function(df, nombre = "panel", periodo = NULL) {
+  datos <- if (is.null(periodo)) df else filter(df, Periodo == periodo)
+  provincias <- unique(datos$Provincia[!is.na(datos$Provincia)])
+  provincias_invalidas <- setdiff(provincias, ine_provincias$Provincia_clean)
+
+  if (length(provincias_invalidas) > 0) {
+    stop("Se encontraron provincias fuera del alcance de 50 provincias: ", paste(provincias_invalidas, collapse = ", "))
+  }
+
+  faltantes <- setdiff(ine_provincias$Provincia_clean, provincias)
+  if (length(faltantes) > 0) {
+    warning(
+      nombre, " no contiene las 50 provincias en ",
+      ifelse(is.null(periodo), "el panel", paste0("el periodo ", periodo)),
+      ": ", paste(faltantes, collapse = ", ")
+    )
+  }
+
+  invisible(df)
+}
+```
+
+```{r preparacion-panel}
+imputar_panel_provincial <- function(df,
+                                     variables = c("Renta_bruta_media", "Personas_Ocupadas_Primario")) {
+  df %>%
+    arrange(Provincia, Periodo) %>%
+    group_by(Provincia) %>%
+    mutate(across(any_of(variables), imputar_valores_intermedios)) %>%
+    ungroup()
+}
+
+crear_panel_analisis_2019 <- function(df, periodo = 2019) {
+  panel <- df %>%
+    filter(Periodo == periodo) %>%
+    select(-any_of("VAB_Total")) %>%
+    mutate(
+      across(
+        c(starts_with("Personas_Ocupadas"), starts_with("VAB")),
+        ~ .x / sum(.x, na.rm = TRUE) * 100,
+        .names = "pct_{str_remove(.col, 'Personas_')}"
+      )
+    ) %>%
+    distinct()
+
+  validar_provincias_50(panel, "panel_analisis_2019", periodo = periodo)
+  panel
+}
+
+crear_panel_bivariante <- function(panel_analisis_2019) {
+  superficie_provincial <- mapSpain::esp_get_prov() %>%
+    mutate(area_km2 = as.numeric(sf::st_area(geometry)) / 1e6) %>%
+    sf::st_drop_geometry() %>%
+    select(id_prov = cpro, area_km2)
+
+  panel_analisis_2019 %>%
+    left_join(ine_provincias, by = c("Provincia" = "Provincia_clean")) %>%
+    left_join(superficie_provincial, by = "id_prov") %>%
+    mutate(
+      esfuerzo_vivienda = (Precio_m2 * 90) / Renta_bruta_media,
+      mig_joven_1000 = (Migracion_Interior / Habitantes) * 1000,
+      Densidad = Habitantes / area_km2,
+      brecha_pib_renta = Renta_bruta_media / PIB_per_capita
+    )
+}
+
+variables_cluster <- c(
+  "brecha_pib_renta", "esfuerzo_vivienda", "Edad_Media_Maternidad", "mig_joven_1000",
+  "Densidad", "pct_Ocupadas_Primario", "pct_Ocupadas_Secundario", "pct_Ocupadas_Terciario",
+  "pct_VAB_Primario", "pct_VAB_Secundario", "pct_VAB_Terciario"
+)
+
+nombres_variables_cluster <- c(
+  "Brecha PIB/renta", "Esf. Viv.", "Edad Mat.", "Migr. Joven", "Dens. Pobl.",
+  "Oc. Primario", "Oc. Sec.", "Oc. Terc.", "VAB Prim.", "VAB Sec.", "VAB Terc."
+)
+
+calcular_matriz_correlacion <- function(df, variables, nombres_variables) {
+  var_corr <- df %>%
+    select(all_of(variables)) %>%
+    setNames(nombres_variables) %>%
+    drop_na()
+
+  matriz <- cor(var_corr, method = "spearman")
+  orden <- hclust(as.dist(1 - abs(matriz)), method = "complete")$order
+
+  list(
+    matriz = matriz[orden, orden],
+    orden = orden
+  )
+}
+
+graficar_matriz_correlacion <- function(matriz) {
+  paleta <- colorRampPalette(
+    c("#F4B6B6", "#FCE4D6", "#FFFFFF", "#DDEBF7", "#9DC3E6")
+  )(200)
+
+  corrplot::corrplot(
+    matriz, method = "color", type = "lower", order = "original",
+    col = paleta, tl.col = "black", tl.srt = 45,
+    addCoef.col = "black", number.cex = 0.7, diag = FALSE
+  )
+}
+
+preparar_correlaciones_por_cluster <- function(df, variables, nombres_variables, orden) {
+  datos_correlacion_cluster <- df %>%
+    filter(!is.na(Cluster)) %>%
+    select(Cluster, all_of(variables)) %>%
+    group_split(Cluster)
+
+  matrices_list <- purrr::map(datos_correlacion_cluster, function(datos_cluster) {
+    datos_cor <- datos_cluster %>%
+      select(all_of(variables)) %>%
+      drop_na()
+    matriz_cor_cluster <- datos_cor %>%
+      setNames(nombres_variables) %>%
+      cor(method = "spearman")
+    matriz_cor_cluster[orden, orden]
+  })
+
+  nombres_matrices <- purrr::map_chr(
+    datos_correlacion_cluster,
+    ~ paste0(
+      as.character(unique(.x$Cluster)),
+      " (n = ", sum(complete.cases(.x[variables])), ")"
+    )
+  )
+  names(matrices_list) <- nombres_matrices
+
+  purrr::map_dfr(
+    matrices_list,
+    ~ as.data.frame(.x) %>%
+      tibble::rownames_to_column(var = "Var1") %>%
+      tidyr::pivot_longer(cols = -Var1, names_to = "Var2", values_to = "Correlacion"),
+    .id = "Grupo"
+  ) %>%
+    mutate(
+      fila = match(Var1, nombres_variables[orden]),
+      columna = match(Var2, nombres_variables[orden])
+    ) %>%
+    filter(fila > columna) %>%
+    mutate(
+      Grupo = factor(Grupo, levels = nombres_matrices),
+      Var1 = factor(Var1, levels = rev(nombres_variables[orden])),
+      Var2 = factor(Var2, levels = nombres_variables[orden]),
+      Contraste = abs(Correlacion) > 0.6
+    )
+}
+
+graficar_correlaciones_por_cluster <- function(df_correlaciones) {
+  ggplot(df_correlaciones, aes(x = Var2, y = Var1, fill = Correlacion)) +
+    geom_tile(color = "white", linewidth = 0.25) +
+    geom_text(aes(label = sprintf("%.2f", Correlacion), color = Contraste), size = 2.1) +
+    scale_fill_gradient2(
+      low = "#3B82F6", mid = "white", high = "#EF4444",
+      midpoint = 0, limits = c(-1, 1)
+    ) +
+    scale_color_manual(values = c(`FALSE` = "black", `TRUE` = "white"), guide = "none") +
+    facet_wrap(~ Grupo, ncol = 2, scales = "fixed") +
+    theme_minimal(base_size = 10) +
+    theme(
+      axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1, size = 8),
+      axis.text.y = element_text(size = 8),
+      panel.grid = element_blank(),
+      strip.text = element_text(face = "bold", size = 10),
+      panel.spacing = grid::unit(1.2, "lines"),
+      legend.position = "bottom"
+    ) +
+    labs(x = NULL, y = NULL, fill = "Correlación")
+}
+```
+# Análisis valores perdidos
+
+```{r analisis perdidos}
+tabla_instancias_faltantes <- function(df){
+faltantes_por_variable <- apply(is.na(df), MARGIN = 2, FUN = sum)
+kable(x = faltantes_por_variable[faltantes_por_variable > 0], col.names = "Valores Perdidos", caption = "Valores perdidos por variable")
+}
+
+tabla_valores_faltantes <- function(df){
+  filas_con_faltantes <- !complete.cases(df)
+faltantes_por_fila <- apply(apply(df[filas_con_faltantes, ], MARGIN = 1, FUN = is.na), MARGIN = 1, FUN = sum)
+columnas_con_faltantes <- names(faltantes_por_fila[faltantes_por_fila > 0])
+
+panel_faltantes <- df[filas_con_faltantes, c("Provincia", "Periodo", columnas_con_faltantes)] %>%
+  arrange(Provincia,Periodo) %>%
+  # Evitamos caracteres de control en tablas LaTeX cuando hay tildes.
+  mutate(across(where(is.character), ~ iconv(.x, from = "UTF-8", to = "ASCII//TRANSLIT")))
+
+kable(panel_faltantes, caption = "Instancias con valores faltantes")
+}
+``` 
+
+```{r imputacion}
+imputar_valores_intermedios <- function(x){
+  # Si el vector está completamente vacío (solo NAs) o no tiene faltantes, se devuelve igual
+  if (all(is.na(x)) || !any(is.na(x))) {
+    return(x)
+  }
+  n <- length(x)
+  valid_idx <- which(!is.na(x))
+  # 1. Obtener el valor válido ANTES de cada posición (NA si no existe)
+  idx_before_pos <- findInterval(1:n, valid_idx)
+  val_before <- ifelse(idx_before_pos == 0, NA_real_, x[valid_idx[pmax(1, idx_before_pos)]])
+  # 2. Obtener el valor válido DESPUÉS de cada posición (NA si no existe)
+  idx_after_pos <- findInterval((1:n) - 0.0001, valid_idx) + 1
+  val_after <- ifelse(idx_after_pos > length(valid_idx), NA_real_, x[valid_idx[pmin(length(valid_idx), idx_after_pos)]])
+  # 3. Media entre ambos vecinos
+  # rowMeans con na.rm = TRUE asigna el único valor disponible en los extremos inicial/final
+  res <- rowMeans(cbind(val_before, val_after), na.rm = TRUE)
+  return(res)
+}
+``` 
+# Análisis Univariante
+```{r univariante-tabla, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+#Funciones de apoyo
+calc_asimetria <- function(x) {
+  # coeficiente de asimetría de Fisher (g1)
+  x <- x[!is.na(x)]; m <- mean(x)
+  (sum((x - m)^3) / length(x)) / (sum((x - m)^2) / length(x))^(3/2)
+}
+
+calc_curtosis <- function(x) {
+  # exceso de curtosis (0 = normal)
+  x <- x[!is.na(x)]; m <- mean(x)
+  (sum((x - m)^4) / length(x)) / (sum((x - m)^2) / length(x))^2 - 3
+}
+
+calc_cv <- function(x) {
+  x <- x[!is.na(x)]
+  if (length(x) == 0 || min(x) < 0 || mean(x) <= 0) {
+    NA_real_
+  } else {
+    sd(x) / mean(x) * 100
+  }
+}
+
+# Formatea los números para que salgan  en castellano
+fmt_es <- function(x, d = 2) {
+  purrr::map2_chr(x, d, function(v, k) {
+    if (is.na(v)) {
+      "–"
+    } else {
+      v <- round(v, k)
+      if (v == 0) v <- 0
+      formatC(v, format = "f", digits = k, big.mark = ".", decimal.mark = ",")
+    }
+  })
+}
+
+# Variables, etiquetas y decimales a mostrar
+etiquetas_variables <- tibble::tribble(
+  ~Variable,                  ~Etiqueta,                              ~dec,
+  "PIB_per_capita",           "PIB per cápita (€)",                    0,
+  "Renta_bruta_media",          "Renta bruta media (€)",                 0,
+  "Precio_m2",          "Precio m² (€)",          1,
+  "Edad_Media_Maternidad",    "Edad media maternidad (años)",          2,
+  "Migracion_Interior",       "Saldo migratorio interior 19-35 años (pers.)",   0,
+  "Habitantes",               "Habitantes",                            0,
+  "pct_Ocupados_Primario",    "Ocupados primario (% nacional)",        1,
+  "pct_Ocupados_Secundario",  "Ocupados secundario (% nacional)",      1,
+  "pct_Ocupados_Terciario",   "Ocupados terciario (% nacional)",       1,
+  "pct_VAB_Primario",         "VAB primario (% nacional)",             1,
+  "pct_VAB_Secundario",       "VAB secundario (% nacional)",           1,
+  "pct_VAB_Terciario",        "VAB terciario (% nacional)",            1
+)
+variables_univariantes <- etiquetas_variables$Variable
+
+porcentaje_sobre_total <- function(df,variable){
+  
+}
+```
+
+```{r histogramas}
+fmt_eje <- scales::label_number(big.mark = ".", decimal.mark = ",")
+
+tema_graficos_univariantes <- theme_minimal(base_size = 9) +
+  theme(strip.text = element_text(face = "bold", size = 8),
+        panel.grid.minor = element_blank(),
+            panel.spacing.y = unit(1.5, "lines"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 7))
+
+
+histograma_estadisticos_outliers <- function(df,variables,eje=fmt_eje,tema = tema_graficos_univariantes){
+  
+etiquetas_graficos <- etiquetas_variables %>%
+  mutate(Variable = ifelse(Variable == "Habitantes", "log10_Habitantes", Variable),
+         Etiqueta = ifelse(Etiqueta == "Habitantes", "Habitantes (log10)", Etiqueta),
+         Etiqueta = gsub("m\u00b2", "m2", Etiqueta))   # el "²" no se dibuja en el gráfico
+
+# Histograma + densidad + media + mediana + detección de outliers (Regla de la Varianza / 3-Sigma)
+etiquetas_histograma <- etiquetas_graficos %>%
+  filter(Variable %in% variables) %>%
+  arrange(match(Variable, variables))
+
+#  Mantenemos 'Provincia' al pivotar para no perder los nombres
+datos_histograma <- df %>%
+  select(Provincia, all_of(etiquetas_histograma$Variable)) %>%
+  pivot_longer(cols = -Provincia, names_to = "Variable", values_to = "Valor") %>%
+  left_join(etiquetas_histograma, by = "Variable") %>%
+  mutate(Etiqueta = factor(Etiqueta, levels = etiquetas_histograma$Etiqueta))
+
+# Calculamos media, mediana y desviación típica (sd)
+estadisticos_histograma <- datos_histograma %>%
+  group_by(Etiqueta) %>%
+  summarise(
+    mediana = median(Valor, na.rm = TRUE),
+    media = mean(Valor, na.rm = TRUE),
+    desv_tipica = sd(Valor, na.rm = TRUE),
+    curtosis = calc_curtosis(Valor),
+    .groups = "drop"
+  )
+
+estadisticos_histograma_lineas <- estadisticos_histograma %>%
+  pivot_longer(
+    cols = c(mediana, media),
+    names_to = "Estadistico",
+    values_to = "Valor_estadistico"
+  ) %>%
+  mutate(
+    Estadistico = recode(Estadistico, mediana = "Mediana", media = "Media"),
+    etiqueta = fmt_es(Valor_estadistico, 2),
+    justificacion = ifelse(Estadistico == "Media", 1.05, -0.05)
+  )
+
+estadisticos_histograma <- estadisticos_histograma %>%
+  mutate(
+    etiqueta_forma = paste0(
+      "Media =" ,fmt_es(media, 2),
+      ", Mediana =" ,fmt_es(mediana, 2),
+      "\n\t\tSD = ", fmt_es(desv_tipica, 2),
+      ",Curtosis = ", fmt_es(curtosis, 2), "\n"
+    )
+  )
+
+#  Filtramos los valores atípicos (Regla: alejados más de 3 desviaciones de la media)
+outliers_histograma <- datos_histograma %>%
+  left_join(estadisticos_histograma, by = "Etiqueta") %>%
+  filter(abs(Valor - media) > 3 * desv_tipica)
+
+ggplot(datos_histograma, aes(x = Valor)) +
+  geom_histogram(aes(y = after_stat(density)), bins = 12, fill = "grey80", colour = "white", na.rm = TRUE) +
+  geom_density(colour = "steelblue", linewidth = 0.7, na.rm = TRUE) +
+  geom_vline(data = estadisticos_histograma, aes(xintercept = mediana, color = "Mediana", linetype = "Mediana"), linewidth = 0.8) +
+  geom_vline(data = estadisticos_histograma, aes(xintercept = media, color = "Media", linetype = "Media"), linewidth = 0.9) +
+  geom_text(data = estadisticos_histograma, aes(x = -Inf, y = -Inf, label = etiqueta_forma),
+            inherit.aes = FALSE, hjust = -0.05, vjust = 1.8, color = "grey35", size = 2.2, lineheight = 0.9) +
+  #  Dibujamos un punto naranja en la base (y = 0) para cada atípico
+  geom_point(data = outliers_histograma, aes(x = Valor, y = 0), color = "darkorange", size = 2.5, shape = 4, stroke = 1.2) +
+  # Añadimos el texto corregido sin romper el eje Y de densidad
+  geom_text_repel(data =outliers_histograma, aes(x = Valor, y = 0, label = Provincia), color = "darkorange", size = 2.5, fontface = "bold", angle = 45, hjust = -0.2,# Empuja el texto hacia arriba usando proporción, no coordenadas Y absolutas
+                  direction = "both",# Evita solapamientos desplazando solo en horizontal
+                  segment.size = 0.4, segment.color = "darkorange", max.overlaps = Inf) +
+  facet_wrap(~ Etiqueta, scales = "free", ncol = 3, labeller = label_wrap_gen(width = 22)) +
+  scale_x_continuous(labels = fmt_eje, n.breaks = 4) +
+  scale_color_manual(
+    name = "Estadístico:",
+    values = c("Mediana" = "firebrick", "Media" = "forestgreen")
+  ) +
+  scale_linetype_manual(
+    name = "Estadístico:",
+    values = c("Mediana" = "dashed", "Media" = "dotted")
+  ) +
+  labs(
+    y = "Densidad",
+    caption = "Las marcas naranjas indican valores atípicos (Alejados de la media más de 3 desviaciones típicas)"
+  ) +
+  coord_cartesian(clip = "off") +
+  tema_graficos_univariantes 
+}
+``` 
+
+```{r boxplot}
+boxplot_estadisticos_outliers <- function(df, variables_boxplot){
+
+# Ajustamos las etiquetas para reflejar las transformaciones matemáticas
+etiquetas_boxplot <- etiquetas_variables %>%
+  # Buscamos tanto log10_Habitantes como su original por seguridad
+  filter(Variable %in% c(variables_boxplot, "Habitantes")) %>%
+  mutate(
+    Variable = ifelse(Variable == "Habitantes", "log10_Habitantes", Variable),
+    Etiqueta = case_when(
+      Variable == "log10_Habitantes" ~ "Habitantes (log10)",
+      Variable == "Migracion_Interior" ~ "Migración Interior (Raíz cúbica)",
+      TRUE ~ gsub("m\u00b2", "m2", Etiqueta)
+    )
+  ) %>%
+  distinct(Variable, .keep_all = TRUE) %>%
+  arrange(match(Variable, variables_boxplot))
+
+# Preparación de datos y cálculo de outliers
+ datos_boxplot <- df %>%
+  # Aseguramos que log10_Habitantes esté calculada en el dataframe base
+  mutate(log10_Habitantes = log10(Habitantes)) %>%
+  select(Provincia, Periodo, all_of(variables_boxplot)) %>%
+  pivot_longer(cols = c(-Provincia, -Periodo), names_to = "Variable", values_to = "Valor") %>%
+  left_join(etiquetas_boxplot, by = "Variable") %>%
+  mutate(
+    Etiqueta = factor(Etiqueta, levels = etiquetas_boxplot$Etiqueta),
+    Periodo = factor(Periodo),
+    Periodo_num = as.numeric(Periodo),
+    x_box = Periodo_num + 0.45
+  ) %>%
+  filter(!is.na(Valor)) %>%
+  # Agrupamos y calculamos umbrales sobre la ESCALA ORIGINAL
+  group_by(Etiqueta, Periodo) %>%
+  mutate(
+    Q1 = quantile(Valor, 0.25),
+    Q3 = quantile(Valor, 0.75),
+    IQR_val = Q3 - Q1,
+    Lim_Inf = Q1 - 1.5 * IQR_val,
+    Lim_Sup = Q3 + 1.5 * IQR_val,
+    # Etiquetamos como outlier si supera el umbral original
+    es_outlier = Valor < Lim_Inf | Valor > Lim_Sup
+  ) %>%
+  ungroup() %>%
+  #Aplicamos la transformación matemática solo para el gráfico
+  mutate(
+    Valor = ifelse(
+      Variable == "Migracion_Interior",
+      sign(Valor) * abs(Valor)^(1/3),   # Raíz cúbica segura para valores negativos
+      Valor
+    )
+  )
+
+# 4. Calculamos los estadísticos en la escala representada por el gráfico
+estadisticos_boxplot <- datos_boxplot %>%
+  group_by(Etiqueta, Periodo, Periodo_num, x_box) %>%
+  summarise(
+    minimo = min(Valor, na.rm = TRUE),
+    maximo = max(Valor, na.rm = TRUE),
+    Q1 = quantile(Valor, 0.25, na.rm = TRUE),
+    Q3 = quantile(Valor, 0.75, na.rm = TRUE),
+    mediana = median(Valor, na.rm = TRUE),
+    IQR_val = IQR(Valor, na.rm = TRUE),
+    asimetria = calc_asimetria(Valor),
+    MADM = mad(Valor, constant = 1, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    etiqueta_forma = paste0(
+      "Asimetría: ", fmt_es(asimetria, 2),
+      " | MADM: ", fmt_es(MADM, 2)
+    )
+  )
+
+estadisticos_boxplot_etiquetas <- estadisticos_boxplot %>%
+  pivot_longer(
+    cols = c(minimo, Q1, mediana, Q3, maximo),
+    names_to = "Estadistico",
+    values_to = "valor"
+  ) %>%
+  mutate(
+    y = valor,
+    Estadistico = recode(
+      Estadistico,
+      minimo = "Mín", Q1 = "Q1", mediana = "Med.", Q3 = "Q3", maximo = "Máx"
+    ),
+    etiqueta = paste0(Estadistico, " = ", fmt_es(valor, 2))
+  ) %>%
+  bind_rows(
+    estadisticos_boxplot %>% transmute(
+      Etiqueta, Periodo, Periodo_num, x_box,
+      Estadistico = "IQR", valor = IQR_val, y = (Q1 + Q3) / 2,
+      etiqueta = paste0("IQR = ", fmt_es(IQR_val, 2))
+    )
+  )
+
+# 5. Extraemos el subset de outliers con sus coordenadas Y ya transformadas
+outliers_boxplot <- datos_boxplot %>% filter(es_outlier)
+
+etiquetas_boxplot_repel <- bind_rows(
+  estadisticos_boxplot_etiquetas %>% transmute(
+    Etiqueta, x = x_box + 1.15, y, label = etiqueta, Tipo = "Estadístico", hjust = 0, fontface = "plain"
+  ),
+  outliers_boxplot %>% transmute(
+    Etiqueta, x = x_box - 0.22, y = Valor, label = Provincia, Tipo = "Outlier", hjust = 1, fontface = "bold"
+  )
+)
+
+ggplot(datos_boxplot, aes(x = x_box, y = Valor)) +
+  geom_boxplot(
+    width = 2,
+    fill = "grey90", 
+    colour = "grey30", 
+    linewidth = 0.35, 
+    outlier.shape = NA, 
+    alpha = 0.75, 
+    na.rm = TRUE
+  ) +
+  
+  # Repulsión horizontal y vertical balanceada
+  geom_text_repel(
+    data = etiquetas_boxplot_repel, 
+    aes(x = x, y = y, label = label, color = Tipo, hjust = hjust, fontface = fontface),
+    inherit.aes = FALSE, 
+    direction = "y", 
+    force_pull = 0, 
+    force = 1.2, 
+    size = 2.0, 
+    box.padding = 0.3, 
+    point.padding = 0.2,
+    min.segment.length = 0, 
+    segment.size = 0.3, 
+    max.overlaps = Inf, 
+    show.legend = FALSE, 
+    seed = 123
+  ) +
+  
+  geom_text(
+    data = estadisticos_boxplot, 
+    aes(x = x_box + 1.15, y = -Inf, label = etiqueta_forma), 
+    inherit.aes = FALSE, 
+    vjust = -0.4, 
+    size = 2.0, 
+    color = "grey35"
+  ) +
+  
+  geom_point(data = outliers_boxplot, color = "firebrick", size = 1.3) +
+  
+  facet_wrap(~ Etiqueta, scales = "free_y", ncol = 3, labeller = label_wrap_gen(width = 22)) +
+  
+  # Centrado del boxplot en el eje horizontal
+  scale_x_continuous(
+    limits = c(0.2, 4.2), 
+    breaks = 1.45, 
+    labels = NULL, 
+    expand = c(0, 0)
+  ) +
+  
+  scale_color_manual(values = c("Estadístico" = "grey25", "Outlier" = "firebrick"), guide = "none") +
+  
+  # Escala logarítmica para equilibrar la proporción entre caja y bigotes
+  scale_y_log10(
+    labels = fmt_eje, 
+    expand = expansion(mult = c(0.06, 0.06))
+  ) +
+  
+  labs(
+    y = NULL, 
+    x = NULL,
+    caption = paste(
+      "Puntos rojos: valores atípicos (IQR ±1.5 sobre la escala original).",
+      "\nEje Y representado en escala logarítmica para equilibrar proporciones visuales."
+    )
+  ) +
+  coord_cartesian(clip = "off") +
+  tema_graficos_univariantes
+}
+``` 
+
+```{r boxplot laborales}
+boxplot_laborales <- function(df){
+# Definimos las 6 variables sectoriales
+variables_sectoriales <- c(
+  "pct_Ocupadas_Primario",
+  "pct_Ocupadas_Secundario",
+  "pct_Ocupadas_Terciario",
+  "pct_VAB_Primario",
+  "pct_VAB_Secundario",
+  "pct_VAB_Terciario"
+)
+
+#  Preparación de datos: Extraemos Magnitud y Sector del propio nombre de la variable
+datos_sectoriales <- df %>%
+  select(Provincia, all_of(variables_sectoriales)) %>%
+  pivot_longer(cols = -Provincia, names_to = "Variable", values_to = "Valor") %>%
+  mutate(
+    #  Creamos la variable que definirá las 2 filas (Facets)
+    Magnitud = ifelse(grepl("Ocupadas", Variable), "Mercado Laboral (% total nacional)", "Estructura Económica (% total nacional)"),
+    #  Creamos la variable que definirá los 3 boxplots por fila (Eje Y)
+    Sector = case_when(
+      grepl("Primario", Variable) ~ "Primario",
+      grepl("Secundario", Variable) ~ "Secundario",
+      grepl("Terciario", Variable) ~ "Terciario"
+    ),
+    # Ponemos el Terciario primero para que en el gráfico salga abajo y el Primario arriba.
+    Sector = factor(Sector, levels = c("Terciario", "Secundario", "Primario")),
+    Magnitud = factor(Magnitud, levels = c("Mercado Laboral (% total nacional)", "Estructura Económica (% total nacional)"))
+  )
+
+#  Calculamos Outliers agrupando por las dos nuevas dimensiones (Magnitud y Sector)
+outliers_sectoriales <- datos_sectoriales %>%
+  filter(!is.na(Valor)) %>%
+  group_by(Magnitud, Sector) %>%
+  mutate(
+    Q1 = quantile(Valor, 0.25),
+    Q3 = quantile(Valor, 0.75),
+    IQR_val = Q3 - Q1,
+    Lim_Inf = Q1 - 1.5 * IQR_val,
+    Lim_Sup = Q3 + 1.5 * IQR_val
+  ) %>%
+  filter(Valor < Lim_Inf | Valor > Lim_Sup) %>%
+  ungroup()
+
+ggplot(datos_sectoriales, aes(x = Valor, y = Sector)) +
+  #  Puntos grises: al ser boxplots horizontales, dispersamos en altura (height) y no en anchura
+  geom_jitter(height = 0.15, color = "grey65", alpha = 0.5, size = 0.9, na.rm = TRUE) +
+  #  Boxplots
+  geom_boxplot(fill = "grey90", colour = "grey30", linewidth = 0.3, outlier.shape = NA, alpha = 0.7, na.rm = TRUE) +
+  # C. Puntos atípicos en rojo
+  geom_point(data = outliers_sectoriales, color = "firebrick", size = 1.3) +
+  # D. Etiquetas repelidas
+  geom_text_repel(data = outliers_sectoriales, aes(label = Provincia), size = 2.2, color = "firebrick", fontface = "bold",
+                  direction = "both", nudge_y = 0.35,               # Empujamos el texto hacia ARRIBA del boxplot
+                  hjust = 0.5, box.padding = 0.3, force = 3, min.segment.length = 0, segment.size = 0.3, segment.color = "firebrick",
+                  max.overlaps = Inf, seed = 123) +
+  #  Dividimos en 2 filas (Ocupados arriba, VAB abajo)
+  # Compartimos límites y marcas del eje X para comparar ambos porcentajes
+  facet_wrap(~ Magnitud, ncol = 1, scales = "fixed") +
+  # Aplicamos el formato numérico español a tu eje (ahora el X)
+  scale_x_continuous(labels = fmt_eje) +
+  labs(
+    x = "Peso relativo (%)", y = "Sector Económico",
+    caption = "Los puntos rojos indican valores atípicos evaluados mediante la regla IQR (±1.5) calculada por sector."
+  ) +
+  tema_graficos_univariantes
+}
+``` 

@@ -28,7 +28,7 @@ header-includes:
   - \usepackage{geometry}
   - \geometry{left=5.85cm,right=1.9cm}
   - \usepackage{setspace}
-  - \setstretch{0.92} 
+  - \setstretch{0.9} 
   - \pubyear{2026}
 ---
 
@@ -45,7 +45,6 @@ knitr::opts_chunk$set(
   fig.height = 4,
   out.width = "100%"    # tamaño final: nunca supera el ancho del texto
 )
-
 # Carga/Descarga de paquetes necesarios
 #AVISO: Es normal que la librería MapSpain tarde cierto tiempo en descargarse, por lo que se recomienda hacerlo antes de querer compilar el archivo.
 paquetes_requeridos <- c(
@@ -61,64 +60,6 @@ if (length(paquetes_faltantes) > 0) {
 
 invisible(lapply(paquetes_requeridos, library, character.only = TRUE))
 
-# Mapeo entre nombre de provincias y códigos, todos los oficiales y usados por el INE
-ine_provincias <- tibble::tribble(
-  ~id_prov, ~Provincia_clean,
-  "01", "Araba/Álava",
-  "02", "Albacete",
-  "03", "Alicante/Alacant",
-  "04", "Almería",
-  "05", "Ávila",
-  "06", "Badajoz",
-  "07", "Balears, Illes",
-  "08", "Barcelona",
-  "09", "Burgos",
-  "10", "Cáceres",
-  "11", "Cádiz",
-  "12", "Castellón/Castelló",
-  "13", "Ciudad Real",
-  "14", "Córdoba",
-  "15", "Coruña, A",
-  "16", "Cuenca",
-  "17", "Girona",
-  "18", "Granada",
-  "19", "Guadalajara",
-  "20", "Gipuzkoa",
-  "21", "Huelva",
-  "22", "Huesca",
-  "23", "Jaén",
-  "24", "León",
-  "25", "Lleida",
-  "26", "Rioja, La",
-  "27", "Lugo",
-  "28", "Madrid",
-  "29", "Málaga",
-  "30", "Murcia",
-  "31", "Navarra",
-  "32", "Ourense",
-  "33", "Asturias",
-  "34", "Palencia",
-  "35", "Palmas, Las",
-  "36", "Pontevedra",
-  "37", "Salamanca",
-  "38", "Santa Cruz de Tenerife",
-  "39", "Cantabria",
-  "40", "Segovia",
-  "41", "Sevilla",
-  "42", "Soria",
-  "43", "Tarragona",
-  "44", "Teruel",
-  "45", "Toledo",
-  "46", "Valencia/València",
-  "47", "Valladolid",
-  "48", "Bizkaia",
-  "49", "Zamora",
-  "50", "Zaragoza",
-  "51", "Ceuta",
-  "52", "Melilla"
-)
-
-remove(list = c("paquetes_requeridos", "paquetes_faltantes"))
 ```
 
 # Introducción y Planteamiento de Preguntas
@@ -140,92 +81,44 @@ Para responder a la pregunta hemos considerado que los datos más indicados corr
    * `Personas ocupadas por sector (Primario, Secundario, Terciario)`: $\quad$ Número de personas ocupadas en cada gran sector económico.
    * `VAB por sector (Primario, Secundario, Terciario)`: El valor bruto añadido (VAB) mide el valor económico total que genera una empresa, sector, región o país durante un periodo de tiempo determinado.
 
-Para la realización del informe se han recopilado todos los datos existentes de dichos registros en el INE y, para el precio de la vivienda, en el MIVAU (entre todas las variables hay registros desde 1975 a 2026). En particular, solamente hay registros de todas las variables en el periodo 2015-2021, y por cuestiones de espacio, en el informe solamente se muestra un análisis exploratorio de los datos correspondientes al año 2019, elegido ya que siendo uno de los años con más datos disponibles, es justamente previo a la pandemia de COVID-19, por lo que este análisis puede ser usado para estudiar los efectos de la pandemia en los factores estudiados.
+Para la realización del informe se han recopilado todos los datos existentes de dichos registros en el INE y, para el precio de la vivienda, en el MIVAU (entre todas las variables hay registros desde 1975 a 2026). En particular, solamente hay registros de todas las variables en el periodo 2015-2021, y por cuestiones de espacio, en el informe solamente se muestra un análisis exploratorio de los datos correspondientes al año 2019, elegido ya que siendo uno de los años con más datos disponibles, es justamente previo a la pandemia de COVID-19, por lo que este análisis puede ser usado para estudiar los efectos de la pandemia en los factores estudiados. Las constantes, funciones, y configuraciones de este proyecto se encuentran almacenadas y documentadas en `Utilidades.Rmd`. Antes de comenzar el trabajo, los importamos al entorno de trabajo. 
+
+```{r importación uxiliar, include=FALSE}
+
+
+# 1. Extraemos el código del Rmd y creamos un archivo .R con el mismo nombre
+purl("Utilidades.Rmd", output = "codigo_extraido.R")
+
+# 2. Cargamos el código
+source("codigo_extraido.R")
+``` 
 
 # Importación y Acondicionamiento de Datos
 
-El primer paso para el análisis es cargar los conjuntos de datos obtenidos del [INE](https://ine.es/dyngs/INEbase/listaoperaciones.htm) y del MIVAU. Los ficheros originales se encuentran almacenados en la carpeta local `data/raw`.
+El primer paso para el análisis es cargar los conjuntos de datos obtenidos del [INE](https://ine.es/dyngs/INEbase/listaoperaciones.htm) y del [MIVAU](https://www.mivau.gob.es/el-ministerio/observatorios-y-estadisticas). Los ficheros originales se encuentran almacenados en la carpeta local `data/raw`.
 
-```{r descarga datos,include = FALSE}
-#Aún así, en caso de que por algún casual los archivos no se encuentren como tal, incluimos este chunk de código que crea la carpeta e intenta realizar la descarga directamente del INE, para evitar que haya errores antes de cargarlos.
-dir.create("./data/raw", showWarnings = FALSE, recursive = TRUE)
+```{r, include=FALSE}
+# La lectura se realiza en el chunk importacion_datos.
+``` 
 
-urls_datos_ine <- c(
-  "coste_vivienda.csv" = "https://cdn.mivau.gob.es/portal-web-mivau/Datos_MIVAU/CSV/VDP006_01.csv",
-  "distribucion_poblacional.csv" = "https://www.ine.es/jaxi/files/t/es/csv_bd/2852.csv?nocab=1",
-  "edad_maternidad.csv" = "https://www.ine.es/jaxiT3/files/t/es/csv_bd/1581.csv?nocab=1",
-  "migracion_interior.csv" = "https://www.ine.es/jaxiT3/files/t/es/csv_bd/24380.csv?nocab=1",
-  "Ocupados_Sector_Provincia.csv" = "https://www.ine.es/jaxiT3/files/t/es/csv_bd/65354.csv?nocab=1",
-  "pib_per_capita.csv" = "https://www.ine.es/jaxiT3/files/t/es/csv_bdsc/80110.csv",
-  "renta_bruta_media.csv" = "https://www.ine.es/jaxiT3/files/t/es/csv_bd/53689.csv?nocab=1",
-  "valor_bruto_sector.csv" = "https://www.ine.es/jaxi/files/tpx/es/csv_bd/76926.csv?nocab=1"
-)
 
-for (nombre_archivo in names(urls_datos_ine)) {
-  ruta_archivo <- file.path("./data/raw", nombre_archivo)
-  if (!file.exists(ruta_archivo)) {
-    download.file(
-      url = urls_datos_ine[[nombre_archivo]],
-      destfile = ruta_archivo,
-      mode = "wb",
-      quiet = FALSE
-    )
-  }
-}
+La fuente de datos no proporciona los datos estrictamente adecuados para el análisis que queremos realizar (buscamos un análisis anual a nivel provincial de ciertas variables socioeconómicas). Por lo tanto, el primer paso es acondicionar los datos obtenidos. Uno de los factores principales a tener en cuenta es que los datos han sido tomados y guardados en español, por lo que hemos de tener cuidado con el indicador de millares y decimales en los datos numéricos. Importamos los datos
 
-remove(list = c("ruta_archivo", "nombre_archivo", "urls_datos_ine"))
-```
 
-La fuente de datos no proporciona los datos estrictamente adecuados para el análisis que queremos realizar (buscamos un análisis anual a nivel provincial de ciertas variables socioeconómicas). Por lo tanto, el primer paso es acondicionar los datos obtenidos para llegar a un conjunto de datos que contenga los datos que nos interesan. Uno de los factores principales a tener en cuenta es que los datos han sido tomados y guardados en español, por lo que hemos de tener cuidado con el indicador de millares y decimales en los datos numéricos. Los datos han sido importados a `R` usando una función basada en `read_delim` de `readr` para tratar adecuadamente las variables numéricas, usando la función `locale`.
-
-```{r lectura datos}
-leer_archivo_ine <- function(fichero, separador, decimal = ",", grouping = ".") {
-  readr::read_delim(
-    file = fichero,
-    delim = separador,
-    locale = locale(decimal_mark=decimal, grouping_mark= grouping),
-    na = c("", "NA", "null",".."),
-    name_repair = "minimal",
-    show_col_types = FALSE,
-    progress = FALSE
-  )
-}
-```
+```{r importacion_datos, include=FALSE}
+leer_datos()
+``` 
 
 ```{r,include=FALSE}
-coste_vivienda_raw <- leer_archivo_ine("./data/raw/coste_vivienda.csv", ";", decimal = ".", grouping = "")
-distribucion_poblacional_raw <- leer_archivo_ine("./data/raw/distribucion_poblacional.csv", "\t")
-edad_maternidad_raw <- leer_archivo_ine("./data/raw/edad_maternidad.csv", "\t")
-migracion_interior_raw <- leer_archivo_ine("./data/raw/migracion_interior.csv", "\t")
-ocupacion_sector_raw <- leer_archivo_ine("./data/raw/Ocupados_Sector_Provincia.csv", "\t")
-pib_per_capita_raw <- leer_archivo_ine("./data/raw/pib_per_capita.csv", ";")
-renta_bruta_media_raw <- leer_archivo_ine("./data/raw/renta_bruta_media.csv", "\t")
-valor_bruto_sector_raw <- leer_archivo_ine("./data/raw/valor_bruto_sector.csv", "\t")
-
 remove(list = c("leer_archivo_ine"))
 ```
 
-El proceso de preparación de los datos se hace siguiendo la filosofía tidy. Al ser un proceso mecánico y repetitivo, no se explicitarán todos y cada uno de los pasos hechos en el informe, aunque se pueden consultar en el script que lo genera. Los principales pasos que han sido necesarios para el acondicionamiento de los datos ha requerido han sido:
+El proceso de preparación de los datos se hace siguiendo la filosofía tidy. Al ser un proceso mecánico y repetitivo, no se indicarán todos y cada uno de los pasos hechos. Los principales pasos que han sido necesarios para el acondicionamiento de los datos ha requerido han sido:
 
-+ Acondicionamiento de nombres de variables para evitar errores de compilación, como `Año` que pasa a ser `Periodo` o `Comunidad Autónoma` a `Comunidad_Autonoma`.
-+ Es una práctica común en el INE incluir la variable `Provincias` que tiene la forma `xx Nombre_Provincia`, siendo `XX` el código de provincia oficial (asignados por orden alfabético, del 01 al 50, siendo Ceuta el 51 y Melilla el 52). Nosotros hemos separado esa variable en código provincial `cod_prov` y nombre provincial (`Provincia`).
-+ En el conjunto de datos que queremos estudiar cada instancia es una provincia en cierto año. Para unir instancias de distintas tablas, hemos asignado un identificador único (en el sentido de que cada provincia tiene uno por año) a todos los registros de los datos originales, usando el formato `yyyy_xx`, año (`yyyy`) y código provincial (`xx`).
-
-```{r identificador}
-# Función para generar el ID único
-crear_id_provincia_anio <- function(df, col_anyo, col_prov) {
-  df %>% mutate(
-    id = paste0(
-      as.numeric({{ col_anyo }}),
-      "_",
-      str_pad(as.character({{ col_prov }}), width = 2, side = "left", pad = "0")
-    )
-  )
-}
-```
-
-+ El INE ofrece algunos datasets con los valores disgregados por variables como sexo,nacionalidad,edad, o valores trimestrales en lugar de anuales. Como estas variables escapan del objetivo del análisis, en los casos en los que también se ofrecía el valor total, se ha seleccionado este, y en los que no, usando el identificador único, se han agregado los datos, usando la medida adecuada (media para obtener el promedio anual de valores trimestrales, y suma para obtener el total por sexos, edades o nacionalidades).
-+ En el INE los datos aparecen en un dataset construido específicamente para ellos, por lo que la variable que nos interesa suele llevar el nombre `Valor` o `Total`. Lo cambiamos para identificar correctamente el nombre de la variable de interés en nuestro dataset.
++ **Lectura y normalización numérica:** se leen los ocho ficheros con su separador original y una configuración española de decimales y millares, convirtiendo las marcas de ausencia (`NA`, `null`, `..` y cadenas vacías) en valores perdidos.
++ **Estandarización de variables y claves:** se renombran las columnas relevantes, se separan el código y el nombre de la provincia, y se construye una clave común `id = año_código_provincia` para poder relacionar todas las tablas.
++ **Selección del ámbito provincial:** se conservan únicamente las 50 provincias de la tabla oficial; las filas autonómicas de comunidades uniprovinciales se transforman a su provincia correspondiente y se excluyen los totales nacionales y autonómicos restantes.
++ **Agregación de dimensiones:** se seleccionan los totales adecuados —por ejemplo, población total, todos los órdenes de nacimiento y ambos sexos— y se agregan las observaciones restantes con la medida correspondiente: medias para trimestres y sumas para edades o componentes sectoriales.
 
 ```{r,include = FALSE}
 #Preparación del coste de vivienda
@@ -237,68 +130,31 @@ names(coste_vivienda)[4] <- "Regimen"
 names(coste_vivienda)[7] <- "Comunidad_Autonoma"
 ```
 
-+ A veces el INE entrega los datos a nivel provincial y regional en el mismo archivo, pero para las regiones uniprovinciales da el valor de la región, por lo que en estos casos se transforma adecuadamente el código y nombre de la región al de la provincia correspondiente para extraer correctamente los datos, y no perder valores por el camino.
 
-```{r}
+```{r,include = FALSE}
 # En las comunidades uniprovinciales, el fichero incluye filas regionales
 # (CPRO vacio) cuyo valor coincide con el de la provincia. Las incorporamos
 # usando el codigo de comunidad autonoma antes de eliminar CODAUTO.
-codigos_uniprov_coste <- c(
-  "03" = "33", # Asturias
-  "04" = "07", # Illes Balears
-  "06" = "39", # Cantabria
-  "13" = "28", # Madrid
-  "14" = "30", # Murcia
-  "15" = "31", # Navarra
-  "17" = "26", # La Rioja
-  "18" = "51", # Ceuta
-  "19" = "52"  # Melilla
-)
 
 coste_vivienda <- coste_vivienda %>%
-  mutate(
-    codigo_ccaa = str_pad(as.character(.data[["CODAUTO"]]), width = 2, side = "left", pad = "0"),
-    codigo_ccaa = case_when(
-      str_detect(str_to_lower(Comunidad_Autonoma), "astur") ~ "03",
-      str_detect(str_to_lower(Comunidad_Autonoma), "balear") ~ "04",
-      str_detect(str_to_lower(Comunidad_Autonoma), "cantabr") ~ "06",
-      str_detect(str_to_lower(Comunidad_Autonoma), "madrid") ~ "13",
-      str_detect(str_to_lower(Comunidad_Autonoma), "murcia") ~ "14",
-      str_detect(str_to_lower(Comunidad_Autonoma), "navarr") ~ "15",
-      str_detect(str_to_lower(Comunidad_Autonoma), "rioja") ~ "17",
-      str_detect(str_to_lower(Comunidad_Autonoma), "ceuta") ~ "18",
-      str_detect(str_to_lower(Comunidad_Autonoma), "melilla") ~ "19",
-      TRUE ~ codigo_ccaa
-    ),
-    CPRO = if_else(
-      is.na(CPRO),
-      unname(codigos_uniprov_coste[codigo_ccaa]),
-      as.character(CPRO)
-    )
-  ) %>%
+tratamiento_uniprovinciales(variable="Comunidad_Autonoma") %>%
   select(-codigo_ccaa)
 ```
 
-```{r,include = FALSE}
+```{r,include = FALSE,include =FALSE}
 coste_vivienda$CODAUTO <- NULL
 coste_vivienda$Comunidad_Autonoma <- NULL
 ```
 
-+ Para extraer únicamente el valor de las provincias (ni el total nacional ni niveles autonómicos), filtramos usando la lista oficial de provincias del INE.
 
-```{r filtro_provincias,include=FALSE}
-filtrar_provincias_ine <- function(df) {
-  df %>%
-    mutate(id_prov = str_pad(as.character(id_prov), width = 2, side = "left", pad = "0")) %>%
-    filter(id_prov %in% ine_provincias$id_prov)
-}
-```
 
 ```{r coste_vivienda,include = FALSE}
 colnames(coste_vivienda)[5]<- "id_prov"
-coste_vivienda <- filtrar_provincias_ine(coste_vivienda)
 
 coste_vivienda <- coste_vivienda %>%
+  filtrar_provincias_ine()%>%
+  # Usamos una definiciÃ³n homogÃ©nea del precio: vivienda libre.
+  filter(Regimen == "Libre") %>%
   arrange(id_prov) %>%
   arrange(Periodo) %>%
   crear_id_provincia_anio(., col_anyo = .$Periodo, col_prov = .$id_prov) %>%
@@ -307,6 +163,8 @@ coste_vivienda <- coste_vivienda %>%
   ungroup() %>%
   select(id,Precio_m2) %>%
   distinct()
+
+validar_clave_unica(coste_vivienda, "id", "coste_vivienda")
 ```
 
 ```{r distribucion_poblacional,include=FALSE}
@@ -319,13 +177,13 @@ distribucion_poblacional <- distribucion_poblacional_raw %>%
     extra = "merge"
   ) %>%
   filtrar_provincias_ine() %>%
-  arrange(id_prov,Periodo) %>%
   filter(Sexo=="Total") %>%
   select(-Sexo) %>%
   rename(Habitantes = Total) %>%
   crear_id_provincia_anio(., col_anyo = .$Periodo, col_prov = .$id_prov) %>%
-  arrange(id_prov, Periodo) %>%
   select(id,Habitantes)
+
+validar_clave_unica(distribucion_poblacional, "id", "distribucion_poblacional")
 ```
 
 ```{r edad_maternidad,include = FALSE}
@@ -342,7 +200,6 @@ edad_maternidad <- edad_maternidad %>%
     extra = "merge"
   ) %>%
   filtrar_provincias_ine() %>%
-  arrange(id_prov,Periodo) %>%
   select(-Orden_de_nacimiento) %>%
   mutate(
     Total = if (is.numeric(Total)) {
@@ -357,8 +214,9 @@ edad_maternidad <- edad_maternidad %>%
   ) %>%
   rename(Edad_Media_Maternidad = Total) %>%
   crear_id_provincia_anio(., col_anyo = .$Periodo, col_prov = .$id_prov) %>%
-  arrange(id_prov, Periodo) %>%
   select(id,Edad_Media_Maternidad)
+
+validar_clave_unica(edad_maternidad, "id", "edad_maternidad")
 ```
 
 ```{r migr_int,include =FALSE}
@@ -384,6 +242,8 @@ migracion_interior <- migracion_interior_raw %>%
   distinct() %>%
   rename(Migracion_Interior=Total) %>%
   select(id,Migracion_Interior)
+
+validar_clave_unica(migracion_interior, "id", "migracion_interior")
 ```
 
 ```{r ocupacion_sector,include=FALSE}
@@ -421,6 +281,8 @@ ocupacion_sector <- ocupacion_sector %>%
   ) %>%
   select(id,Sector,Personas_Ocupadas) %>%
   distinct()
+
+validar_clave_unica(ocupacion_sector, c("id", "Sector"), "ocupacion_sector")
 ```
 
 ```{r pib_per_capita,include = FALSE}
@@ -430,43 +292,48 @@ colnames(pib_per_capita)[1] <- "Provincias"
 
 pib_per_capita <- pib_per_capita %>%
   pivot_wider(names_from=Magnitud,values_from = Total) %>%
-  select(-4,-5) %>%
+  select(Provincias, Periodo, Valor) %>%
   separate(
     col = Provincias,
     into = c("id_prov", "Provincia"),
     sep = " ",
     extra = "merge"
   ) %>%
-  filter(id_prov!="Total")
+  mutate(id_prov = str_pad(as.character(id_prov), width = 2, side = "left", pad = "0")) %>%
+  filter(id_prov != "Total") %>%
+  mutate(
+    es_provincia = Provincia %in% ine_provincias$Provincia_clean,
+    es_ccaa_uniprov = !es_provincia & id_prov %in% names(codigos_uniprov)
+  ) %>%
+  filter(es_provincia | es_ccaa_uniprov) %>%
+  select(-es_ccaa_uniprov)
 
 # El fichero de PIB mezcla comunidades autónomas y provincias. Para las
 # comunidades uniprovinciales, el valor regional coincide con el de su única
 # provincia.
-codigos_uniprov_pib <- c(
-  "03" = "33", # Asturias
-  "04" = "07", # Illes Balears
-  "06" = "39", # Cantabria
-  "13" = "28", # Madrid
-  "14" = "30", # Murcia
-  "15" = "31", # Navarra
-  "17" = "26", # La Rioja
-  "18" = "51", # Ceuta
-  "19" = "52"  # Melilla
-)
 
 pib_per_capita <- pib_per_capita %>%
   mutate(
-    es_provincia = str_detect(Provincia, "[[:lower:]]"),
+    # Reemplaza el código autonómico (ej. "14") por el provincial ("30") si existe en codigos_uniprov
     id_prov = if_else(
-      es_provincia,
+      Provincia %in% ine_provincias$Provincia_clean,
       id_prov,
-      unname(codigos_uniprov_pib[id_prov])
+      unname(codigos_uniprov[id_prov])
     )
   ) %>%
+  group_by(id_prov, Periodo) %>%
+  slice_max(order_by = es_provincia, n = 1, with_ties = FALSE) %>%
+  ungroup() %>%
+  select(-es_provincia) %>%
+  # El fichero también contiene comunidades autónomas; solo conservamos
+  # las 50 provincias antes de construir la clave de unión.
+  filtrar_provincias_ine() %>%
   crear_id_provincia_anio(., col_anyo = .$Periodo, col_prov = .$id_prov) %>%
   rename(PIB_per_capita = Valor) %>%
-  select(id,PIB_per_capita) %>%
-  distinct()
+  select(id, PIB_per_capita) %>%
+  distinct() 
+
+validar_clave_unica(pib_per_capita, "id", "pib_per_capita")
 ```
 
 ```{r renta_bruta,include=FALSE}
@@ -477,9 +344,13 @@ colnames(renta_bruta_media)[5] <- "Indicadores"
 
 renta_bruta_media <- renta_bruta_media %>%
   filter(Indicadores == "Renta bruta media por persona") %>%
-  select(-Indicadores,-2,-1,-Islas) %>%
-  rename(Renta_bruta_media=Total) %>%
+  select(-Indicadores, -2, -1, -Islas) %>%
+  rename(Renta_bruta_media = Total) %>%
   filter(!is.na(Provincias), Provincias != "NA") %>%
+  mutate(
+    Provincias = str_remove(Provincias, "^\\d+\\s+"),
+    Provincias = if_else(str_detect(Provincias, "Murcia"), "Murcia", Provincias)
+  ) %>%
   inner_join(ine_provincias, by = c("Provincias" = "Provincia_clean")) %>%
   crear_id_provincia_anio(., col_anyo = .$Periodo, col_prov = .$id_prov) %>%
   group_by(id) %>%
@@ -487,8 +358,10 @@ renta_bruta_media <- renta_bruta_media %>%
   ungroup() %>%
   distinct() %>%
   arrange(id_prov, Periodo) %>%
-  select(id,Renta_bruta_media) %>%
+  select(id, Renta_bruta_media) %>%
   distinct()
+
+validar_clave_unica(renta_bruta_media, "id", "renta_bruta_media")
 ```
 
 ```{r VAB,include=FALSE}
@@ -524,11 +397,15 @@ valor_bruto_sector <- valor_bruto_sector %>%
   pivot_longer(c(Primario,Secundario,Terciario), names_to = "Sector", values_to = "VAB") %>%
   select(id,Sector,VAB) %>%
   distinct()
+
+validar_clave_unica(valor_bruto_sector, c("id", "Sector"), "valor_bruto_sector")
 ```
 
-Una vez tenemos los datos tratados, los juntamos haciendo uso del identificador único. Para evitar que se generen muchos valores perdidos, para la unión solamente tomaremos las instancias comunes a todos.
++ **Unión y control final:** se combinan los indicadores socioeconómicos mediante `inner_join(id)` y los datos laborales mediante `inner_join(id, Sector)`; después se pasan los sectores a columnas, se unen ambos bloques y se comprueba que no haya claves duplicadas. El cruce común resultante corresponde a 2015–2021.
 
-```{r joins,include=FALSE}
+Una vez tenemos los datos tratados, los juntamos haciendo uso del identificador único. Usamos uniones internas para conservar únicamente las instancias comunes a todas las fuentes. En los datos disponibles, este cruce produce el periodo común 2015–2021.
+
+```{r joins, include=FALSE}
 panel_socioeconomico_base <- coste_vivienda %>%
   inner_join(distribucion_poblacional, by = "id") %>%
   inner_join(edad_maternidad, by = "id") %>%
@@ -537,8 +414,13 @@ panel_socioeconomico_base <- coste_vivienda %>%
   inner_join(renta_bruta_media, by = "id")
 
 panel_laboral_base <- ocupacion_sector %>%
-  inner_join(valor_bruto_sector,by=c("id","Sector"))
+  inner_join(valor_bruto_sector, by = c("id", "Sector"))
 
+validar_clave_unica(panel_socioeconomico_base, "id", "panel_socioeconomico_base")
+validar_clave_unica(panel_laboral_base, c("id", "Sector"), "panel_laboral_base")
+```
+
+```{r,include = FALSE}
 # Los guardamos por si acaso
 save(panel_socioeconomico_base, file = "./data/Datos_SocioEcon.Rdata")
 write_delim(panel_socioeconomico_base, file = "./data/Datos_SocioEcon.csv", delim = ";")
@@ -547,490 +429,96 @@ save(panel_laboral_base, file = "./data/Datos_Laborales.Rdata")
 write_delim(panel_laboral_base, file = "./data/Datos_Laborales.csv", delim = ";")
 ```
 
-```{r joins2,include=FALSE}
-# Juntamos los datos en formato tidy. Para lo cual separamos los datos laborales en las columnas correspondientes, los unimos y deshacemos la variable id en provincia y año.
+```{r joins2, include=FALSE}
+# Juntamos los datos en formato tidy. Para lo cual separamos los datos laborales 
+# en las columnas correspondientes, los unimos y deshacemos la variable id en provincia y año.
 panel_laboral_tidy <- panel_laboral_base %>%
   pivot_wider(
     names_from = Sector,
     values_from = c(Personas_Ocupadas, VAB),
-    #Modificamos el nombre para que quede claro el valor, ej: "Personas_Ocupadas_Primario"
+    #Modificamos el nombre para que quede claro el valor
     names_glue = "{.value}_{Sector}"
-  )
-
+  ) %>%
+  select(-any_of("VAB_Total"))
 panel_provincial <- panel_socioeconomico_base %>%
   inner_join(panel_laboral_tidy, by = "id") %>%
   separate(id, into = c("Periodo", "id_prov"), sep = "_", convert = FALSE) %>%
   mutate(Periodo = as.integer(Periodo)) %>%
   left_join(ine_provincias,by = "id_prov") %>%
   rename(Provincia = Provincia_clean) %>%
-  select(-id_prov)
+  select(-id_prov) %>% distinct()
+
+validar_clave_unica(panel_provincial, c("Provincia", "Periodo"), "panel_provincial")
+validar_provincias_50(panel_provincial, "panel_provincial")
 
 # Elimanamos algunas variables que no usaremos para liberar espacio
-rm(list  = setdiff(ls(), c("panel_provincial","ine_provincias")))
+#rm(list  = setdiff(ls(), c("panel_provincial","ine_provincias")))
 ```
 
 # Análisis Exploratorio de Datos (EDA)
 
 ## Análisis de Datos Perdidos
 
-Ahora que tenemos un conjunto de datos con todas las variables de interés, y las instancias adecuadamente identificadas, podemos proceder al análisis exploratorio propiamente dicho. Para empezar observamos en qué variables hay valores faltantes.
+Ahora que tenemos un conjunto de datos con todas las variables de interés, y las instancias adecuadamente identificadas, podemos proceder al análisis exploratorio propiamente dicho. Para empezar, seleccionamos el periodo común 2015–2021 y observamos en qué variables hay valores faltantes.
 
-```{r analisis-nas,echo=FALSE}
-faltantes_por_variable <- apply(is.na(panel_provincial), MARGIN = 2, FUN = sum)
-kable(x = faltantes_por_variable[faltantes_por_variable > 0], col.names = "Valores Perdidos", caption = "Valores perdidos por variable")
+```{r analisis-nas, echo=TRUE}
+panel_2015_2021 <- panel_provincial %>%
+  filter(Periodo >= 2015, Periodo <= 2021)
+
+validar_provincias_50(panel_2015_2021, "panel_2015_2021")
+tabla_instancias_faltantes(panel_2015_2021)
 ```
 
-Por suerte, hay pocos valores perdidos, por lo que podemos visualizar sus instancias correspondientes antes de decidir qué hacer con ellos.
+Por suerte, hay pocos valores perdidos en este periodo, por lo que podemos visualizar sus instancias correspondientes antes de decidir qué hacer con ellos.
 
-```{r,echo=FALSE}
-filas_con_faltantes <- !complete.cases(panel_provincial)
-faltantes_por_fila <- apply(apply(panel_provincial[filas_con_faltantes, ], MARGIN = 1, FUN = is.na), MARGIN = 1, FUN = sum)
-columnas_con_faltantes <- names(faltantes_por_fila[faltantes_por_fila > 0])
-
-panel_faltantes <- panel_provincial[filas_con_faltantes, c("Provincia", "Periodo", columnas_con_faltantes)] %>%
-  arrange(Provincia,Periodo)
-
-kable(panel_faltantes, caption = "Instancias con valores faltantes")
-remove(list = c("panel_faltantes"))
+```{r analisis NAs, echo=TRUE}
+tabla_valores_faltantes(panel_2015_2021)
 ```
 
-Observamos que los valores faltantes afectan solamente a 5 provincias, además, cada instancia tiene como mucho un valor faltante, las variables afectadas son series temporales de valores numéricos (valores anuales de 2015 a 2021), y en todos los casos tenemos al menos un registro de toda la serie, por lo que la decisión sobre los valores faltantes es imputarlos siguiendo la siguiente norma:
+Observamos que los valores faltantes corresponden a 3 provincias, y como en todos los casos se tiene al menos un registro de la variable entre 2015 y 2021, se decide imputar los datos de la siguiente manera:
 
 *Se imputan los valores faltantes con la media del primer valor anterior no faltante, y el primer valor posterior no faltante. En caso de no haber valores anteriores o posteriores no faltantes, se imputará el dato usando el primer dato posterior o respectivamente anterior no faltante.*
 
-```{r,include=FALSE}
-imputar_valores_intermedios <- function(x){
-  # Si el vector está completamente vacío (solo NAs) o no tiene faltantes, se devuelve igual
-  if (all(is.na(x)) || !any(is.na(x))) {
-    return(x)
-  }
-  n <- length(x)
-  valid_idx <- which(!is.na(x))
-  # 1. Obtener el valor válido ANTES de cada posición (NA si no existe)
-  idx_before_pos <- findInterval(1:n, valid_idx)
-  val_before <- ifelse(idx_before_pos == 0, NA_real_, x[valid_idx[pmax(1, idx_before_pos)]])
-  # 2. Obtener el valor válido DESPUÉS de cada posición (NA si no existe)
-  idx_after_pos <- findInterval((1:n) - 0.0001, valid_idx) + 1
-  val_after <- ifelse(idx_after_pos > length(valid_idx), NA_real_, x[valid_idx[pmin(length(valid_idx), idx_after_pos)]])
-  # 3. Media entre ambos vecinos
-  # rowMeans con na.rm = TRUE asigna el único valor disponible en los extremos inicial/final
-  res <- rowMeans(cbind(val_before, val_after), na.rm = TRUE)
-  return(res)
-}
-
-panel_provincial <- panel_provincial %>%
-  group_by(Provincia) %>%
-  mutate(across(c(Renta_bruta_media, Personas_Ocupadas_Primario), imputar_valores_intermedios)) %>%
-  ungroup()
-
-remove(list = c("imputar_valores_intermedios"))
+```{r, include=FALSE}
+panel_provincial <- imputar_panel_provincial(panel_provincial)
 ```
 
 ## Análisis Univariante
 
 En esta sección procedemos a examinar la distribución individual de las variables recopiladas. El objetivo central de este análisis univariante es caracterizar el comportamiento estadístico de cada magnitud —evaluando su tendencia central, grado de dispersión, presencia de asimetrías y valores atípicos, antes de abordar las relaciones multivariantes. Para las variables laborales (VAB y ocupación por sectores), no usaremos los datos originales (valores totales) si no el porcentaje sobre el total nacional.
 
-```{r univariante-tabla, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
-#Funciones de apoyo
-calc_asimetria <- function(x) {
-  # coeficiente de asimetría de Fisher (g1)
-  x <- x[!is.na(x)]; m <- mean(x)
-  (sum((x - m)^3) / length(x)) / (sum((x - m)^2) / length(x))^(3/2)
-}
-
-calc_curtosis <- function(x) {
-  # exceso de curtosis (0 = normal)
-  x <- x[!is.na(x)]; m <- mean(x)
-  (sum((x - m)^4) / length(x)) / (sum((x - m)^2) / length(x))^2 - 3
-}
-
-calc_cv <- function(x) {
-  x <- x[!is.na(x)]
-  if (length(x) == 0 || min(x) < 0 || mean(x) <= 0) {
-    NA_real_
-  } else {
-    sd(x) / mean(x) * 100
-  }
-}
-
-# Formatea los números para que salgan  en castellano
-fmt_es <- function(x, d = 2) {
-  purrr::map2_chr(x, d, function(v, k) {
-    if (is.na(v)) {
-      "–"
-    } else {
-      v <- round(v, k)
-      if (v == 0) v <- 0
-      formatC(v, format = "f", digits = k, big.mark = ".", decimal.mark = ",")
-    }
-  })
-}
-
-# Variables, etiquetas y decimales a mostrar
-etiquetas_variables <- tibble::tribble(
-  ~Variable,                  ~Etiqueta,                              ~dec,
-  "PIB_per_capita",           "PIB per cápita (€)",                    0,
-  "Renta_bruta_media",          "Renta bruta media (€)",                 0,
-  "Precio_m2",          "Precio m² (€)",          1,
-  "Edad_Media_Maternidad",    "Edad media maternidad (años)",          2,
-  "Migracion_Interior",       "Saldo migratorio interior 19-35 años (pers.)",   0,
-  "Habitantes",               "Habitantes",                            0,
-  "pct_Ocupados_Primario",    "Ocupados primario (% nacional)",        1,
-  "pct_Ocupados_Secundario",  "Ocupados secundario (% nacional)",      1,
-  "pct_Ocupados_Terciario",   "Ocupados terciario (% nacional)",       1,
-  "pct_VAB_Primario",         "VAB primario (% nacional)",             1,
-  "pct_VAB_Secundario",       "VAB secundario (% nacional)",           1,
-  "pct_VAB_Terciario",        "VAB terciario (% nacional)",            1
-)
-variables_univariantes <- etiquetas_variables$Variable
-
-# Porcentaje de ocupados y VAB de cada provincia sobre el total nacional
-# correspondiente a cada sector.
-panel_analisis_2019 <- panel_provincial %>%
-  filter(Periodo == 2019) %>%
-  mutate(
-    pct_Ocupados_Primario   = Personas_Ocupadas_Primario / sum(Personas_Ocupadas_Primario, na.rm = TRUE) * 100,
-    pct_Ocupados_Secundario = Personas_Ocupadas_Secundario / sum(Personas_Ocupadas_Secundario, na.rm = TRUE) * 100,
-    pct_Ocupados_Terciario  = Personas_Ocupadas_Terciario / sum(Personas_Ocupadas_Terciario, na.rm = TRUE) * 100,
-    pct_VAB_Primario        = VAB_Primario / sum(VAB_Primario, na.rm = TRUE) * 100,
-    pct_VAB_Secundario      = VAB_Secundario / sum(VAB_Secundario, na.rm = TRUE) * 100,
-    pct_VAB_Terciario       = VAB_Terciario / sum(VAB_Terciario, na.rm = TRUE) * 100
-  )
-```
-
+```{r filtro datos, echo=TRUE}
+panel_analisis_2019 <- crear_panel_analisis_2019(panel_provincial, periodo = 2019)
+``` 
 Visualizamos los histogramas de los datos:
 
-```{r univ-graficas-setup, echo=FALSE, message=FALSE, warning=FALSE}
+```{r histograma, echo=FALSE}
 panel_histogramas <- panel_analisis_2019 %>%
   mutate(log10_Habitantes = log10(Habitantes))
-
-etiquetas_graficos <- etiquetas_variables %>%
-  mutate(Variable = ifelse(Variable == "Habitantes", "log10_Habitantes", Variable),
-         Etiqueta = ifelse(Etiqueta == "Habitantes", "Habitantes (log10)", Etiqueta),
-         Etiqueta = gsub("m\u00b2", "m2", Etiqueta))   # el "²" no se dibuja en el gráfico
-
-fmt_eje <- scales::label_number(big.mark = ".", decimal.mark = ",")
-
-tema_graficos_univariantes <- theme_minimal(base_size = 9) +
-  theme(strip.text = element_text(face = "bold", size = 8),
-        panel.grid.minor = element_blank(),
-        axis.title.x = element_blank(),
-        axis.text.x = element_text(size = 7))
-
-# Histograma + densidad + media + mediana + detección de outliers (Regla de la Varianza / 3-Sigma)
 variables_histograma <- c("PIB_per_capita", "Renta_bruta_media", "Precio_m2",
                           "Edad_Media_Maternidad", "Migracion_Interior", "log10_Habitantes")
-
-etiquetas_histograma <- etiquetas_graficos %>%
-  filter(Variable %in% variables_histograma) %>%
-  arrange(match(Variable, variables_histograma))
-
-# 1. Mantenemos 'Provincia' al pivotar para no perder los nombres
-datos_histograma <- panel_histogramas %>%
-  select(Provincia, all_of(etiquetas_histograma$Variable)) %>%
-  pivot_longer(cols = -Provincia, names_to = "Variable", values_to = "Valor") %>%
-  left_join(etiquetas_histograma, by = "Variable") %>%
-  mutate(Etiqueta = factor(Etiqueta, levels = etiquetas_histograma$Etiqueta))
-
-# 2. Calculamos media, mediana y desviación típica (sd)
-estadisticos_histograma <- datos_histograma %>%
-  group_by(Etiqueta) %>%
-  summarise(
-    mediana = median(Valor, na.rm = TRUE),
-    media = mean(Valor, na.rm = TRUE),
-    desv_tipica = sd(Valor, na.rm = TRUE),
-    curtosis = calc_curtosis(Valor),
-    .groups = "drop"
-  )
-
-estadisticos_histograma_lineas <- estadisticos_histograma %>%
-  pivot_longer(
-    cols = c(mediana, media),
-    names_to = "Estadistico",
-    values_to = "Valor_estadistico"
-  ) %>%
-  mutate(
-    Estadistico = recode(Estadistico, mediana = "Mediana", media = "Media"),
-    etiqueta = fmt_es(Valor_estadistico, 2),
-    justificacion = ifelse(Estadistico == "Media", 1.05, -0.05)
-  )
-
-estadisticos_histograma <- estadisticos_histograma %>%
-  mutate(
-    etiqueta_forma = paste0(
-      "Media =" ,fmt_es(media, 2),
-      ", Mediana =" ,fmt_es(mediana, 2),
-      "\n\t\tSD = ", fmt_es(desv_tipica, 2),
-      ",Curtosis = ", fmt_es(curtosis, 2), "\n"
-    )
-  )
-
-# 3. Filtramos los valores atípicos (Regla: alejados más de 3 desviaciones de la media)
-outliers_histograma <- datos_histograma %>%
-  left_join(estadisticos_histograma, by = "Etiqueta") %>%
-  filter(abs(Valor - media) > 3 * desv_tipica)
-
-ggplot(datos_histograma, aes(x = Valor)) +
-  geom_histogram(aes(y = after_stat(density)), bins = 12, fill = "grey80", colour = "white", na.rm = TRUE) +
-  geom_density(colour = "steelblue", linewidth = 0.7, na.rm = TRUE) +
-  geom_vline(data = estadisticos_histograma, aes(xintercept = mediana, color = "Mediana", linetype = "Mediana"), linewidth = 0.8) +
-  geom_vline(data = estadisticos_histograma, aes(xintercept = media, color = "Media", linetype = "Media"), linewidth = 0.9) +
-  geom_text(data = estadisticos_histograma, aes(x = -Inf, y = -Inf, label = etiqueta_forma),
-            inherit.aes = FALSE, hjust = -0.05, vjust = 1.8, color = "grey35", size = 2.2, lineheight = 0.9) +
-  # 4. Dibujamos un punto naranja en la base (y = 0) para cada atípico
-  geom_point(data = outliers_histograma, aes(x = Valor, y = 0), color = "darkorange", size = 2.5, shape = 4, stroke = 1.2) +
-  # 5. Añadimos el texto corregido sin romper el eje Y de densidad
-  geom_text_repel(data =outliers_histograma, aes(x = Valor, y = 0, label = Provincia), color = "darkorange", size = 2.5, fontface = "bold", angle = 45, hjust = -0.2,# Empuja el texto hacia arriba usando proporción, no coordenadas Y absolutas
-                  direction = "both",# Evita solapamientos desplazando solo en horizontal
-                  segment.size = 0.4, segment.color = "darkorange", max.overlaps = Inf) +
-  facet_wrap(~ Etiqueta, scales = "free", ncol = 3, labeller = label_wrap_gen(width = 22)) +
-  scale_x_continuous(labels = fmt_eje, n.breaks = 4) +
-  scale_color_manual(
-    name = "Estadístico:",
-    values = c("Mediana" = "firebrick", "Media" = "forestgreen")
-  ) +
-  scale_linetype_manual(
-    name = "Estadístico:",
-    values = c("Mediana" = "dashed", "Media" = "dotted")
-  ) +
-  labs(
-    y = "Densidad",
-    caption = "Las marcas naranjas indican valores atípicos (Alejados de la media más de 3 desviaciones típicas)"
-  ) +
-  coord_cartesian(clip = "off") +
-  tema_graficos_univariantes +
-  theme(
-    panel.spacing.y = unit(1.5, "lines"),
-    axis.text.y = element_blank(),
-    axis.ticks.y = element_blank(),
-    legend.position = "bottom",
-    legend.title = element_text(face = "bold", size = 8),
-    legend.text = element_text(size = 8),
-    plot.caption = element_text(color = "grey40", size = 7.5, hjust = 0.5, margin = margin(t = 10)),
-    plot.margin = margin(t = 5, r = 5, b = 45, l = 5)
-  )
+histograma_estadisticos_outliers(panel_histogramas,variables_histograma)
 ```
 
 En los histogramas observamos la media y la mediana de cada variable, así como los valores atípicos según la regla de la desviación típica. La edad media de maternidad, la renta bruta media y el logaritmo de la población son las variables más próximas a la simetría (media y mediana casi coinciden), mientras que el PIB per cápita y el precio del metro cuadrado presentan asimetría positiva, con la media por encima de la mediana por la cola de provincias de renta y precios altos. El caso más extremo es el del saldo migratorio: su media es nula (como cabe esperar al tratarse de saldos netos entre provincias) pero su mediana es negativa (-308 personas), es decir, la mayoría de provincias pierde población joven y Madrid, único valor atípico según este criterio, concentra las ganancias, lo que explica en buena medida una curtosis de 33,16.
 
 Para complementar el análisis, representamos también diagramas de caja y detectamos los valores atípicos usando la regla del rango intercuartílico.
 
-```{r fig-univ-3, echo=FALSE, message=FALSE, warning=FALSE, fig.height=5.5, out.width="100%", fig.cap="Distribución de las variables socioeconómicas."}
-# Variables del panel
-variables_boxplot <- c("PIB_per_capita", "Renta_bruta_media", "Precio_m2", "Edad_Media_Maternidad", "Migracion_Interior", "log10_Habitantes")
+```{r boxplots, echo=FALSE, fig.cap="Distribución de las variables socioeconómicas."}
+boxplot_estadisticos_outliers(panel_analisis_2019, c("PIB_per_capita", "Renta_bruta_media", "Precio_m2"))
+boxplot_estadisticos_outliers(panel_analisis_2019, c("Edad_Media_Maternidad", "Migracion_Interior", "log10_Habitantes"))
 
-# Ajustamos las etiquetas para reflejar las transformaciones matemáticas
-etiquetas_boxplot <- etiquetas_variables %>%
-  # Buscamos tanto log10_Habitantes como su original por seguridad
-  filter(Variable %in% c(variables_boxplot, "Habitantes")) %>%
-  mutate(
-    Variable = ifelse(Variable == "Habitantes", "log10_Habitantes", Variable),
-    Etiqueta = case_when(
-      Variable == "log10_Habitantes" ~ "Habitantes (log10)",
-      Variable == "Migracion_Interior" ~ "Migración Interior (Raíz cúbica)",
-      TRUE ~ gsub("m\u00b2", "m2", Etiqueta)
-    )
-  ) %>%
-  distinct(Variable, .keep_all = TRUE) %>%
-  arrange(match(Variable, variables_boxplot))
-
-# Preparación de datos y cálculo de outliers
-datos_boxplot <- panel_analisis_2019 %>%
-  # Aseguramos que log10_Habitantes esté calculada en el dataframe base
-  mutate(log10_Habitantes = log10(Habitantes)) %>%
-  select(Provincia, Periodo, all_of(variables_boxplot)) %>%
-  pivot_longer(cols = c(-Provincia, -Periodo), names_to = "Variable", values_to = "Valor") %>%
-  left_join(etiquetas_boxplot, by = "Variable") %>%
-  mutate(
-    Etiqueta = factor(Etiqueta, levels = etiquetas_boxplot$Etiqueta),
-    Periodo = factor(Periodo),
-    Periodo_num = as.numeric(Periodo),
-    x_box = Periodo_num + 0.45
-  ) %>%
-  filter(!is.na(Valor)) %>%
-  # Agrupamos y calculamos umbrales sobre la ESCALA ORIGINAL
-  group_by(Etiqueta, Periodo) %>%
-  mutate(
-    Q1 = quantile(Valor, 0.25),
-    Q3 = quantile(Valor, 0.75),
-    IQR_val = Q3 - Q1,
-    Lim_Inf = Q1 - 1.5 * IQR_val,
-    Lim_Sup = Q3 + 1.5 * IQR_val,
-    # Etiquetamos como outlier si supera el umbral original
-    es_outlier = Valor < Lim_Inf | Valor > Lim_Sup
-  ) %>%
-  ungroup() %>%
-  #Aplicamos la transformación matemática solo para el gráfico
-  mutate(
-    Valor = ifelse(
-      Variable == "Migracion_Interior",
-      sign(Valor) * abs(Valor)^(1/3),   # Raíz cúbica segura para valores negativos
-      Valor
-    )
-  )
-
-# 4. Calculamos los estadísticos en la escala representada por el gráfico
-estadisticos_boxplot <- datos_boxplot %>%
-  group_by(Etiqueta, Periodo, Periodo_num, x_box) %>%
-  summarise(
-    minimo = min(Valor, na.rm = TRUE),
-    maximo = max(Valor, na.rm = TRUE),
-    Q1 = quantile(Valor, 0.25, na.rm = TRUE),
-    Q3 = quantile(Valor, 0.75, na.rm = TRUE),
-    mediana = median(Valor, na.rm = TRUE),
-    IQR_val = IQR(Valor, na.rm = TRUE),
-    asimetria = calc_asimetria(Valor),
-    MADM = mad(Valor, constant = 1, na.rm = TRUE),
-    .groups = "drop"
-  ) %>%
-  mutate(
-    etiqueta_forma = paste0(
-      "Asimetría: ", fmt_es(asimetria, 2),
-      " | MADM: ", fmt_es(MADM, 2)
-    )
-  )
-
-estadisticos_boxplot_etiquetas <- estadisticos_boxplot %>%
-  pivot_longer(
-    cols = c(minimo, Q1, mediana, Q3, maximo),
-    names_to = "Estadistico",
-    values_to = "valor"
-  ) %>%
-  mutate(
-    y = valor,
-    Estadistico = recode(
-      Estadistico,
-      minimo = "Mín", Q1 = "Q1", mediana = "Med.", Q3 = "Q3", maximo = "Máx"
-    ),
-    etiqueta = paste0(Estadistico, " = ", fmt_es(valor, 2))
-  ) %>%
-  bind_rows(
-    estadisticos_boxplot %>% transmute(
-      Etiqueta, Periodo, Periodo_num, x_box,
-      Estadistico = "IQR", valor = IQR_val, y = (Q1 + Q3) / 2,
-      etiqueta = paste0("IQR = ", fmt_es(IQR_val, 2))
-    )
-  )
-
-# 5. Extraemos el subset de outliers con sus coordenadas Y ya transformadas
-outliers_boxplot <- datos_boxplot %>% filter(es_outlier)
-
-etiquetas_boxplot_repel <- bind_rows(
-  estadisticos_boxplot_etiquetas %>% transmute(
-    Etiqueta, x = x_box + 0.3, y, label = etiqueta, Tipo = "Estadístico", hjust = 0, fontface = "plain"
-  ),
-  outliers_boxplot %>% transmute(
-    Etiqueta, x = x_box - 0.22, y = Valor, label = Provincia, Tipo = "Outlier", hjust = 1, fontface = "bold"
-  )
-)
-
-# 6. Generación del gráfico
-ggplot(datos_boxplot, aes(x = x_box, y = Valor))  +
-  geom_boxplot(width = 0.4, fill = "grey90", colour = "grey30", linewidth = 0.3, outlier.shape = NA, alpha = 0.7, na.rm = TRUE) +
-  geom_text_repel(data = etiquetas_boxplot_repel, aes(x = x, y = y, label = label, color = Tipo, hjust = hjust, fontface = fontface),
-                  inherit.aes = FALSE, direction = "y", force_pull = 1, size = 1.9, box.padding = 0.6, point.padding = 0.2,
-                  force = 3, min.segment.length = 0, segment.size = 0.3, max.overlaps = Inf, show.legend = FALSE, seed = 123) +
-  geom_text(data = estadisticos_boxplot, aes(x = x_box, y = -Inf, label = etiqueta_forma), inherit.aes = FALSE, vjust = 1.15, size = 2.0, color = "grey35") +
-  geom_point(data = outliers_boxplot, color = "firebrick", size = 1.3) +
-  facet_wrap(~ Etiqueta, scales = "free_y", ncol = 3, labeller = label_wrap_gen(width = 22)) +
-  scale_x_continuous(
-    limits = c(0.15, 2.85), breaks = 1.45, labels = NULL, expand = c(0, 0)
-  ) +
-  scale_color_manual(values = c("Estadístico" = "grey25", "Outlier" = "firebrick"), guide = "none") +
-  scale_y_continuous(labels = fmt_eje, expand = expansion(mult = c(0.12, 0.12))) +
-  labs(
-    y = NULL, x = NULL,
-    caption = paste(
-      "Los puntos rojos indican valores atípicos evaluados mediante IQR (±1.5) sobre la escala original de los datos.",
-      "\nNota: estadísticos en la escala representada (Migración Interior en raíz cúbica).\nMADM: mediana de las desviaciones absolutas."
-    )
-  ) +
-  coord_cartesian(clip = "off") +
-  tema_graficos_univariantes +
-  theme(
-    plot.margin = margin(t = 5, r = 55, b = 32, l = 35),
-    panel.spacing.y = unit(2.2, "lines"),
-    plot.caption = element_text(size = 6.5, colour = "grey40", hjust = 0.5, margin = margin(t = 16))
-  )
 ```
 
-Con el criterio del rango intercuartílico aparecen más valores atípicos que con la regla de las tres desviaciones, al ser un criterio más sensible a las colas. El precio del metro cuadrado destaca por varios atípicos por encima del bigote superior (entre ellos Gipuzkoa, Madrid, Barcelona, Bizkaia e Illes Balears), lo que refleja la tensión del mercado inmobiliario en las provincias más pobladas y en del País Vasco. En la migración interior destacan Madrid, Illes Balears y Barcelona como receptoras y Jaén como la provincia con mayor pérdida, mientras que en la edad de maternidad el único atípico es Ceuta, con la edad más baja (30,47 años).
+ Con el criterio del rango intercuartílico aparecen más valores atípicos que con la regla de las tres desviaciones, al ser un criterio más sensible a las colas. El precio del metro cuadrado destaca por varios atípicos por encima del bigote superior. En la migración interior destacan Madrid, Illes Balears y Barcelona como receptoras y Jaén como la provincia con mayor pérdida. El análisis incluye únicamente las 50 provincias, por lo que Ceuta y Melilla no forman parte de esta comparación.
 
 Para visualizar la distribución de las variables laborales, hacemos uso de diagramas de cajas para comparar por sector cada una de las variables.
 
-```{r,echo=FALSE}
-# 1. Definimos las 6 variables sectoriales
-variables_sectoriales <- c(
-  "pct_Ocupados_Primario",
-  "pct_Ocupados_Secundario",
-  "pct_Ocupados_Terciario",
-  "pct_VAB_Primario",
-  "pct_VAB_Secundario",
-  "pct_VAB_Terciario"
-)
-
-# 2. Preparación de datos: Extraemos Magnitud y Sector del propio nombre de la variable
-datos_sectoriales <- panel_analisis_2019 %>%
-  select(Provincia, all_of(variables_sectoriales)) %>%
-  pivot_longer(cols = -Provincia, names_to = "Variable", values_to = "Valor") %>%
-  mutate(
-    # A. Creamos la variable que definirá las 2 filas (Facets)
-    Magnitud = ifelse(grepl("Ocupados", Variable), "Mercado Laboral (% total nacional)", "Estructura Económica (% total nacional)"),
-    # B. Creamos la variable que definirá los 3 boxplots por fila (Eje Y)
-    Sector = case_when(
-      grepl("Primario", Variable) ~ "Primario",
-      grepl("Secundario", Variable) ~ "Secundario",
-      grepl("Terciario", Variable) ~ "Terciario"
-    ),
-    # Factorizamos. Ojo: ggplot dibuja el eje Y de abajo hacia arriba.
-    # Ponemos el Terciario primero para que en el gráfico salga abajo y el Primario arriba.
-    Sector = factor(Sector, levels = c("Terciario", "Secundario", "Primario")),
-    Magnitud = factor(Magnitud, levels = c("Mercado Laboral (% total nacional)", "Estructura Económica (% total nacional)"))
-  )
-
-# 3. Calculamos Outliers agrupando por las dos nuevas dimensiones (Magnitud y Sector)
-outliers_sectoriales <- datos_sectoriales %>%
-  filter(!is.na(Valor)) %>%
-  group_by(Magnitud, Sector) %>%
-  mutate(
-    Q1 = quantile(Valor, 0.25),
-    Q3 = quantile(Valor, 0.75),
-    IQR_val = Q3 - Q1,
-    Lim_Inf = Q1 - 1.5 * IQR_val,
-    Lim_Sup = Q3 + 1.5 * IQR_val
-  ) %>%
-  filter(Valor < Lim_Inf | Valor > Lim_Sup) %>%
-  ungroup()
-
-# 4. Generación del gráfico con orientación horizontal
-ggplot(datos_sectoriales, aes(x = Valor, y = Sector)) +
-  # A. Puntos grises: al ser boxplots horizontales, dispersamos en altura (height) y no en anchura
-  geom_jitter(height = 0.15, color = "grey65", alpha = 0.5, size = 0.9, na.rm = TRUE) +
-  # B. Boxplots
-  geom_boxplot(fill = "grey90", colour = "grey30", linewidth = 0.3, outlier.shape = NA, alpha = 0.7, na.rm = TRUE) +
-  # C. Puntos atípicos en rojo
-  geom_point(data = outliers_sectoriales, color = "firebrick", size = 1.3) +
-  # D. Etiquetas repelidas
-  geom_text_repel(data = outliers_sectoriales, aes(label = Provincia), size = 2.2, color = "firebrick", fontface = "bold",
-                  direction = "both", nudge_y = 0.35,               # Empujamos el texto hacia ARRIBA del boxplot
-                  hjust = 0.5, box.padding = 0.3, force = 3, min.segment.length = 0, segment.size = 0.3, segment.color = "firebrick",
-                  max.overlaps = Inf, seed = 123) +
-  # E. Dividimos en 2 filas (Ocupados arriba, VAB abajo)
-  # Compartimos límites y marcas del eje X para comparar ambos porcentajes
-  facet_wrap(~ Magnitud, ncol = 1, scales = "fixed") +
-  # Aplicamos el formato numérico español a tu eje (ahora el X)
-  scale_x_continuous(labels = fmt_eje) +
-  labs(
-    x = "Peso relativo (%)", y = "Sector Económico",
-    caption = "Los puntos rojos indican valores atípicos evaluados mediante la regla IQR (±1.5) calculada por sector."
-  ) +
-  tema_graficos_univariantes
-
-rm(list  = setdiff(ls(), c("panel_analisis_2019","ine_provincias","etiquetas_variables")))
+```{r}
+boxplot_laborales(panel_analisis_2019)
 ```
 
-Podemos observar de nuevo datos muy heterogéneos y valores extremos muy altos. En los sectores secundario y terciario los atípicos son siempre las mismas provincias de gran tamaño (Madrid, Barcelona y Valencia/València), que concentran una parte desproporcionada del empleo y del valor añadido nacional (Madrid supera el 20 % del VAB terciario), mientras que en el sector primario destacan Almería y Murcia en empleo, y Sevilla y Almería en VAB, provincias de agricultura intensiva. Al expresar estas variables como porcentaje del total nacional, su magnitud depende en gran medida del tamaño de la provincia, algo que condiciona la lectura de las correlaciones posteriores.
-
+Podemos observar de nuevo datos muy heterogéneos y valores extremos muy altos. En los sectores secundario y terciario los atípicos son siempre las mismas provincias de gran tamaño (Madrid, Barcelona y Valencia/València), que concentran una parte desproporcionada del empleo y del valor añadido nacional (Madrid supera el 20 % del VAB terciario), mientras que en el sector primario destacan Almería y Murcia en empleo, y Sevilla y Almería en VAB.
 
 ## Análisis Bivariante y Multivariante
 
@@ -1044,61 +532,20 @@ Una vez constatada la heteoregeidad de los datos en el análisis univariante, en
 
 Usamos la correlación de Spearman, ya que al aplicar estas transformaciones no lineales, la correlación de Pearson se distorsiona.
 
-```{r preparacion-bivariante, echo=FALSE}
-# Preparar las variables derivadas usadas por la matriz de correlación
-superficie_provincial <- esp_get_prov() %>%
-  mutate(area_km2 = as.numeric(st_area(geometry)) / 1e6) %>%
-  st_drop_geometry() %>%
-  select(id_prov = cpro, area_km2)
-
-panel_bivariante_2019 <- panel_analisis_2019 %>%
-  left_join(ine_provincias, by = c("Provincia" = "Provincia_clean")) %>%
-  left_join(superficie_provincial, by = "id_prov") %>%
-  mutate(
-    # Peso provincial sobre el total nacional de VAB de cada sector
-    # Peso provincial sobre el total nacional de ocupados del sector terciario
-    esfuerzo_vivienda = (Precio_m2 * 90) / Renta_bruta_media,
-    mig_joven_1000    = (Migracion_Interior / Habitantes) * 1000,
-    Densidad      = Habitantes / area_km2,
-    brecha_pib_renta = Renta_bruta_media/PIB_per_capita
-  )
+```{r preparacion-bivariante}
+panel_bivariante_2019 <- crear_panel_bivariante(panel_analisis_2019)
 ```
 
-```{r,echo=FALSE}
-# Variables comunes a la matriz de correlación y al clustering
-variables_cluster <- c(
-  "brecha_pib_renta","esfuerzo_vivienda", "Edad_Media_Maternidad", "mig_joven_1000",
-  "Densidad","pct_Ocupados_Primario","pct_Ocupados_Secundario","pct_Ocupados_Terciario",
-  "pct_VAB_Primario","pct_VAB_Secundario","pct_VAB_Terciario"
+```{r}
+correlacion_global <- calcular_matriz_correlacion(
+  panel_bivariante_2019, variables_cluster, nombres_variables_cluster
 )
-
-nombres_variables_cluster <- c("Brecha pib-renta","Esf. Vivienda", "Edad Maternidad", "Migración Joven","Densidad Pobl.","Oc. Primario","Oc. Secundario","Oc. Terciario","VAB Primario","VAB Secundario","VAB Terciario")
-
-# Seleccionamos las variables continuas de interés
-var_corr <- panel_bivariante_2019 %>%
-  select(all_of(variables_cluster)) %>%
-  setNames(nombres_variables_cluster) %>%
-  drop_na()
-
-matriz_cor <- cor(var_corr,method="spearman")
-
-# Orden común de variables para comparar todas las matrices
-orden_variables_cor <- hclust(
-  as.dist(1 - abs(matriz_cor)), method = "complete"
-)$order
-
-matriz_cor <- matriz_cor[orden_variables_cor, orden_variables_cor]
-
-paleta_correlacion <- colorRampPalette(
-  c("#F4B6B6", "#FCE4D6", "#FFFFFF", "#DDEBF7", "#9DC3E6")
-)(200)
-
-corrplot(matriz_cor, method = "color", type = "lower", order = "original",
-         col = paleta_correlacion, tl.col = "black", tl.srt = 45,
-         addCoef.col = "black", number.cex = 0.7, diag = FALSE)
+matriz_cor <- correlacion_global$matriz
+orden_variables_cor <- correlacion_global$orden
+graficar_matriz_correlacion(matriz_cor)
 ```
 
-Observamos valores de correlaciones muy variados, algunos esperados como la correlación entre el porcentaje de ocupación el VAB en cada uno de los sectores. Hay otros que llaman la atención, como la correlación entre la densidad de población y el esfuerzo de acceso a la vivienda. Sin embargo, como hemos visto en el análisis univariante de los datos, tenemos datos muy heterogéneos con valores extremos, y distribuciones asimétricas. Para responder a la pregunta sobre si las relaciones entre los distintos indicadores ocurren de manera homogénea, realizamos un cluster de las provincias para separarlas en 4 grupos (clustering jerárquico) con características socioeconómicas similares de manera que se minimize la varianza de los datos en cada uno, para observar si cambian las dinámicas entre estas, o por el contratio no se alteran a pesar de la heterogeneidad de los datos. En el siguiente mapa podemos observar un mapa con las provincias divididas en los grupos correspondientes.
+Observamos valores de correlaciones muy variados, algunos esperados como la correlación entre el porcentaje de ocupación el VAB en cada uno de los sectores. Hay otros que llaman la atención, como la correlación entre la densidad de población y el esfuerzo de acceso a la vivienda. Sin embargo, ninguno es tan alto como para asegurar una relación fuerte entre dos variables. Como hemos visto en el análisis univariante de los datos, tenemos datos muy heterogéneos con valores extremos, y distribuciones asimétricas. Para responder a la pregunta sobre si las relaciones entre los distintos indicadores ocurren de manera homogénea, realizamos un agrupamiento de las provincias para separarlas en 4 grupos (clustering jerárquico) con características socioeconómicas similares, para observar si cambian las dinámicas entre estas, o por el contratio no se alteran. En el siguiente mapa podemos observar un mapa con las provincias divididas en los grupos correspondientes.
 
 ```{r,echo=FALSE,fig.height = 10}
 datos_cluster_2019 <- panel_bivariante_2019 %>%
@@ -1115,7 +562,6 @@ datos_cluster_estandarizados <- scale(datos_cluster_2019)
 distancia_provincias <- dist(datos_cluster_estandarizados, method = "euclidean")
 dendrograma_provincias <- hclust(distancia_provincias, method = "ward.D2")
 
-# Definir número óptimo de clusters (k = 4) y cortar el dendrograma
 numero_clusters <- 4
 asignacion_clusters <- cutree(dendrograma_provincias, k = numero_clusters)
 ```
@@ -1194,7 +640,7 @@ perfil_promedio %>%
 
 perfil_promedio %>%
   select(
-    Cluster, Num_Provincias, pct_Ocupados_Primario,pct_Ocupados_Secundario,pct_Ocupados_Terciario,pct_VAB_Primario,pct_VAB_Secundario,pct_VAB_Terciario
+    Cluster, Num_Provincias, pct_Ocupadas_Primario,pct_Ocupadas_Secundario,pct_Ocupadas_Terciario,pct_VAB_Primario,pct_VAB_Secundario,pct_VAB_Terciario
   ) %>%
   kable(
     format = "latex", booktabs = TRUE, longtable = FALSE,
@@ -1221,106 +667,35 @@ Podemos decir, que tenemos 4 clusters con perfiles diferentes, en los que destac
 
 1. El primer cluster está formado por provincias con baja densidad, que no destacan en ningún sector en particular, que no aportan de manera significativa al total nacional, y de las que muchos jóvenes se van.
 
-2. El segundo cluster está formado por provincias que también pierden población joven, pero tienen bastante más densidad. Tampoco destacan en ningún sector, pero aportan más al total nacional que las del primer cluster.
+2. El segundo cluster está formado por provincias que tienen bastante más densidad, que Tampoco destacan en ningún sector, pero aportan más al total nacional que las del primer cluster.
 
-3. El tercer cluster está formado por provincias que también pierden población joven, con una densidad intermedia, y especialmente dedicadas al sector primario.
+3. El tercer cluster está formado por provincias con una densidad intermedia, y especialmente dedicadas al sector primario.
 
 4. El cuarto cluster lo forman las provincias con áreas urbanas muy densas que reciben grandes cantidades de jóvenes de las otras partes del país, y concentran una parte importante de la actividad y el valor añadido de los sectores secundario y terciario.
 
 
 Por último, calculamos las correlaciones por cluster, para determinar si las relaciones son heterogéneas o no.
 
-```{r correlaciones-por-cluster, echo=FALSE, fig.height=12, fig.width=12}
-# Matrices de correlación de Spearman por cluster
-datos_correlacion_cluster <- panel_bivariante_2019 %>%
-  filter(!is.na(Cluster)) %>%
-  select(Cluster, all_of(variables_cluster)) %>%
-  group_split(Cluster)
-
-matrices_list <- purrr::map(datos_correlacion_cluster, function(datos_cluster) {
-  datos_cor <- datos_cluster %>%
-    select(all_of(variables_cluster)) %>%
-    drop_na()
-  matriz_cor_cluster <- datos_cor %>%
-    setNames(nombres_variables_cluster) %>%
-    cor(method = "spearman")
-  matriz_cor_cluster[orden_variables_cor, orden_variables_cor]
-})
-
-nombres_matrices <- purrr::map_chr(
-  datos_correlacion_cluster,
-  ~ paste0(
-    as.character(unique(.x$Cluster)),
-    " (n = ", sum(complete.cases(.x[variables_cluster])), ")"
-  )
+```{r correlaciones-por-cluster, fig.height=10, fig.width=12}
+df_correlaciones <- preparar_correlaciones_por_cluster(
+  panel_bivariante_2019,
+  variables_cluster,
+  nombres_variables_cluster,
+  orden_variables_cor
 )
-names(matrices_list) <- nombres_matrices
-
-df_correlaciones <- purrr::map_dfr(
-  matrices_list,
-  ~ as.data.frame(.x) %>%
-    tibble::rownames_to_column(var = "Var1") %>%
-    tidyr::pivot_longer(cols = -Var1, names_to = "Var2", values_to = "Correlacion"),
-  .id = "Grupo"
-) %>%
-  mutate(
-    fila = match(Var1, nombres_variables_cluster[orden_variables_cor]),
-    columna = match(Var2, nombres_variables_cluster[orden_variables_cor])
-  ) %>%
-  filter(fila > columna) %>%
-  mutate(
-    Grupo = factor(Grupo, levels = nombres_matrices),
-    Var1 = factor(Var1, levels = rev(nombres_variables_cluster[orden_variables_cor])),
-    Var2 = factor(Var2, levels = nombres_variables_cluster[orden_variables_cor]),
-    Contraste = abs(Correlacion) > 0.6
-  )
-
-ggplot(df_correlaciones, aes(x = Var2, y = Var1, fill = Correlacion)) +
-  geom_tile(color = "white", linewidth = 0.25) +
-  geom_text(
-    aes(label = sprintf("%.2f", Correlacion), color = Contraste), size = 2.1
-  ) +
-  scale_fill_gradient2(
-    low = "#3B82F6", mid = "white", high = "#EF4444",
-    midpoint = 0, limits = c(-1, 1)
-  ) +
-  scale_color_manual(
-    values = c(`FALSE` = "black", `TRUE` = "white"), guide = "none"
-  ) +
-  facet_wrap(~ Grupo, ncol = 2, scales = "fixed") +
-  theme_minimal(base_size = 10) +
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1, size = 8),
-    axis.text.y = element_text(size = 8),
-    panel.grid = element_blank(),
-    strip.text = element_text(face = "bold", size = 10),
-    panel.spacing = grid::unit(1.2, "lines"),
-    legend.position = "bottom"
-  ) +
-  labs(x = NULL, y = NULL, fill = "Correlación")
+graficar_correlaciones_por_cluster(df_correlaciones)
 ```
 
-Estas nuevas matrices de correlación poco tienen que ver con la original. Observamos valores de correlación bastante altos que antes no aparecían. En los grupos 3 y 4 al estar formados por dos elementos la correlación entre dos de sus variables cualesquiera será 1 o -1 siempre, por lo que cualquier interpretación que se haga sobre estos valores debe cogerse con pinzas. Aún así, haciendo uso de las matrices de correlación de los dos primeros clusters podemos dar respuesta a la pregunta, y afirmar que las relaciones entre los distintos indicadores socioeconómicos no son homogéneas a lo largo del país. Por ejemplo, podemos descatar que en el primer cluster la brecha renta/PIB contribuye positivamente a la edad de maternidad, mientras que en el segundo la relación es inversa.
+Estas nuevas matrices de correlación poco tienen que ver con la original. Observamos que la mayoría de valores cambian. En los grupos 3 y 4 al estar formados por dos elementos la correlación entre dos de sus variables cualesquiera será 1 o -1 siempre, por lo que cualquier interpretación que se haga sobre estos valores debe cogerse con pinzas. Aún así, haciendo uso de las matrices de correlación de los dos primeros clusters podemos dar respuesta a la pregunta, y afirmar que las relaciones entre los distintos indicadores socioeconómicos no son homogéneas a lo largo del país. Por ejemplo, podemos descatar que en el primer cluster la brecha renta/PIB contribuye positivamente a la edad de maternidad, mientras que en el segundo la relación es inversa.
 
 # Conclusiones Finales
 
-El análisis provincial de España (2019) revela que la relación entre estructura productiva e indicadores socioeconómicos es heterogénea. La matriz global oculta realidades territoriales distintas que exigen dividir el país en grupos en los que las dinámicas socioeconómicas son similares, para poder responder preguntas más profundas sobre estas.
+El análisis provincial de España (2019) revela que la relación entre estructura productiva e indicadores socioeconómicos es heterogénea. La matriz global oculta realidades territoriales distintas que exigen dividir el país en grupos en los que las dinámicas socioeconómicas son similares, para poder responder preguntas más profundas sobre estas. Destacan tres hallazgos clave:
 
+1\. Peso de los valores atípicos: Una minoría de provincias (Madrid, Barcelona, País Vasco) concentra los máximos demográficos y económicos, distorsionando las medias nacionales.
 
-Destacan tres hallazgos clave:
-
-
-
-1\. Peso de los valores atípicos: Una minoría de provincias (Madrid, Barcelona, Illes Balears, País Vasco) concentra los máximos demográficos y económicos, distorsionando las medias nacionales y forzando la creación de clústeres exclusivos (3 y 4) para aislar estos extremos.
-
-
-
-2\. Vivienda vs. Migración: El esfuerzo inmobiliario crece drásticamente con la densidad poblacional (correlación 0,85). Pese a esta barrera, solo los grandes núcleos (Clúster 4: Madrid y Barcelona) logran atraer migración joven.
-
-
+2\. Vivienda vs. Migración: El esfuerzo inmobiliario crece drásticamente con la densidad poblacional (correlación 0,87). Pese a esta barrera, solo los grandes núcleos (Clúster 4: Madrid y Barcelona) logran atraer migración joven.
 
 3\. Estabilidad demográfica: La edad media de maternidad es la variable más homogénea del país y la menos condicionada por la estructura productiva.
-
-
 
 Estas asociaciones no causales reflejan en gran medida el tamaño absoluto de las provincias. Para futuros estudios, se sugiere medir la estructura productiva a nivel interno (para evitar sesgos de tamaño) y ampliar el análisis al periodo 2015-2021.
