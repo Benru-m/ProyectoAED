@@ -11,11 +11,9 @@ affiliation:
   - num: 1
     address: |
       Universitat de València (UV), España.
-    email: pagacaclot@gmail.com
 authorcitation: |
   Molina Villar, L.; Sánchez Munuera, R.; Gallart Carbonell, P.
-correspondence: |
-  pagacaclot@gmail.com (P. Gallart Carbonell)
+
 # Variables obligatorias para la plantilla
 MDPI journal: "Máster Universitario de ciencia de datos"
 type: "article"
@@ -29,6 +27,8 @@ output: rticles::mdpi_article
 header-includes:
   - \usepackage{geometry}
   - \geometry{left=5.85cm,right=1.9cm}
+  - \usepackage{setspace}
+  - \setstretch{0.92} 
   - \pubyear{2026}
 ---
 
@@ -131,7 +131,7 @@ Para responder a la pregunta hemos considerado que los datos más indicados corr
    * `PIB per cápita`: Producto Interior Bruto provincial por habitante (€/hab). Este indicador mide el valor monetario de todos los bienes y servicios finales producidos en un periodo en una región.
    * `Renta bruta media`: Renta bruta media por persona (€/hab). El concepto de renta bruta corresponde al conjunto total de ingresos que percibe una persona durante un periodo determinado, antes de aplicar ningún tipo de impuesto.
 2. **Dimensión del Mercado Inmobiliario:**
-   * `Precio del metro cuadrado`: Valor medio del metro cuadrado de la vivienda (€/m²).
+   * `Precio del metro cuadrado`: Valor medio del metro cuadrado de las operaciones de compra/venta de vivienda (€/m²).
 3. **Dimensión Demográfica y Ciclo Vital:**
    * `Edad media de maternidad`: Edad media de las madres al nacimiento de un hijo/a, considerando todos los órdenes de nacimiento (primer hijo/a, segundo hijo/a,...) (años).
    * `Migracion Interior`: Saldo migratorio neto interprovincial (personas que pasan de vivir de una provincia a otra) en el rango de edad de 19 a 35 años (número neto de personas).
@@ -178,19 +178,21 @@ remove(list = c("ruta_archivo", "nombre_archivo", "urls_datos_ine"))
 
 La fuente de datos no proporciona los datos estrictamente adecuados para el análisis que queremos realizar (buscamos un análisis anual a nivel provincial de ciertas variables socioeconómicas). Por lo tanto, el primer paso es acondicionar los datos obtenidos para llegar a un conjunto de datos que contenga los datos que nos interesan. Uno de los factores principales a tener en cuenta es que los datos han sido tomados y guardados en español, por lo que hemos de tener cuidado con el indicador de millares y decimales en los datos numéricos. Los datos han sido importados a `R` usando una función basada en `read_delim` de `readr` para tratar adecuadamente las variables numéricas, usando la función `locale`.
 
-```{r lectura datos,include = FALSE}
+```{r lectura datos}
 leer_archivo_ine <- function(fichero, separador, decimal = ",", grouping = ".") {
   readr::read_delim(
     file = fichero,
     delim = separador,
-    locale = readr::locale(decimal_mark=decimal, grouping_mark= grouping),
+    locale = locale(decimal_mark=decimal, grouping_mark= grouping),
     na = c("", "NA", "null",".."),
     name_repair = "minimal",
     show_col_types = FALSE,
     progress = FALSE
   )
 }
+```
 
+```{r,include=FALSE}
 coste_vivienda_raw <- leer_archivo_ine("./data/raw/coste_vivienda.csv", ";", decimal = ".", grouping = "")
 distribucion_poblacional_raw <- leer_archivo_ine("./data/raw/distribucion_poblacional.csv", "\t")
 edad_maternidad_raw <- leer_archivo_ine("./data/raw/edad_maternidad.csv", "\t")
@@ -209,7 +211,7 @@ El proceso de preparación de los datos se hace siguiendo la filosofía tidy. Al
 + Es una práctica común en el INE incluir la variable `Provincias` que tiene la forma `xx Nombre_Provincia`, siendo `XX` el código de provincia oficial (asignados por orden alfabético, del 01 al 50, siendo Ceuta el 51 y Melilla el 52). Nosotros hemos separado esa variable en código provincial `cod_prov` y nombre provincial (`Provincia`).
 + En el conjunto de datos que queremos estudiar cada instancia es una provincia en cierto año. Para unir instancias de distintas tablas, hemos asignado un identificador único (en el sentido de que cada provincia tiene uno por año) a todos los registros de los datos originales, usando el formato `yyyy_xx`, año (`yyyy`) y código provincial (`xx`).
 
-```{r identificador,include = FALSE}
+```{r identificador}
 # Función para generar el ID único
 crear_id_provincia_anio <- function(df, col_anyo, col_prov) {
   df %>% mutate(
@@ -228,7 +230,7 @@ crear_id_provincia_anio <- function(df, col_anyo, col_prov) {
 ```{r,include = FALSE}
 #Preparación del coste de vivienda
 # Normalizamos nombres problemáticos antes de usarlos en expresiones de R.
-# Esto evita errores de codificación con tildes y deja una clave temporal común.
+# Esto evita errores de codificación con tildes.
 coste_vivienda <- coste_vivienda_raw
 names(coste_vivienda)[1] <- "Periodo"
 names(coste_vivienda)[4] <- "Regimen"
@@ -237,7 +239,7 @@ names(coste_vivienda)[7] <- "Comunidad_Autonoma"
 
 + A veces el INE entrega los datos a nivel provincial y regional en el mismo archivo, pero para las regiones uniprovinciales da el valor de la región, por lo que en estos casos se transforma adecuadamente el código y nombre de la región al de la provincia correspondiente para extraer correctamente los datos, y no perder valores por el camino.
 
-```{r,include=FALSE}
+```{r}
 # En las comunidades uniprovinciales, el fichero incluye filas regionales
 # (CPRO vacio) cuyo valor coincide con el de la provincia. Las incorporamos
 # usando el codigo de comunidad autonoma antes de eliminar CODAUTO.
@@ -275,7 +277,9 @@ coste_vivienda <- coste_vivienda %>%
     )
   ) %>%
   select(-codigo_ccaa)
+```
 
+```{r,include = FALSE}
 coste_vivienda$CODAUTO <- NULL
 coste_vivienda$Comunidad_Autonoma <- NULL
 ```
@@ -950,7 +954,7 @@ ggplot(datos_boxplot, aes(x = x_box, y = Valor))  +
   )
 ```
 
-Con el criterio del rango intercuartílico aparecen más valores atípicos que con la regla de las tres desviaciones, al ser un criterio más sensible a las colas. El precio del metro cuadrado destaca por varios atípicos por encima del bigote superior (entre ellos Gipuzkoa, Madrid, Barcelona, Bizkaia e Illes Balears), lo que refleja la tensión del mercado inmobiliario en las provincias más pobladas, turísticas y del País Vasco. En la migración interior destacan Madrid, Illes Balears y Barcelona como receptoras y Jaén como la provincia con mayor pérdida, mientras que en la edad de maternidad el único atípico es Ceuta, con la edad más baja (30,47 años).
+Con el criterio del rango intercuartílico aparecen más valores atípicos que con la regla de las tres desviaciones, al ser un criterio más sensible a las colas. El precio del metro cuadrado destaca por varios atípicos por encima del bigote superior (entre ellos Gipuzkoa, Madrid, Barcelona, Bizkaia e Illes Balears), lo que refleja la tensión del mercado inmobiliario en las provincias más pobladas y en del País Vasco. En la migración interior destacan Madrid, Illes Balears y Barcelona como receptoras y Jaén como la provincia con mayor pérdida, mientras que en la edad de maternidad el único atípico es Ceuta, con la edad más baja (30,47 años).
 
 Para visualizar la distribución de las variables laborales, hacemos uso de diagramas de cajas para comparar por sector cada una de las variables.
 
@@ -1094,9 +1098,7 @@ corrplot(matriz_cor, method = "color", type = "lower", order = "original",
          addCoef.col = "black", number.cex = 0.7, diag = FALSE)
 ```
 
-Observamos valores de correlaciones muy variados, algunos esperados como la correlación entre el porcentaje de ocupación el VAB en cada uno de los sectores. Hay otros que llaman la atención, como la correlación entre la densidad de población y el esfuerzo de acceso a la vivienda. Sin embargo, como hemos visto en el análisis univariante de los datos, tenemos datos muy heterogéneos con valores extremos, y distribuciones asimétricas, por lo que para estudiar con más exactitud las relaciones entre los distintos indicadores realizamos un cluster de las provincias para separarlas en 4 grupos con características socioeconómicas similares, para que se reflejen de manera más clara las dinámicas entre estas, y no se contaminen por la heterogeneidad de los datos.
-
-Representamos los grupos en un mapa
+Observamos valores de correlaciones muy variados, algunos esperados como la correlación entre el porcentaje de ocupación el VAB en cada uno de los sectores. Hay otros que llaman la atención, como la correlación entre la densidad de población y el esfuerzo de acceso a la vivienda. Sin embargo, como hemos visto en el análisis univariante de los datos, tenemos datos muy heterogéneos con valores extremos, y distribuciones asimétricas. Para responder a la pregunta sobre si las relaciones entre los distintos indicadores ocurren de manera homogénea, realizamos un cluster de las provincias para separarlas en 4 grupos (clustering jerárquico) con características socioeconómicas similares de manera que se minimize la varianza de los datos en cada uno, para observar si cambian las dinámicas entre estas, o por el contratio no se alteran a pesar de la heterogeneidad de los datos. En el siguiente mapa podemos observar un mapa con las provincias divididas en los grupos correspondientes.
 
 ```{r,echo=FALSE,fig.height = 10}
 datos_cluster_2019 <- panel_bivariante_2019 %>%
@@ -1131,7 +1133,7 @@ panel_analisis_2019_mapa <- panel_analisis_2019_asignado %>%
   # Asegurar formato INE de 2 dígitos (ej: 1 -> "01")
 
 # Obtener geometría provincial de España asegurando el formato de 2 dígitos en cpro
-mapa_prov_clusters <- esp_get_prov() %>%
+mapa_prov_clusters <- esp_get_prov(prov=setdiff(esp_get_prov()$ine.prov.name,c("Ceuta","Melilla"))) %>%
   mutate(cpro = str_pad(cpro, width = 2, side = "left", pad = "0")) %>%
   left_join(panel_analisis_2019_mapa, by = c("cpro" = "id_prov"))
 
@@ -1145,7 +1147,6 @@ ggplot(mapa_prov_clusters) +
       "Cluster 3" = "#2ECC71",  # Verde: Polo Industrial / Foral
       "Cluster 4" = "#F39C12"   # Naranja: Interior / Sector Primario
     ),
-    na.value = "grey85",
     name = "Tipología Provincial"
   ) +
   theme_void(base_size = 11) +
@@ -1193,7 +1194,7 @@ perfil_promedio %>%
 
 perfil_promedio %>%
   select(
-    Cluster, Num_Provincias, pct_Ocupados_Primario,pct_Ocupados_Secundario,pct_Ocupados_Terciario,pct_VAB_Primario,pct_VAB_Secundario,pct_VAB_Primario
+    Cluster, Num_Provincias, pct_Ocupados_Primario,pct_Ocupados_Secundario,pct_Ocupados_Terciario,pct_VAB_Primario,pct_VAB_Secundario,pct_VAB_Terciario
   ) %>%
   kable(
     format = "latex", booktabs = TRUE, longtable = FALSE,
@@ -1216,7 +1217,18 @@ colores_cluster <- c(
 )
 ```
 
-Ahora calculamos las correlaciones por cluster.
+Podemos decir, que tenemos 4 clusters con perfiles diferentes, en los que destacan:
+
+1. El primer cluster está formado por provincias con baja densidad, que no destacan en ningún sector en particular, que no aportan de manera significativa al total nacional, y de las que muchos jóvenes se van.
+
+2. El segundo cluster está formado por provincias que también pierden población joven, pero tienen bastante más densidad. Tampoco destacan en ningún sector, pero aportan más al total nacional que las del primer cluster.
+
+3. El tercer cluster está formado por provincias que también pierden población joven, con una densidad intermedia, y especialmente dedicadas al sector primario.
+
+4. El cuarto cluster lo forman las provincias con áreas urbanas muy densas que reciben grandes cantidades de jóvenes de las otras partes del país, y concentran una parte importante de la actividad y el valor añadido de los sectores secundario y terciario.
+
+
+Por último, calculamos las correlaciones por cluster, para determinar si las relaciones son heterogéneas o no.
 
 ```{r correlaciones-por-cluster, echo=FALSE, fig.height=12, fig.width=12}
 # Matrices de correlación de Spearman por cluster
@@ -1288,12 +1300,11 @@ ggplot(df_correlaciones, aes(x = Var2, y = Var1, fill = Correlacion)) +
   labs(x = NULL, y = NULL, fill = "Correlación")
 ```
 
-Estas nuevas matrices de correlación poco tienen que ver con la original. Observamos valores de correlación bastante altos que antes no aparecían. En los grupos 3 y 4 al estar formados por dos elementos la correlación entre dos de sus variables cualesquiera será 1 o -1 siempre, por lo que la información que nos aporta no es de gran utilidad.
+Estas nuevas matrices de correlación poco tienen que ver con la original. Observamos valores de correlación bastante altos que antes no aparecían. En los grupos 3 y 4 al estar formados por dos elementos la correlación entre dos de sus variables cualesquiera será 1 o -1 siempre, por lo que cualquier interpretación que se haga sobre estos valores debe cogerse con pinzas. Aún así, haciendo uso de las matrices de correlación de los dos primeros clusters podemos dar respuesta a la pregunta, y afirmar que las relaciones entre los distintos indicadores socioeconómicos no son homogéneas a lo largo del país. Por ejemplo, podemos descatar que en el primer cluster la brecha renta/PIB contribuye positivamente a la edad de maternidad, mientras que en el segundo la relación es inversa.
 
 # Conclusiones Finales
 
-El análisis provincial de España (2019) revela que la relación entre estructura productiva e indicadores socioeconómicos es heterogénea. La matriz global oculta realidades territoriales distintas que exigen dividir el país en cuatro clústeres.
-
+El análisis provincial de España (2019) revela que la relación entre estructura productiva e indicadores socioeconómicos es heterogénea. La matriz global oculta realidades territoriales distintas que exigen dividir el país en grupos en los que las dinámicas socioeconómicas son similares, para poder responder preguntas más profundas sobre estas.
 
 
 Destacan tres hallazgos clave:
