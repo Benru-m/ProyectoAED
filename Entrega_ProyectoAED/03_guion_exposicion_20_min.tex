@@ -1,0 +1,200 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage{lmodern}
+\usepackage[a4paper,margin=2cm,headheight=14pt]{geometry}
+\usepackage{booktabs,longtable,array,tabularx,enumitem,xcolor,hyperref,graphicx,fancyhdr,titlesec,amsmath,microtype}
+\definecolor{azul}{HTML}{1F4E79}\definecolor{azulclaro}{HTML}{EAF2F8}\definecolor{verde}{HTML}{2E7D32}\definecolor{gris}{HTML}{5B6573}
+\hypersetup{colorlinks=true,linkcolor=azul,urlcolor=azul,pdftitle={Guion de exposición de 20 minutos},pdfauthor={Codex}}
+\pagestyle{fancy}\fancyhf{}\lhead{Guion de exposición}\rhead{Proyecto AED}\cfoot{\thepage}
+\titleformat{\section}{\Large\bfseries\color{azul}}{\thesection}{0.5em}{}[\titlerule]
+\titleformat{\subsection}{\large\bfseries\color{azul}}{\thesubsection}{0.5em}{}
+\newcommand{\code}[1]{\texttt{\small #1}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\begin{document}
+\begin{titlepage}
+\centering\vspace*{1.4cm}
+{\color{azul}\rule{\textwidth}{1.5pt}}\\[0.8cm]
+{\Huge\bfseries Guion argumentado para una exposición de 20 minutos\par}
+\vspace{0.5cm}{\Large Estructura Productiva, Presión Inmobiliaria y su Impacto en el Ciclo Vital y Migratorio en España\par}
+\vspace{1.5cm}
+\begin{minipage}{0.85\textwidth}\small\centering
+Guion listo para exposición oral, con tiempos, transiciones, mensajes clave, interpretación de resultados y respuestas para preguntas previsibles.
+\end{minipage}
+\vfill
+{\large Luis Molina Villar, Rubén Sánchez Munuera y Pablo Gallart Carbonell\\ Universitat de València\\[0.3cm]8 de noviembre de 2026\par}
+{\color{azul}\rule{\textwidth}{1.5pt}}
+\end{titlepage}
+\tableofcontents\newpage
+
+\section{Idea central que debe quedar clara}
+La tesis de la exposición es: \textbf{la relación entre estructura productiva e indicadores socioeconómicos no es homogénea en España}. Una matriz nacional puede ocultar realidades territoriales distintas. Por eso el proyecto combina análisis descriptivo, indicadores relativos, correlación de Spearman y clustering provincial.
+
+La respuesta debe repetirse al inicio y al final: \colorbox{azulclaro}{\parbox{0.92\textwidth}{\centering\textbf{no estamos demostrando causalidad; estamos describiendo patrones territoriales y mostrando que cambian según el grupo de provincias.}}}
+
+\section{Mapa temporal de la exposición}
+\begin{longtable}{p{0.13\textwidth}p{0.25\textwidth}p{0.48\textwidth}}
+\toprule\textbf{Tiempo} & \textbf{Bloque} & \textbf{Objetivo oral}\
+\midrule\endhead
+0:00--1:30 & Apertura y pregunta & Motivar el problema y presentar la hipótesis de heterogeneidad.\\
+1:30--3:30 & Datos y alcance & Explicar fuentes, unidad provincial y elección de 2019.\\
+3:30--5:30 & Preparación & Justificar limpieza, claves y uniones.\\
+5:30--7:00 & Valores perdidos & Mostrar que el tratamiento es pequeño, explícito y auditable.\\
+7:00--10:00 & Univariante & Interpretar asimetrías, concentración y outliers.\\
+10:00--12:00 & Indicadores derivados & Explicar densidad, vivienda, migración y brecha renta/PIB.\\
+12:00--14:30 & Correlaciones globales & Presentar qué relaciones aparecen y qué no puede concluirse.\\
+14:30--17:00 & Clustering y mapa & Explicar cómo se construyen las cuatro tipologías.\\
+17:00--18:45 & Correlaciones por cluster & Demostrar que las relaciones cambian entre grupos.\\
+18:45--20:00 & Conclusión y límites & Responder la pregunta, advertir limitaciones y abrir futuros análisis.\\
+\bottomrule
+\end{longtable}
+
+\section{Guion palabra por palabra}
+\subsection{0:00--1:30 | Apertura y pregunta}
+\textbf{Diapositiva sugerida: título y pregunta de investigación.}
+
+Buenos días. Nuestro proyecto analiza cómo se relacionan la estructura productiva y varios indicadores socioeconómicos en las provincias españolas. Nos interesan cuatro dimensiones: renta y riqueza, mercado inmobiliario, demografía y ciclo vital, y estructura productiva.
+
+La pregunta es sencilla de formular, pero no de responder: \emph{¿las provincias que tienen una determinada estructura productiva muestran también los mismos patrones de renta, vivienda, maternidad y migración, o existen dinámicas territoriales diferentes?} Nuestra hipótesis inicial es que el comportamiento no será homogéneo, porque las provincias tienen tamaños, especializaciones económicas y niveles de urbanización muy distintos.
+
+Es importante precisar el alcance. Hacemos un análisis exploratorio: identificamos distribuciones, asociaciones y grupos de provincias. No afirmamos que una variable cause otra. La aportación es ordenar la evidencia y mostrar dónde una relación nacional deja de ser representativa.
+
+\textbf{Transición:} Para responder, primero necesitamos construir una base comparable entre fuentes que no fueron diseñadas originalmente para cruzarse.
+
+\subsection{1:30--3:30 | Datos y alcance}
+\textbf{Diapositiva sugerida: fuentes y dimensiones.}
+
+Usamos datos del Instituto Nacional de Estadística y del Ministerio de Vivienda y Agenda Urbana. Las ocho fuentes son: precio de vivienda, distribución de población, edad media de maternidad, migración interior, ocupación por sector, PIB per cápita, renta bruta media y VAB por rama de actividad.
+
+La unidad final de análisis es provincia-año. Trabajamos con las 50 provincias del catálogo del INE; Ceuta y Melilla quedan fuera. Aunque las fuentes tienen historiales más largos y coberturas distintas, al cruzarlas todas solo hay observaciones comunes entre 2015 y 2021. Para las figuras principales elegimos 2019: es un año completo, anterior a la pandemia y adecuado como referencia pre-COVID.
+
+Las variables económicas no significan exactamente lo mismo. El PIB mide producción generada en el territorio; la renta bruta media mide ingresos de las personas; el precio por metro cuadrado mide presión inmobiliaria. Las variables de ocupación y VAB describen la dimensión productiva desde dos perspectivas complementarias.
+
+\textbf{Transición:} La comparación solo es válida después de resolver los formatos, nombres y niveles territoriales.
+
+\subsection{3:30--5:30 | Preparación y trazabilidad}
+\textbf{Diapositiva sugerida: esquema del pipeline.}
+
+El pipeline tiene cinco decisiones clave. Primero, leemos cada CSV con su separador y configuración numérica. El INE utiliza etiquetas como NA, null, dos puntos o cadenas vacías, y en varias tablas los números siguen la convención española de coma decimal y punto de millar.
+
+Segundo, normalizamos las provincias. Separamos el código y el nombre, quitamos tildes para construir una clave de unión y rellenamos los códigos a dos dígitos. La clave final es año más código provincial, por ejemplo, 2019_28 para Madrid.
+
+Tercero, filtramos el territorio correcto. Algunas fuentes mezclan provincias, comunidades autónomas y totales nacionales. En comunidades uniprovinciales, el registro regional representa a la provincia; el código se reconduce antes de unir.
+
+Cuarto, agregamos con una regla sustantiva: media de trimestres para vivienda, suma de edades para migración, combinación de industria y construcción para el sector secundario, y suma de ramas para los sectores del VAB.
+
+Quinto, usamos uniones internas y validamos claves únicas. Esto sacrifica registros no comunes, pero evita comparar una variable con otra en unidades temporales distintas. El resultado se guarda en CSV y RData para poder auditarlo y reutilizarlo.
+
+\textbf{Transición:} Una vez construido el panel, comprobamos primero qué información falta.
+
+\subsection{5:30--7:00 | Valores perdidos}
+\textbf{Diapositiva sugerida: tabla de ausentes.}
+
+Restringimos el periodo común 2015--2021 y contamos valores faltantes por variable y por fila. Los ausentes son pocos y afectan a tres provincias. Como cada provincia tiene un valor válido antes o después dentro del periodo, se utiliza una imputación temporal conservadora.
+
+Para un valor faltante, se toma la media del primer valor válido anterior y el primer valor válido posterior. Si el dato está en un extremo de la serie, se utiliza el único vecino disponible. La imputación se limita a renta bruta media y ocupación primaria, que son las variables configuradas en la función. No se rellena indiscriminadamente todo el panel.
+
+La idea metodológica es importante: antes de imputar, mostramos dónde están los ausentes; después, la función trabaja por provincia y en orden temporal. Así se preserva la estructura territorial y se evita mezclar provincias.
+
+\textbf{Transición:} Con el panel limpio podemos preguntar cómo se distribuye cada variable por separado.
+
+\subsection{7:00--10:00 | Análisis univariante}
+\textbf{Diapositivas sugeridas: histogramas y boxplots.}
+
+En 2019 observamos que las distribuciones no son homogéneas. El PIB per cápita y el precio de la vivienda presentan asimetría positiva: unas pocas provincias elevan la media por encima de la mediana. La población también está muy concentrada, por eso se visualiza en logaritmo.
+
+El caso más llamativo es la migración interior de 19 a 35 años. Como es un saldo, su media nacional puede aproximarse a cero, pero la mediana es negativa: muchas provincias pierden población joven y unas pocas concentran las ganancias. Madrid destaca como valor extremo con la regla de tres desviaciones.
+
+Los boxplots con la regla del rango intercuartílico son más sensibles a colas. Ahí aparecen Madrid, Barcelona e Illes Balears como receptoras importantes de migración, y Jaén como una de las mayores pérdidas. En los datos laborales, las provincias grandes dominan el peso nacional: Madrid, Barcelona y Valencia aparecen como atípicos en sectores secundario y terciario. En el primario destacan, según la magnitud, Almería, Murcia y Sevilla.
+
+Esto deja una advertencia: una media nacional puede estar capturando principalmente tamaño provincial. Para comparar mejor, construimos indicadores relativos.
+
+\subsection{10:00--12:00 | Indicadores derivados}
+\textbf{Diapositiva sugerida: fórmulas.}
+
+Creamos cuatro indicadores. La densidad divide habitantes por superficie y evita confundir población total con concentración territorial. El esfuerzo de vivienda aproxima los años de renta bruta necesarios para comprar una vivienda de 90 metros cuadrados: 90 por precio del metro cuadrado dividido por renta media.
+
+La migración joven por mil habitantes normaliza el saldo por tamaño de población. La brecha renta/PIB mide qué proporción representa la renta bruta media respecto al PIB per cápita. Estas transformaciones no eliminan todos los sesgos, pero hacen que las comparaciones sean más interpretables.
+
+Además, para ocupación y VAB usamos porcentajes del total nacional. Esto permite decir qué parte del empleo o valor añadido nacional concentra cada provincia, aunque debemos recordar que no equivale a la especialización interna de la provincia.
+
+\textbf{Transición:} Con estas variables podemos estudiar relaciones, pero elegimos una medida robusta frente a asimetrías y outliers.
+
+\subsection{12:00--14:30 | Correlación global}
+\textbf{Diapositiva sugerida: matriz de Spearman.}
+
+Calculamos una matriz de correlación de Spearman con once variables. Elegimos Spearman porque trabaja con rangos y es menos sensible a distribuciones muy asimétricas y a la escala absoluta. La matriz se ordena mediante agrupamiento jerárquico para que variables con patrones parecidos queden próximas.
+
+Aparecen relaciones esperables entre ocupación y VAB del mismo sector. También destaca la relación entre densidad y esfuerzo de vivienda, que en las conclusiones del informe alcanza aproximadamente 0,87. Sin embargo, la matriz global no basta para afirmar que exista una dinámica común para todo el país. Una correlación nacional puede estar impulsada por Madrid, Barcelona u otras provincias grandes.
+
+La interpretación correcta es asociativa: dos variables aumentan juntas en el conjunto observado. No decimos que el precio cause migración ni que la estructura productiva cause maternidad.
+
+\textbf{Transición:} Para comprobar si hay varias dinámicas, agrupamos provincias con perfiles multivariantes parecidos.
+
+\subsection{14:30--17:00 | Clustering y mapa}
+\textbf{Diapositivas sugeridas: método y mapa de cuatro clusters.}
+
+Estandarizamos las once variables para que ninguna domine por sus unidades. Calculamos distancia euclídea y aplicamos clustering jerárquico con Ward.D2. Cortamos el dendrograma en cuatro grupos. Después enlazamos las etiquetas con la geometría provincial de mapSpain y representamos el resultado en un mapa.
+
+El primer grupo reúne provincias menos densas, sin una aportación nacional dominante y con salida de jóvenes. El segundo tiene mayor densidad y mayor peso nacional, aunque sin una especialización sectorial tan marcada. El tercero se caracteriza por un peso especialmente primario y densidad intermedia. El cuarto agrupa áreas urbanas densas, receptoras de migración joven y concentradoras de actividad secundaria y terciaria.
+
+Estas etiquetas son tipologías descriptivas, no categorías oficiales. Dependen de las variables, del año, de la estandarización, de la distancia y de Ward.D2. Lo que sí aportan es una forma de pasar de una lectura única del país a una lectura territorial diferenciada.
+
+\textbf{Transición:} Si la heterogeneidad es real, las correlaciones deberían cambiar cuando las calculamos dentro de cada grupo.
+
+\subsection{17:00--18:45 | Correlaciones por cluster}
+\textbf{Diapositiva sugerida: panel de matrices por grupo.}
+
+Calculamos de nuevo las correlaciones de Spearman dentro de cada cluster, manteniendo el mismo orden de variables. Las matrices cambian bastante respecto a la matriz global. Por ejemplo, la relación entre brecha renta/PIB y edad media de maternidad es positiva en un grupo y se invierte en otro.
+
+Hay que interpretar con cautela los clusters pequeños. Si un grupo tiene solo dos provincias, las correlaciones internas pueden resultar automáticamente 1 o -1. Por eso la evidencia más útil está en los grupos con más observaciones y en la comparación cualitativa de perfiles.
+
+El resultado responde a la pregunta: las relaciones entre indicadores no son homogéneas a lo largo de España. La misma asociación puede ser fuerte, débil o cambiar de signo dependiendo del contexto territorial.
+
+\subsection{18:45--20:00 | Conclusión, límites y futuro}
+\textbf{Diapositiva sugerida: tres conclusiones.}
+
+Concluimos tres cosas. Primera: los outliers importan. Una minoría de provincias concentra máximos demográficos y económicos, distorsionando las medias nacionales. Segunda: la vivienda y la migración se relacionan con la densidad de forma compleja. El esfuerzo inmobiliario crece en zonas densas, pero los grandes núcleos siguen atrayendo población joven. Tercera: la edad media de maternidad es relativamente homogénea frente a otras variables y parece menos condicionada por la estructura productiva.
+
+Estas asociaciones no son causales y reflejan parcialmente el tamaño absoluto de las provincias. Para continuar, mediríamos la estructura productiva como composición interna de cada provincia, ampliaríamos el análisis a todo 2015--2021 y estudiaríamos la estabilidad de los clusters. También sería útil contrastar los resultados con modelos espaciales o temporales.
+
+La frase final es: \emph{España no presenta una única relación entre producción y bienestar territorial; presenta varias dinámicas provinciales, y el AED permite hacer visible esa heterogeneidad. Muchas gracias.}
+
+\section{Mensajes que conviene enfatizar}
+\begin{enumerate}[leftmargin=1.6em]
+\item La unidad de análisis es provincia-año, no individuo.
+\item El año principal es 2019, aunque el panel común cubre 2015--2021.
+\item Spearman se usa por asimetrías y outliers; no se interpreta como causalidad.
+\item Los porcentajes nacionales de empleo/VAB reflejan concentración, no especialización interna.
+\item Los clusters son exploratorios y dependen de decisiones metodológicas.
+\end{enumerate}
+
+\section{Preguntas previsibles y respuestas breves}
+\begin{longtable}{p{0.38\textwidth}p{0.52\textwidth}}
+\toprule\textbf{Pregunta} & \textbf{Respuesta recomendada}\
+\midrule\endhead
+¿Por qué 2019? & Es un año pre-pandemia con disponibilidad común de todas las variables; evita mezclar coberturas distintas.\\
+¿Por qué Spearman? & Porque las variables tienen colas, asimetrías y outliers; los rangos reducen la dependencia de la escala y de la normalidad.\\
+¿Por qué cuatro clusters? & Es una decisión exploratoria para obtener tipologías interpretables; debe considerarse una elección analítica, no una verdad única.\\
+¿La correlación 0,87 demuestra causalidad? & No. Indica asociación en la muestra provincial; puede reflejar densidad, tamaño y factores omitidos.\\
+¿Por qué no incluir Ceuta y Melilla? & El catálogo y el objetivo se centran en las 50 provincias; además se excluyen explícitamente del mapa y del clustering.\\
+¿Cómo se imputaron los NA? & Por provincia y orden temporal, con la media del vecino válido anterior y posterior, usando el único vecino en los extremos.\\
+¿Qué sesgo queda? & El peso de las provincias grandes y el uso de participaciones nacionales; por eso se propone medir composición interna en futuros trabajos.\\
+¿Qué diferencia hay entre PIB y renta? & PIB es producción territorial; renta es ingreso bruto medio de las personas. No son intercambiables.\\
+¿Por qué unir con inner join? & Para conservar solo las instancias observadas en todas las fuentes y asegurar comparabilidad del panel común.\\
+\bottomrule\end{longtable}
+
+\section{Checklist de ensayo}
+\begin{itemize}[leftmargin=1.5em]
+\item Ensayar con cronómetro: no superar 1 minuto y 30 segundos en la apertura.
+\item Pronunciar siempre la limitación ``asociación, no causalidad'' al hablar de correlaciones.
+\item Señalar en el mapa que los colores son tipologías descriptivas.
+\item Explicar primero qué mide una variable y después qué patrón se observa.
+\item Reservar al menos 45 segundos para la conclusión; es la parte que fija la respuesta a la pregunta.
+\end{itemize}
+
+\section*{Cierre para memorizar}
+El proyecto parte de ocho fuentes heterogéneas, las convierte en un panel provincial comparable y muestra que las asociaciones socioeconómicas cambian según el territorio. La matriz global es útil como resumen, pero el clustering revela que no existe una única dinámica española. Esa es la conclusión que debe guiar toda la exposición.
+
+\end{document}

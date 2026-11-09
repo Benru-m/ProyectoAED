@@ -1,0 +1,234 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage{lmodern}
+\usepackage[a4paper,margin=1.7cm,headheight=14pt]{geometry}
+\usepackage{booktabs,longtable,array,tabularx,enumitem,xcolor,hyperref,graphicx,fancyhdr,titlesec,amsmath,microtype,listings}
+\definecolor{azul}{HTML}{1F4E79}\definecolor{grisclaro}{HTML}{F3F6F8}\definecolor{gris}{HTML}{5B6573}\definecolor{verde}{HTML}{2E7D32}
+\hypersetup{colorlinks=true,linkcolor=azul,urlcolor=azul,pdftitle={Documentación de R del proyecto AED},pdfauthor={Codex}}
+\pagestyle{fancy}\fancyhf{}\lhead{Documentación de R}\rhead{Proyecto AED}\cfoot{\thepage}
+\titleformat{\section}{\Large\bfseries\color{azul}}{\thesection}{0.5em}{}[\titlerule]
+\titleformat{\subsection}{\large\bfseries\color{azul}}{\thesubsection}{0.5em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries\color{verde}}{\thesubsubsection}{0.5em}{}
+\newcommand{\code}[1]{\texttt{\small #1}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\lstset{language=R,basicstyle=\ttfamily\scriptsize,keywordstyle=\color{azul}\bfseries,commentstyle=\color{gris}\itshape,stringstyle=\color{verde},backgroundcolor=\color{grisclaro},frame=single,framerule=0.2pt,breaklines=true,columns=fullflexible,showstringspaces=false}
+\begin{document}
+\begin{titlepage}
+\centering\vspace*{1cm}
+{\color{azul}\rule{\textwidth}{1.5pt}}\\[0.7cm]
+{\Huge\bfseries Documentación completa de R\\[0.15cm] del proyecto AED\par}
+\vspace{0.5cm}{\Large Librerías, comandos, funciones y parámetros utilizados\par}
+\vspace{1cm}
+\begin{minipage}{0.88\textwidth}\small
+Esta referencia se ha elaborado a partir de \code{ProyectoAED.Rmd}, \code{Utilidades.Rmd} y \code{codigo\_extraido.R}. Se documentan las decisiones que afectan a los resultados: formatos de entrada, argumentos de lectura, verbos de transformación, funciones auxiliares, estadísticas, gráficos, correlaciones y clustering.
+\end{minipage}
+\vfill
+{\large 8 de noviembre de 2026\par}
+{\color{azul}\rule{\textwidth}{1.5pt}}
+\end{titlepage}
+\tableofcontents\newpage
+
+\section{Convenciones de lectura}
+\begin{itemize}[leftmargin=1.4em]
+\item \textbf{Código propio:} funciones definidas en \code{Utilidades.Rmd}. Se documentan con su firma, propósito, argumentos y comportamiento.
+\item \textbf{Código de paquete:} funciones llamadas con prefijo, como \code{readr::read\_delim()}, o mediante \code{library()} desde el informe.
+\item \textbf{Argumento usado:} cuando un parámetro no aparece en la llamada, se conserva el valor por defecto de la función; aquí solo se detallan los parámetros que el proyecto fija explícitamente o que son esenciales para entender el resultado.
+\item \textbf{Pipelines:} \code{\%>\%} pasa el objeto de la izquierda como primer argumento de la función siguiente. \code{::} llama una función sin adjuntar todo el paquete al buscador.
+\end{itemize}
+
+\section{Paquetes y configuración}
+\subsection{Paquetes declarados}
+La lista \code{paquetes\_requeridos} contiene: \code{rmarkdown}, \code{rticles}, \code{knitr}, \code{tidyverse}, \code{mapSpain}, \code{sf}, \code{corrplot}, \code{scales}, \code{ggrepel}, \code{pheatmap}, \code{kableExtra}, \code{RColorBrewer} y \code{cluster}. La instalación se ejecuta solo para los faltantes mediante \code{installed.packages()} y \code{install.packages(..., repos = "https://cloud.r-project.org")}.
+
+\begin{longtable}{p{0.18\textwidth}p{0.31\textwidth}p{0.39\textwidth}}
+\toprule\textbf{Paquete} & \textbf{Papel en el proyecto} & \textbf{Funciones o elementos usados}\
+\midrule\endhead
+\code{rmarkdown} & Render y extracción de código. & \code{knitr::purl()} y flujo R Markdown.\\
+\code{rticles} & Plantilla editorial. & \code{mdpi\_article}.\\
+\code{knitr} & Chunks, figuras y extracción. & \code{opts\_chunk\$set()}, \code{purl()}.\\
+\code{tidyverse} & Manipulación y gráficos. & dplyr, tidyr, readr, stringr, purrr, tibble y ggplot2.\\
+\code{mapSpain} & Geometría provincial española. & \code{esp\_get\_prov()}.\\
+\code{sf} & Áreas y geometrías espaciales. & \code{st\_area()}, \code{st\_drop\_geometry()}, \code{geom\_sf()}.\\
+\code{corrplot} & Matriz de correlaciones. & \code{corrplot(...)}.\\
+\code{scales} & Etiquetas numéricas. & \code{label\_number()}.\\
+\code{ggrepel} & Etiquetas sin solapamiento. & \code{geom\_text\_repel()}.\\
+\code{pheatmap} & Declarado para mapas de calor. & No aparece como llamada directa en el flujo final.\\
+\code{kableExtra} & Tablas LaTeX. & \code{kable\_styling()}.\\
+\code{RColorBrewer} & Paletas disponibles. & Declarado; el informe usa paletas hex definidas explícitamente.\\
+\code{cluster} & Infraestructura estadística declarada. & El clustering final usa \code{dist()} y \code{hclust()} base.\\
+\bottomrule
+\end{longtable}
+
+\subsection{Opciones globales de knitr}
+\begin{lstlisting}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE,
+  fig.align = "center", fig.pos = "H", fig.width = 6,
+  fig.height = 4, out.width = "100%")
+\end{lstlisting}
+\code{echo} controla si se muestra el código; \code{warning} y \code{message} ocultan advertencias y mensajes; \code{fig.align} centra figuras; \code{fig.pos = "H"} solicita posición fija cuando LaTeX lo permite; \code{fig.width}, \code{fig.height} fijan pulgadas de salida; \code{out.width} limita el ancho final.
+
+\section{Funciones auxiliares propias}
+\subsection{Normalización y lectura}
+\begin{longtable}{p{0.30\textwidth}p{0.20\textwidth}p{0.39\textwidth}}
+\toprule\textbf{Firma} & \textbf{Argumentos} & \textbf{Qué hace}\
+\midrule\endhead
+\code{normalizar\_nombre\_provincia(x)} & \code{x}: texto o vector & Convierte a carácter; quita tildes con \code{stri\_trans\_general(..., "Latin-ASCII")}; pasa a minúsculas y elimina espacios con \code{str\_to\_lower(str\_squish())}; conserva solo \code{a-z0-9}.\\
+\code{comprobacion\_descarga\_datos(ruta\_base = "./data/raw")} & \code{ruta\_base}: carpeta & Crea carpeta recursiva; descarga 8 URL si el archivo no existe o pesa 0; comprueba faltantes y devuelve rutas invisibles.\\
+\code{leer\_archivo\_ine(fichero, separador, decimal = ",", grouping = ".")} & Ruta, delimitador, marca decimal, marca de millar & Llama \code{readr::read\_delim()} con locale, NA personalizados, \code{name\_repair = "minimal"}, \code{show\_col\_types = FALSE}, \code{progress = FALSE}.\\
+\code{leer\_datos(ruta\_base = "./data/raw")} & Carpeta de fuentes & Ejecuta la comprobación, carga los ocho CSV con delimitadores individuales, usa \code{list2env()} en el entorno llamador y devuelve la lista invisiblemente.\\
+\code{leer\_datos\_comprobar\_existencia()} & Sin argumentos & Comprueba con \code{exists()} que existan los ocho objetos \code{\_raw}; imprime éxito o error.\\
+\bottomrule
+\end{longtable}
+
+\subsubsection{Delimitadores efectivamente utilizados}
+\begin{tabularx}{\textwidth}{p{0.35\textwidth}p{0.18\textwidth}Y}\toprule\textbf{Objeto} & \textbf{delim} & \textbf{locale}\
+\midrule
+\code{coste\_vivienda\_raw} & \code{";"} & \code{decimal = ".", grouping = ""}.\\
+Resto de fuentes tabuladas & \code{"\textbackslash t"} & Por defecto: decimal coma, millar punto.\\
+\code{pib\_per\_capita\_raw} & \code{";"} & Por defecto: decimal coma, millar punto.\\
+\bottomrule\end{tabularx}
+
+\subsection{Claves, alcance y validación}
+\begin{longtable}{p{0.31\textwidth}p{0.23\textwidth}p{0.37\textwidth}}
+\toprule\textbf{Firma} & \textbf{Parámetros} & \textbf{Comportamiento}\
+\midrule\endhead
+\code{crear\_id\_provincia\_anio(df, col\_anyo, col\_prov)} & Data frame y columnas capturadas mediante evaluación no estándar & Crea \code{id} con \code{paste0()} y códigos de provincia con \code{str\_pad(width = 2, side = "left", pad = "0")}.\\
+\code{tratamiento\_uniprovinciales(df, variable, uniprov = codigos\_uniprov)} & Data frame, columna textual y mapa de códigos & Reconstruye \code{codigo\_ccaa}; reconoce Asturias, Baleares, Cantabria, Madrid, Murcia, Navarra, Rioja, Ceuta y Melilla; rellena \code{CPRO} cuando está vacío. El parámetro \code{uniprov} está en la firma, aunque el cuerpo indexa el objeto global.\\
+\code{filtrar\_provincias\_ine(df)} & Data frame con \code{id\_prov} & Rellena el código a 2 dígitos y conserva los 50 códigos de \code{ine\_provincias}.\\
+\code{validar\_clave\_unica(df, claves, nombre = "datos")} & Claves: texto o vector; nombre para error & Agrupa por \code{claves}, cuenta filas y detiene con ejemplos si hay duplicados. Devuelve \code{df} invisiblemente.\\
+\code{validar\_provincias\_50(df, nombre = "panel", periodo = NULL)} & Data frame, etiqueta y periodo opcional & Busca provincias inválidas y avisa de provincias faltantes; si \code{periodo} no es nulo filtra antes de validar.\\
+\bottomrule\end{longtable}
+
+\subsection{Panel e indicadores derivados}
+\begin{longtable}{p{0.31\textwidth}p{0.23\textwidth}p{0.37\textwidth}}
+\toprule\textbf{Firma} & \textbf{Parámetros usados} & \textbf{Resultado}\
+\midrule\endhead
+\code{imputar\_panel\_provincial(df, variables = c(...))} & \code{variables}: renta y ocupación primaria & Ordena por provincia/año, agrupa por provincia, aplica \code{imputar\_valores\_intermedios()} con \code{across(any\_of(variables))}.\\
+\code{crear\_panel\_analisis\_2019(df, periodo = 2019)} & \code{periodo = 2019} & Filtra año, elimina \code{VAB\_Total}, convierte ocupación/VAB a porcentaje del total nacional y valida las 50 provincias.\\
+\code{crear\_panel\_bivariante(panel\_analisis\_2019)} & Panel anual & Descarga geometría, calcula área en km$^2$, y crea \code{esfuerzo\_vivienda}, \code{mig\_joven\_1000}, \code{Densidad} y \code{brecha\_pib\_renta}.\\
+\bottomrule\end{longtable}
+
+Las fórmulas son:
+\[
+\begin{aligned}
+\text{esfuerzo vivienda} &= \frac{90\,\text{Precio\_m2}}{\text{Renta\_bruta\_media}}, &
+\text{mig. joven/1000} &= \frac{\text{Migracion\_Interior}}{\text{Habitantes}}\,1000,\\
+\text{Densidad} &= \frac{\text{Habitantes}}{\text{area\_km2}}, &
+\text{brecha PIB-renta} &= \frac{\text{Renta\_bruta\_media}}{\text{PIB\_per\_capita}}.
+\end{aligned}
+\]
+
+\subsection{Correlaciones y gráficos multivariantes}
+\begin{longtable}{p{0.34\textwidth}p{0.20\textwidth}p{0.36\textwidth}}
+\toprule\textbf{Función} & \textbf{Argumentos} & \textbf{Parámetros críticos}\
+\midrule\endhead
+\code{calcular\_matriz\_correlacion(df, variables, nombres\_variables)} & Panel, 11 columnas, 11 etiquetas & Selecciona \code{all\_of(variables)}, renombra, elimina NA, calcula \code{cor(method = "spearman")}; ordena con \code{hclust(as.dist(1 - abs(matriz)), method = "complete")}.\\
+\code{graficar\_matriz\_correlacion(matriz)} & Matriz ordenada & \code{corrplot(method = "color", type = "lower", order = "original", addCoef.col = "black", number.cex = 0.7, diag = FALSE)}; etiquetas negras a 45 grados.\\
+\code{preparar\_correlaciones\_por\_cluster(df, variables, nombres\_variables, orden)} & Panel con \code{Cluster}, variables y orden global & Divide por cluster, calcula Spearman por grupo, reordena filas/columnas, conserva triángulo inferior y marca \code{Contraste = abs(Correlacion) > 0.6}.\\
+\code{graficar\_correlaciones\_por\_cluster(df\_correlaciones)} & Tabla larga de correlaciones & Mapa con \code{geom\_tile()}, textos con dos decimales, escala de -1 a 1, facetas en 2 columnas y etiquetas repelentes no usadas aquí.\\
+\bottomrule\end{longtable}
+
+\subsection{Datos perdidos y estadísticos}
+\begin{longtable}{p{0.31\textwidth}p{0.25\textwidth}p{0.34\textwidth}}
+\toprule\textbf{Función} & \textbf{Parámetros} & \textbf{Implementación}\
+\midrule\endhead
+\code{tabla\_instancias\_faltantes(df)} & Data frame & \code{apply(is.na(df), MARGIN = 2, FUN = sum)} y tabla \code{kable()} solo con conteos positivos.\\
+\code{tabla\_valores\_faltantes(df)} & Data frame & Selecciona \code{!complete.cases(df)}, cuenta NA por fila, conserva provincia/periodo/variables afectadas y ordena.\\
+\code{imputar\_valores\_intermedios(x)} & Vector numérico & Usa \code{findInterval()} para vecinos válidos y \code{rowMeans(cbind(...), na.rm = TRUE)}; devuelve el mismo vector si está completo o vacío.\\
+\code{calc\_asimetria(x)} & Vector & Coeficiente de Fisher sin corrección: tercer momento centrado dividido por la desviación al cubo.\\
+\code{calc\_curtosis(x)} & Vector & Exceso de curtosis: cuarto momento estandarizado menos 3.\\
+\code{calc\_cv(x)} & Vector & CV en porcentaje \code{sd(x)/mean(x)*100}; devuelve \code{NA\_real\_} si hay negativos, media no positiva o vector vacío.\\
+\code{fmt\_es(x, d = 2)} & Vector y decimales & Formatea con punto de millares, coma decimal; los NA se convierten en un guion.\\
+\bottomrule\end{longtable}
+
+\subsection{Gráficos univariantes}
+\code{histograma\_estadisticos\_outliers(df, variables, eje = fmt\_eje, tema = tema\_graficos\_univariantes)} usa \code{pivot\_longer()} para conservar provincia, calcula mediana, media, \code{sd()} y curtosis, marca outliers con $|x-\bar{x}|>3s$ y compone \code{ggplot()} con:
+\begin{itemize}[leftmargin=1.4em]
+\item \code{geom\_histogram(bins = 12, aes(y = after\_stat(density)), fill = "grey80", colour = "white", na.rm = TRUE)};
+\item \code{geom\_density(colour = "steelblue", linewidth = 0.7, na.rm = TRUE)};
+\item dos \code{geom\_vline()} para mediana y media, con linetypes manuales;
+\item \code{geom\_text\_repel(..., direction = "both", segment.size = 0.4, max.overlaps = Inf)} para nombres de atípicos;
+\item \code{facet\_wrap(..., scales = "free", ncol = 3)} y etiquetas de eje con \code{scales::label\_number(big.mark = ".", decimal.mark = ",")}.
+\end{itemize}
+
+\code{boxplot\_estadisticos\_outliers(df, variables\_boxplot)} calcula Q1, Q3, IQR, límites $Q1\pm1.5IQR$, asimetría y MADM. La población se presenta como \code{log10(Habitantes)} y la migración como $\operatorname{sign}(x)|x|^{1/3}$ solo para visualización. El eje Y usa \code{scale\_y\_log10(labels = fmt\_eje, expand = expansion(mult = c(0.06,0.06)))}. \code{geom\_text\_repel()} fija \code{seed = 123}, \code{max.overlaps = Inf}, \code{direction = "y"} y \code{force = 1.2}.
+
+\code{boxplot\_laborales(df)} transforma seis variables sectoriales a largo, clasifica por magnitud y sector, calcula IQR por grupo, dibuja puntos jitter con \code{height = 0.15}, boxplots horizontales y etiquetas rojas de atípicos con \code{seed = 123}. Usa dos facetas verticales y escala X compartida.
+
+\section{Procesamiento fuente por fuente}
+\begin{longtable}{p{0.20\textwidth}p{0.72\textwidth}}
+\toprule\textbf{Fuente} & \textbf{Cadena exacta de decisiones}\
+\midrule\endhead
+Vivienda & Renombrar \code{Periodo}, \code{Regimen}, \code{Comunidad\_Autonoma}; aplicar \code{tratamiento\_uniprovinciales(variable = "Comunidad\_Autonoma")}; eliminar códigos autonómicos; renombrar \code{CPRO} a \code{id\_prov}; filtrar 50 provincias y \code{Regimen == "Libre"}; agrupar por \code{id}; media de \code{Valor}; seleccionar \code{id, Precio\_m2}.\\
+Población & \code{separate(Provincias, into = c("id\_prov","Provincia"), sep = " ", extra = "merge")}; filtrar 50; \code{Sexo == "Total"}; renombrar \code{Total} a \code{Habitantes}.\\
+Maternidad & Renombrar orden; filtrar \code{"Todos"}; separar provincia; convertir \code{Total} con \code{parse\_number(..., locale = locale(decimal\_mark = ",", grouping\_mark = "."))}; renombrar.\\
+Migración & Filtrar \code{Sexo == "Ambos sexos"}; separar provincia; \code{Edad = parse\_number(Edad)}; filtrar $19\leq Edad\leq35$; sumar \code{Total} por \code{id}.\\
+Ocupación & Normalizar construcción; \code{pivot\_wider(names\_from = sector\_econ, values\_from = Total)}; sumar industria y construcción; promedio por \code{id}; \code{pivot\_longer()} de total/sectores.\\
+PIB & Abrir magnitudes, separar provincia, rellenar códigos, detectar provincia vs CCAA uniprovincial, reemplazar código autonómico, elegir provincia con \code{slice\_max(order\_by = es\_provincia, n = 1, with\_ties = FALSE)}.\\
+Renta & Filtrar indicador exacto; eliminar columnas 1, 2 e \code{Islas}; quitar códigos iniciales con \code{str\_remove()}; corregir Murcia; unir con catálogo INE; promediar duplicados por clave.\\
+VAB & Separar provincia; filtrar dos ramas no deseadas; abrir ramas; eliminar columnas que empiezan por \code{Valor...bruto total}; sumar ramas en secundario y terciario; pasar a largo.\\
+\bottomrule\end{longtable}
+
+\section{Análisis estadístico final}
+\subsection{Clustering}
+\begin{lstlisting}
+datos_cluster_estandarizados <- scale(datos_cluster_2019)
+distancia_provincias <- dist(datos_cluster_estandarizados,
+                             method = "euclidean")
+dendrograma_provincias <- hclust(distancia_provincias,
+                                 method = "ward.D2")
+asignacion_clusters <- cutree(dendrograma_provincias, k = 4)
+\end{lstlisting}
+\code{scale()} centra y escala cada variable; \code{dist(method = "euclidean")} calcula distancias; \code{hclust(method = "ward.D2")} construye el dendrograma; \code{cutree(k = 4)} asigna cuatro clusters.
+
+\subsection{Mapa}
+\code{mapSpain::esp\_get\_prov(prov = setdiff(esp\_get\_prov()\$ine.prov.name, c("Ceuta","Melilla")))} obtiene la geometría provincial excluyendo las dos ciudades autónomas. \code{sf::st\_area(geometry)} calcula área; la división por \code{1e6} convierte metros cuadrados a km$^2$. \code{geom\_sf(aes(fill = Cluster), color = "white", size = 0.3)} representa los polígonos.
+
+\section{Tablas y persistencia}
+\begin{itemize}[leftmargin=1.4em]
+\item \code{save(objeto, file = "...Rdata")} serializa objetos R.
+\item \code{write\_delim(..., delim = ";")} escribe CSV compatible con el formato de salida del proyecto.
+\item \code{kable(format = "latex", booktabs = TRUE, longtable = FALSE, caption = ..., digits = 2)} crea tablas LaTeX; \code{kable\_styling(latex\_options = c("hold\_position", "scale\_down"), full\_width = FALSE)} controla posición y escala.
+\end{itemize}
+
+\section{Inventario ampliado de llamadas clave y parámetros}
+\begin{longtable}{p{0.39\textwidth}p{0.51\textwidth}}
+\toprule\textbf{Llamada} & \textbf{Parámetros/efecto}\
+\midrule\endhead
+\code{filter(id\_prov \%in\% ine\_provincias\$id\_prov)} & Conserva solo los códigos del catálogo oficial.\\
+\code{separate(..., sep = " ", extra = "merge")} & Divide código y nombre; \code{extra = "merge"} evita romper nombres con espacios.\\
+\code{pivot\_wider(names\_from = ..., values\_from = ...)} & Convierte categorías en columnas.\\
+\code{pivot\_longer(cols = ..., names\_to = ..., values\_to = ...)} & Convierte columnas sectoriales en filas tidy.\\
+\code{group\_by(...); summarise(..., .groups = "drop")} & Agrupa y devuelve tabla sin agrupación persistente.\\
+\code{mutate(across(..., mean, na.rm = TRUE))} & Aplica media a varias columnas respetando NA.\\
+\code{left\_join(..., by = ...)} & Añade geometría/códigos sin perder provincias del panel izquierdo.\\
+\code{inner\_join(..., by = ...)} & Conserva solo coincidencias comunes.\\
+\code{drop\_na()} & Elimina filas incompletas antes de calcular correlación.\\
+\code{facet\_wrap(..., ncol = 3)} & Organiza paneles gráficos en tres columnas.\\
+\code{theme\_minimal(base\_size = 10)} & Tema limpio con tamaño base 10.\\
+\code{coord\_cartesian(clip = "off")} & Permite etiquetas fuera del panel sin truncarlas.\\
+\bottomrule\end{longtable}
+
+\section{Advertencias y decisiones reproducibles}
+\begin{enumerate}[leftmargin=1.6em]
+\item El orden de ramas en VAB se obtiene con \code{unique()} e índices de posición; si cambia la fuente, debe revisarse el mapeo de ramas.
+\item \code{tratamiento\_uniprovinciales()} declara \code{uniprov} pero usa el mapa global \code{codigos\_uniprov}; documentarlo evita confundir la interfaz con el comportamiento real.
+\item Los porcentajes de ocupación y VAB son porcentajes del total nacional por columna y no cuotas internas de cada provincia.
+\item Las correlaciones por cluster con grupos pequeños pueden ser degeneradas; el propio informe advierte que en clusters de dos elementos aparecen valores $1$ o $-1$.
+\item La imputación está acotada a dos variables y se realiza en el panel completo ordenado temporalmente; no es una interpolación estadística general para todas las columnas.
+\end{enumerate}
+
+\section*{Referencia rápida de ejecución}
+\begin{lstlisting}
+knitr::purl("Utilidades.Rmd", output = "codigo_extraido.R")
+source("codigo_extraido.R")
+leer_datos()
+panel_analisis_2019 <- crear_panel_analisis_2019(panel_provincial, 2019)
+panel_bivariante_2019 <- crear_panel_bivariante(panel_analisis_2019)
+correlacion_global <- calcular_matriz_correlacion(
+  panel_bivariante_2019, variables_cluster, nombres_variables_cluster)
+\end{lstlisting}
+
+\end{document}

@@ -1,0 +1,195 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage{lmodern}
+\usepackage[a4paper,margin=2.2cm,headheight=14pt]{geometry}
+\usepackage{booktabs,longtable,array,tabularx,enumitem,xcolor,hyperref,graphicx,fancyhdr,titlesec,amsmath,microtype}
+\definecolor{azul}{HTML}{1F4E79}
+\definecolor{azulclaro}{HTML}{EAF2F8}
+\definecolor{gris}{HTML}{5B6573}
+\hypersetup{colorlinks=true,linkcolor=azul,urlcolor=azul,citecolor=azul,pdftitle={Estructura del proyecto de análisis de datos},pdfauthor={Codex}}
+\pagestyle{fancy}\fancyhf{}\lhead{Documentación del proyecto AED}\rhead{Estructura}\cfoot{\thepage}
+\titleformat{\section}{\Large\bfseries\color{azul}}{\thesection}{0.6em}{}[\titlerule]
+\titleformat{\subsection}{\large\bfseries\color{azul}}{\thesubsection}{0.6em}{}
+\newcommand{\code}[1]{\texttt{\small #1}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\begin{document}
+\begin{titlepage}
+\centering
+\vspace*{1.8cm}
+{\color{azul}\rule{\textwidth}{1.5pt}}\\[0.8cm]
+{\Huge\bfseries Documentación de la estructura\\[0.15cm] del proyecto de análisis de datos\par}
+\vspace{0.7cm}
+{\Large Análisis Exploratorio de Datos provincial en España\par}
+\vspace{1.4cm}
+\begin{tabular}{rl}
+\textbf{Proyecto:} & Estructura Productiva, Presión Inmobiliaria y su Impacto en el Ciclo Vital y Migratorio en España\\
+\textbf{Autores del proyecto:} & Luis Molina Villar, Rubén Sánchez Munuera y Pablo Gallart Carbonell\\
+\textbf{Institución:} & Universitat de València\\
+\textbf{Fecha de documentación:} & 8 de noviembre de 2026
+\end{tabular}
+\vfill
+\begin{minipage}{0.85\textwidth}\small\centering
+Este documento describe la arquitectura, los ficheros, el flujo de transformación y los controles de calidad del proyecto entregado. La documentación se ha construido a partir de los archivos locales del repositorio, del informe PDF y de los datos incluidos en la carpeta \code{data/}.
+\end{minipage}
+\vfill
+{\color{azul}\rule{\textwidth}{1.5pt}}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+\section{Resumen ejecutivo}
+El proyecto realiza un Análisis Exploratorio de Datos (AED) sobre las 50 provincias españolas peninsulares e insulares, excluyendo Ceuta y Melilla. El objetivo es estudiar si la estructura productiva provincial se relaciona de forma homogénea o heterogénea con la renta, la vivienda, la demografía y la migración.
+
+El flujo completo es:
+\begin{center}
+\colorbox{azulclaro}{\parbox{0.92\textwidth}{\centering\textbf{fuentes INE/MIVAU} $\rightarrow$ \textbf{lectura española} $\rightarrow$ \textbf{normalización} $\rightarrow$ \textbf{unión por provincia-año} $\rightarrow$ \textbf{imputación} $\rightarrow$ \textbf{análisis 2019} $\rightarrow$ \textbf{correlaciones y clustering}}}
+\end{center}
+
+La unidad final de observación es una provincia en un año. El panel socioeconómico común cubre 2015--2021 y el análisis principal selecciona 2019, año anterior a la pandemia de COVID-19 y con disponibilidad común de todas las fuentes.
+
+\section{Inventario de archivos}
+\subsection{Archivos principales}
+\begin{longtable}{p{0.29\textwidth}p{0.18\textwidth}p{0.45\textwidth}}
+\toprule
+\textbf{Archivo} & \textbf{Tipo} & \textbf{Responsabilidad}\
+\midrule
+\endhead
+\code{ProyectoAED.Rmd} & R Markdown & Informe reproducible: planteamiento, preparación, EDA, correlaciones, clustering y conclusiones.\\
+\code{Utilidades.Rmd} & R Markdown & Funciones auxiliares, catálogos de provincias, lectura, validación, imputación y gráficos.\\
+\code{codigo\_extraido.R} & R & Versión ejecutable del código de \code{Utilidades.Rmd}, creada con \code{knitr::purl()}.\\
+\code{instalar\_paquetes.R} & R & Script auxiliar de instalación/configuración disponible en el proyecto.\\
+\code{ProyectoAED.tex} & LaTeX & Fuente LaTeX del informe principal.\\
+\code{Proyecto\_AED.pdf} & PDF & Informe final original, de 10 páginas.\\
+\code{ProyectoAED.Rproj} & RStudio & Configuración del proyecto RStudio.\\
+\code{README.txt} & Texto & Nota de uso y contexto del repositorio.\\
+\code{EnlaceRepo.txt} & Texto & Referencia al repositorio del proyecto.\\
+\bottomrule
+\end{longtable}
+
+\subsection{Estructura de carpetas}
+\begin{verbatim}
+Entrega_ProyectoAED/
+|-- ProyectoAED.Rmd              # informe reproducible
+|-- Utilidades.Rmd               # funciones auxiliares
+|-- codigo_extraido.R            # utilidades extraidas
+|-- Proyecto_AED.pdf             # informe renderizado
+|-- ProyectoAED.tex              # fuente LaTeX del informe
+|-- data/
+|   |-- raw/                     # ocho fuentes CSV originales
+|   |-- Datos_SocioEcon.csv      # panel socioeconómico procesado
+|   |-- Datos_SocioEcon.Rdata    # mismo panel en formato R
+|   |-- Datos_Laborales.csv      # panel laboral procesado
+|   `-- Datos_Laborales.Rdata    # mismo panel en formato R
+|-- ProyectoAED_files/figure-latex/ # figuras del informe
+|-- Definitions/                 # clase MDPI, bibliografía y logos
+`-- output/pdf/                  # documentación generada
+\end{verbatim}
+
+\section{Fuentes de datos y dimensiones}
+Se emplean ocho ficheros CSV de INE y MIVAU. Los ficheros están delimitados de forma distinta; por ello la lectura no se puede resolver con una única llamada genérica sin parámetros.
+
+\begin{longtable}{p{0.26\textwidth}p{0.17\textwidth}p{0.15\textwidth}p{0.32\textwidth}}
+\toprule
+\textbf{Fuente local} & \textbf{Origen} & \textbf{Filas aprox.} & \textbf{Contenido y tratamiento}\
+\midrule
+\endhead
+\code{coste\_vivienda.csv} & MIVAU & 13.711 & Precio por m$^2$, trimestre y régimen; se conserva vivienda libre y se promedia por provincia-año.\\
+\code{distribucion\_poblacional.csv} & INE & 4.134 & Habitantes por provincia, periodo y sexo; se conserva \code{Sexo == "Total"}.\\
+\code{edad\_maternidad.csv} & INE & 13.250 & Edad media; se conserva \code{Orden de nacimiento == "Todos"}.\\
+\code{migracion\_interior.csv} & INE & 200.928 & Saldo por edad y sexo; se conserva ambos sexos y edades 19--35, sumando por provincia-año.\\
+\code{Ocupados\_Sector\_Provincia.csv} & INE & 19.875 & Ocupación por ramas; construcción e industria se agrupan en secundario.\\
+\code{pib\_per\_capita.csv} & INE & 4.914 & PIB por magnitud y territorio; se eliminan totales y se resuelven CCAA uniprovinciales.\\
+\code{renta\_bruta\_media.csv} & INE & 4.920 & Renta bruta media por persona; se filtra el indicador exacto y se normalizan nombres.\\
+\code{valor\_bruto\_sector.csv} & INE & 12.480 & VAB por rama; se agregan ramas en primario, secundario y terciario.\\
+\bottomrule
+\end{longtable}
+
+\subsection{Dimensiones conceptuales}
+\begin{itemize}[leftmargin=1.5em]
+\item \textbf{Renta y riqueza:} \code{PIB\_per\_capita}, \code{Renta\_bruta\_media}.
+\item \textbf{Mercado inmobiliario:} \code{Precio\_m2}.
+\item \textbf{Demografía y ciclo vital:} \code{Habitantes}, \code{Edad\_Media\_Maternidad}, \code{Migracion\_Interior}.
+\item \textbf{Estructura productiva:} ocupación y VAB de los sectores primario, secundario y terciario.
+\end{itemize}
+
+\section{Arquitectura del flujo de datos}
+\subsection{Etapa 1: configuración y catálogo territorial}
+El bloque de configuración carga los paquetes requeridos y establece opciones globales de \code{knitr}: código visible, advertencias y mensajes ocultos, figuras centradas, tamaño de 6 por 4 pulgadas y ancho máximo del texto del PDF. \code{Utilidades.Rmd} construye además \code{ine\_provincias}, una tabla de 50 códigos INE y nombres oficiales, y \code{ine\_provincias\_join}, que añade una clave normalizada para unir fuentes con tildes, barras y nombres alternativos.
+
+\subsection{Etapa 2: descarga y lectura}
+\code{comprobacion\_descarga\_datos()} crea \code{data/raw} si es necesario, comprueba la existencia de los ocho archivos y descarga únicamente los que no existen o tienen tamaño cero. \code{leer\_archivo\_ine()} aplica el delimitador, la configuración decimal/millar y las etiquetas de ausentes \code{""}, \code{"NA"}, \code{"null"} y \code{".."}. \code{leer\_datos()} carga cada fuente en un objeto con sufijo \code{\_raw}.
+
+\subsection{Etapa 3: normalización y claves}
+Cada tabla se lleva a formato tidy. Se separa el texto \code{"código provincia nombre"}, se rellenan códigos a dos dígitos y se genera:
+\[
+\code{id} = \code{año\_provincia},\qquad \text{por ejemplo, }\code{2019\_28}.
+\]
+La clave es común a todas las tablas socioeconómicas; para los datos laborales se utiliza \code{(id, Sector)}.
+
+\subsection{Etapa 4: agregación de fuentes}
+\begin{enumerate}[leftmargin=1.7em]
+\item Vivienda: se corrigen nombres de columnas, se recuperan las comunidades uniprovinciales, se filtra \code{Regimen == "Libre"} y se calcula la media trimestral.
+\item Población: se conserva el total de ambos sexos y se renombra \code{Total} como \code{Habitantes}.
+\item Maternidad: se conserva el total de órdenes de nacimiento y se convierte el indicador numérico con configuración española.
+\item Migración: se conserva \code{Ambos sexos}, edades 19--35 y se suman los saldos de esas edades.
+\item Ocupación: se pasa a columnas, se calcula \code{Secundario = Industria + Construccion} y se vuelve a formato largo.
+\item PIB y renta: se filtran indicadores, se corrigen nombres y se resuelven duplicidades entre provincia y comunidad autónoma uniprovincial.
+\item VAB: se excluyen impuestos y PIB a precios de mercado; las ramas se suman por sector.
+\end{enumerate}
+
+\subsection{Etapa 5: paneles y persistencia}
+El panel socioeconómico se forma con seis \code{inner\_join()} por \code{id}. El panel laboral se forma con un cruce por \code{id} y \code{Sector}. Después los sectores se pasan a columnas, se unen ambos bloques y se separa la clave en \code{Periodo} e \code{id\_prov}. El panel final se guarda en CSV delimitado por punto y coma y en formato binario RData.
+
+\section{Análisis exploratorio}
+\subsection{Datos perdidos}
+Se restringe el panel a 2015--2021. Se contabilizan ausentes por variable y se listan las filas con ausentes. La imputación solo se aplica a \code{Renta\_bruta\_media} y \code{Personas\_Ocupadas\_Primario}, por provincia y en orden temporal: media entre el primer valor válido anterior y posterior; en los extremos se usa el único vecino disponible.
+
+\subsection{Análisis univariante}
+Para 2019 se calculan participaciones nacionales de ocupación y VAB. Se muestran histogramas con media, mediana, desviación típica, curtosis y atípicos a más de tres desviaciones. Los boxplots usan la regla $1.5\times IQR$, con transformaciones visuales para población y migración, pero calculando atípicos sobre la escala original.
+
+\subsection{Análisis bivariante y multivariante}
+Se derivan cuatro indicadores: densidad, esfuerzo de vivienda, migración joven por 1.000 habitantes y brecha renta/PIB. La matriz global usa Spearman y ordenamiento jerárquico por $1-|\rho|$. Para explorar heterogeneidad, se estandarizan 11 variables, se calcula distancia euclídea, se aplica \code{hclust(method = "ward.D2")} y se cortan cuatro grupos. Finalmente se cartografían las provincias con \code{mapSpain} y se calculan matrices de correlación por cluster.
+
+\section{Controles de calidad}
+El proyecto incluye controles en puntos críticos:
+\begin{itemize}[leftmargin=1.5em]
+\item \code{validar\_clave\_unica()} detiene la ejecución ante duplicados de la clave esperada.
+\item \code{validar\_provincias\_50()} detecta provincias fuera del alcance y avisa si falta alguna de las 50.
+\item Se usan \code{inner\_join()} para que el panel final solo contenga instancias comunes a todas las fuentes.
+\item Se eliminan explícitamente Ceuta y Melilla del análisis cartográfico y del clustering.
+\item Se conservan dos formatos de salida: CSV auditable y RData reproducible.
+\end{itemize}
+
+\section{Productos generados por el proyecto}
+\begin{longtable}{p{0.36\textwidth}p{0.5\textwidth}}
+\toprule\textbf{Producto} & \textbf{Uso}\
+\midrule
+\endhead
+\code{data/Datos\_SocioEcon.csv/.Rdata} & Variables de vivienda, población, maternidad, migración, PIB y renta por provincia-año.\\
+\code{data/Datos\_Laborales.csv/.Rdata} & Personas ocupadas y VAB por provincia-año-sector.\\
+\code{Proyecto\_AED.pdf} & Informe científico con metodología, figuras, resultados y conclusiones.\\
+\code{ProyectoAED\_files/figure-latex/} & Figuras incrustadas o auxiliares del informe.\\
+\code{output/pdf/} & Esta documentación: estructura, referencia de R y guion oral.\\
+\bottomrule
+\end{longtable}
+
+\section{Reproducción recomendada}
+\begin{enumerate}[leftmargin=1.7em]
+\item Abrir el proyecto desde \code{ProyectoAED.Rproj} para conservar las rutas relativas.
+\item Verificar que R y los paquetes listados en la documentación de R están disponibles.
+\item Ejecutar primero \code{Utilidades.Rmd} o extraerlo con \code{knitr::purl()}.
+\item Ejecutar \code{ProyectoAED.Rmd} desde la raíz del proyecto, manteniendo \code{data/raw}.
+\item Revisar que las validaciones no devuelvan duplicados y que el periodo común siga siendo 2015--2021.
+\item Renderizar el informe y comprobar las figuras y tablas antes de entregar.
+\end{enumerate}
+
+\section{Limitaciones documentadas}
+El análisis es exploratorio y provincial: no prueba causalidad. Las participaciones laborales y de VAB están expresadas respecto al total nacional, por lo que el tamaño de la provincia influye. El clustering depende de las variables elegidas, la estandarización, la distancia y el método Ward.D2. Los clusters 3 y 4 tienen muy pocas provincias, de modo que sus correlaciones internas deben interpretarse con especial cautela. El año 2019 es una fotografía pre-pandemia; extender el análisis a 2015--2021 permitiría estudiar la evolución temporal.
+
+\section*{Cierre}
+La estructura del proyecto separa claramente datos brutos, funciones, análisis y productos. Esa separación permite auditar el origen de cada indicador, repetir el pipeline y distinguir entre decisiones de preparación de datos y conclusiones substantivas.
+
+\end{document}
